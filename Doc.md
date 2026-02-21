@@ -359,6 +359,24 @@ Export the model.
 
 ---
 
+### Step 27b — Create the StudentProfile Model
+
+Inside `models`, create `StudentProfile.ts`. Define a Mongoose schema with:
+
+- `userId` — ObjectId, ref to User, required, unique
+- `dateOfBirth` — Date, optional
+- `city` — String, optional
+- `skillLevel` — String, enum of `beginner`, `intermediate`, `advanced`, `expert`, default `beginner`
+- `chessRating` — Number, optional
+- `ratingPlatform` — String, enum of `fide`, `lichess`, `chesscom`, `none`, default `none`
+- `preferredLanguage` — String, enum of `en`, `si`, `ta`, default `en`
+- `totalCoursesCompleted` — Number, default 0
+- `totalStudyHours` — Number, default 0
+- `referredBy` — ObjectId, ref to User, optional
+- `createdAt` and `updatedAt` — via timestamps
+
+Create an index on `userId`. Export the model.
+
 ### Step 28 — Create the Course Model
 
 Inside `models`, create `Course.ts`. Define a Mongoose schema with:
