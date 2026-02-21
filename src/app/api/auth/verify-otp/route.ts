@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import OTPSession from "@/models/OTPSession";
 import User from "@/models/User";
+import CoachProfile from "@/models/CoachProfile";
 import { signToken } from "@/lib/jwt";
 import { setSessionCookie } from "@/lib/cookies";
 
@@ -88,8 +89,15 @@ export async function POST(request: NextRequest) {
 
     await setSessionCookie(token);
 
+    // 9. For coaches, include verification status
+    let verificationStatus: string | undefined;
+    if (user.role === "coach") {
+      const coachProfile = await CoachProfile.findOne({ userId: user._id });
+      verificationStatus = coachProfile?.verificationStatus || "pending";
+    }
+
     return NextResponse.json(
-      { isNewUser: false, role: user.role },
+      { isNewUser: false, role: user.role, verificationStatus },
       { status: 200 },
     );
   } catch (error) {
