@@ -10,6 +10,7 @@ import {
   GraduationCap,
   CreditCard,
   LogOut,
+  ShieldCheck,
 } from "lucide-react";
 import React from "react";
 
@@ -34,6 +35,7 @@ export default async function ManagerLayout({
     { name: "Courses", href: "/manager/courses", icon: BookOpen },
     { name: "Students", href: "/manager/students", icon: GraduationCap },
     { name: "Payments", href: "/manager/payments", icon: CreditCard },
+    { name: "Managers", href: "/manager/managers", icon: ShieldCheck },
   ];
 
   return (
