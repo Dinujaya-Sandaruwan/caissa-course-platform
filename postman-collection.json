@@ -106,6 +106,20 @@
             "description": "Completes registration for a new coach after OTP verification. Creates User + CoachProfile with pending verification."
           },
           "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Clears the session cookie and logs the user out."
+          },
+          "response": []
         }
       ]
     }
