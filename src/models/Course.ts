@@ -1,0 +1,102 @@
+import mongoose, { Schema, Document, Model, Types } from "mongoose";
+
+export interface ICourse extends Document {
+  coach: Types.ObjectId;
+  title: string;
+  description: string;
+  price: number;
+  thumbnailUrl?: string;
+  previewVideoUrl?: string;
+  level: "beginner" | "intermediate" | "advanced";
+  tags: string[];
+  status:
+    | "draft"
+    | "pending_review"
+    | "approved"
+    | "rejected"
+    | "published"
+    | "unpublished";
+  reviewNotes?: string;
+  reviewedBy?: Types.ObjectId;
+  reviewedAt?: Date;
+  enrollmentCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const CourseSchema = new Schema<ICourse>(
+  {
+    coach: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    thumbnailUrl: {
+      type: String,
+    },
+    previewVideoUrl: {
+      type: String,
+    },
+    level: {
+      type: String,
+      enum: ["beginner", "intermediate", "advanced"],
+      required: true,
+    },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    status: {
+      type: String,
+      enum: [
+        "draft",
+        "pending_review",
+        "approved",
+        "rejected",
+        "published",
+        "unpublished",
+      ],
+      default: "draft",
+      index: true,
+    },
+    reviewNotes: {
+      type: String,
+    },
+    reviewedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    reviewedAt: {
+      type: Date,
+    },
+    enrollmentCount: {
+      type: Number,
+      default: 0,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+CourseSchema.index({ title: "text", description: "text" });
+
+const Course: Model<ICourse> =
+  mongoose.models.Course || mongoose.model<ICourse>("Course", CourseSchema);
+
+export default Course;
