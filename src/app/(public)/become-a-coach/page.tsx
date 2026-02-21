@@ -64,13 +64,8 @@ export default function BecomeACoachPage() {
     if (!res.ok) throw new Error(data.error);
   };
 
-  const handleRegister = async (formData: {
-    name: string;
-    dateOfBirth: string;
-    fideId: string;
-    fideRating: number;
-    [key: string]: unknown;
-  }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleRegister = async (formData: any) => {
     const res = await fetch("/api/auth/complete-registration", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -107,22 +102,41 @@ export default function BecomeACoachPage() {
             <div className="flex items-center justify-center gap-2 mb-8">
               {["phone", "otp", "register"].map((s, i) => (
                 <div key={s} className="flex items-center gap-2">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                      step === s
-                        ? "bg-red-600 text-white"
-                        : ["phone", "otp", "register"].indexOf(step) > i
-                          ? "bg-red-100 text-red-600 border border-red-300"
-                          : "bg-gray-200 text-gray-400"
-                    }`}
-                  >
-                    {i + 1}
+                  <div className="flex flex-col items-center gap-2">
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                        step === s
+                          ? "bg-red-600 text-white shadow-xl shadow-red-500/25 scale-110"
+                          : ["phone", "otp", "register"].indexOf(step) > i
+                            ? "bg-red-100 text-red-600"
+                            : "bg-white text-gray-400 border border-gray-200 shadow-sm"
+                      }`}
+                    >
+                      {["phone", "otp", "register"].indexOf(step) > i
+                        ? "✓"
+                        : i + 1}
+                    </div>
+                    <span
+                      className={`text-xs sm:text-sm font-semibold tracking-wide ${
+                        step === s
+                          ? "text-red-600"
+                          : ["phone", "otp", "register"].indexOf(step) > i
+                            ? "text-red-500"
+                            : "text-gray-400"
+                      }`}
+                    >
+                      {s === "phone"
+                        ? "Phone"
+                        : s === "otp"
+                          ? "Verify"
+                          : "Profile"}
+                    </span>
                   </div>
                   {i < 2 && (
                     <div
-                      className={`w-12 h-0.5 ${
+                      className={`w-12 sm:w-16 h-[3px] rounded-full mb-6 transition-colors duration-500 ${
                         ["phone", "otp", "register"].indexOf(step) > i
-                          ? "bg-red-300"
+                          ? "bg-red-400"
                           : "bg-gray-200"
                       }`}
                     />
