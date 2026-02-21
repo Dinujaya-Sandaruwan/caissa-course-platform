@@ -98,28 +98,27 @@ export default function StudentRegistrationForm({
   };
 
   const inputClasses =
-    "w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors";
-  const labelClasses = "block text-sm font-medium text-gray-300 mb-1.5";
+    "w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors";
+  const labelClasses = "block text-sm font-medium text-gray-700 mb-1.5";
 
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/10 mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 mb-4">
           <UserPlus className="w-8 h-8 text-red-500" />
         </div>
-        <h1 className="text-3xl font-bold text-white font-[family-name:var(--font-outfit)]">
+        <h1 className="text-3xl font-bold text-gray-900 font-[family-name:var(--font-outfit)]">
           Create Your Account
         </h1>
-        <p className="text-gray-400 mt-2">
+        <p className="text-gray-500 mt-2">
           Fill in your details to get started
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Required Fields */}
         <div>
           <label className={labelClasses}>
-            Name <span className="text-red-400">*</span>
+            Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -133,7 +132,7 @@ export default function StudentRegistrationForm({
 
         <div>
           <label className={labelClasses}>
-            Date of Birth <span className="text-red-400">*</span>
+            Date of Birth <span className="text-red-500">*</span>
           </label>
           <input
             type="date"
@@ -145,7 +144,7 @@ export default function StudentRegistrationForm({
 
         <div>
           <label className={labelClasses}>
-            Gender <span className="text-red-400">*</span>
+            Gender <span className="text-red-500">*</span>
           </label>
           <div className="flex gap-3">
             {[
@@ -159,8 +158,8 @@ export default function StudentRegistrationForm({
                 onClick={() => updateField("gender", option.value)}
                 className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${
                   form.gender === option.value
-                    ? "bg-red-600/20 border-red-500 text-red-400"
-                    : "bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600"
+                    ? "bg-red-50 border-red-500 text-red-600"
+                    : "bg-white border-gray-300 text-gray-500 hover:border-gray-400"
                 }`}
               >
                 {option.label}
@@ -170,15 +169,15 @@ export default function StudentRegistrationForm({
         </div>
 
         {/* Under 13 Toggle */}
-        <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-xl">
+        <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
           <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
               checked={isUnder13}
               onChange={(e) => setIsUnder13(e.target.checked)}
-              className="w-5 h-5 rounded border-gray-600 bg-gray-700 text-red-500 focus:ring-red-500 focus:ring-offset-0 accent-red-500"
+              className="w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-500 focus:ring-offset-0 accent-red-500"
             />
-            <span className="text-gray-300 text-sm">
+            <span className="text-gray-600 text-sm">
               I am under 13 years old
             </span>
           </label>
@@ -186,13 +185,13 @@ export default function StudentRegistrationForm({
 
         {/* Parent Fields (conditional) */}
         {isUnder13 && (
-          <div className="space-y-4 p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-xl">
-            <p className="text-yellow-400 text-xs font-medium uppercase tracking-wider">
+          <div className="space-y-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+            <p className="text-amber-700 text-xs font-medium uppercase tracking-wider">
               Parent / Guardian Details
             </p>
             <div>
               <label className={labelClasses}>
-                Parent Name <span className="text-red-400">*</span>
+                Parent Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -204,7 +203,7 @@ export default function StudentRegistrationForm({
             </div>
             <div>
               <label className={labelClasses}>
-                Parent Date of Birth <span className="text-red-400">*</span>
+                Parent Date of Birth <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
@@ -221,10 +220,10 @@ export default function StudentRegistrationForm({
         {/* Optional Fields Divider */}
         <div className="relative py-2">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-700" />
+            <div className="w-full border-t border-gray-200" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="px-3 bg-gray-900 text-gray-500 uppercase tracking-wider">
+            <span className="px-3 bg-white text-gray-400 uppercase tracking-wider">
               Optional Information
             </span>
           </div>
@@ -292,15 +291,15 @@ export default function StudentRegistrationForm({
         </div>
 
         {error && (
-          <div className="px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-            <p className="text-red-400 text-sm">{error}</p>
+          <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
+            <p className="text-red-600 text-sm">{error}</p>
           </div>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-red-600/20 hover:shadow-red-600/30 mt-2"
+          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-red-600/20 hover:shadow-red-600/30 mt-2"
         >
           {loading ? (
             <>

@@ -40,7 +40,6 @@ export default function BecomeACoachPage() {
     if (data.isNewUser) {
       setStep("register");
     } else {
-      // Existing user
       if (data.role === "coach") {
         if (data.verificationStatus === "approved") {
           router.push("/coach");
@@ -50,7 +49,6 @@ export default function BecomeACoachPage() {
       } else if (data.role === "manager") {
         router.push("/manager");
       } else {
-        // Student trying to access coach page — redirect to student dashboard
         router.push("/student");
       }
     }
@@ -66,7 +64,13 @@ export default function BecomeACoachPage() {
     if (!res.ok) throw new Error(data.error);
   };
 
-  const handleRegister = async (formData: Record<string, unknown>) => {
+  const handleRegister = async (formData: {
+    name: string;
+    dateOfBirth: string;
+    fideId: string;
+    fideRating: number;
+    [key: string]: unknown;
+  }) => {
     const res = await fetch("/api/auth/complete-registration", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -75,19 +79,18 @@ export default function BecomeACoachPage() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
 
-    // After coach registration, always show pending
     if (data.role === "coach") {
       setStep("pending");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <div className="p-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-white hover:text-red-400 transition-colors"
+          className="inline-flex items-center gap-2 text-gray-900 hover:text-red-600 transition-colors"
         >
           <Crown className="w-6 h-6 text-red-500" />
           <span className="font-bold text-lg font-[family-name:var(--font-outfit)]">
@@ -109,8 +112,8 @@ export default function BecomeACoachPage() {
                       step === s
                         ? "bg-red-600 text-white"
                         : ["phone", "otp", "register"].indexOf(step) > i
-                          ? "bg-red-600/20 text-red-400 border border-red-500/30"
-                          : "bg-gray-800 text-gray-500"
+                          ? "bg-red-100 text-red-600 border border-red-300"
+                          : "bg-gray-200 text-gray-400"
                     }`}
                   >
                     {i + 1}
@@ -119,8 +122,8 @@ export default function BecomeACoachPage() {
                     <div
                       className={`w-12 h-0.5 ${
                         ["phone", "otp", "register"].indexOf(step) > i
-                          ? "bg-red-600/40"
-                          : "bg-gray-700"
+                          ? "bg-red-300"
+                          : "bg-gray-200"
                       }`}
                     />
                   )}
@@ -129,32 +132,35 @@ export default function BecomeACoachPage() {
             </div>
           )}
 
-          {step === "phone" && (
-            <PhoneEntry
-              onSubmit={handleSendOTP}
-              title="Become a Coach"
-              subtitle="Enter your WhatsApp number to apply"
-            />
-          )}
-          {step === "otp" && (
-            <OTPEntry
-              phoneNumber={phoneNumber}
-              onSubmit={handleVerifyOTP}
-              onResend={handleResendOTP}
-            />
-          )}
-          {step === "register" && (
-            <CoachRegistrationForm onSubmit={handleRegister} />
-          )}
-          {step === "pending" && <CoachPendingApproval />}
+          {/* Card Container */}
+          <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
+            {step === "phone" && (
+              <PhoneEntry
+                onSubmit={handleSendOTP}
+                title="Become a Coach"
+                subtitle="Enter your WhatsApp number to apply"
+              />
+            )}
+            {step === "otp" && (
+              <OTPEntry
+                phoneNumber={phoneNumber}
+                onSubmit={handleVerifyOTP}
+                onResend={handleResendOTP}
+              />
+            )}
+            {step === "register" && (
+              <CoachRegistrationForm onSubmit={handleRegister} />
+            )}
+            {step === "pending" && <CoachPendingApproval />}
+          </div>
 
           {/* Link to student login */}
           {step === "phone" && (
-            <p className="text-center text-gray-500 text-sm mt-8">
+            <p className="text-center text-gray-400 text-sm mt-8">
               Looking to learn?{" "}
               <Link
                 href="/login"
-                className="text-red-400 hover:text-red-300 font-medium transition-colors"
+                className="text-red-500 hover:text-red-600 font-medium transition-colors"
               >
                 Sign in as a Student
               </Link>

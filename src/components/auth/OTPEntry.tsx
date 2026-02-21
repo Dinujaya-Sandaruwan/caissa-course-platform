@@ -21,10 +21,8 @@ export default function OTPEntry({
   const [resending, setResending] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Masked phone number: +94 *** ** 567
   const maskedNumber = `+${phoneNumber.slice(0, 2)} *** ** ${phoneNumber.slice(-3)}`;
 
-  // Cooldown timer
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const timer = setInterval(() => {
@@ -41,7 +39,6 @@ export default function OTPEntry({
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // Auto-focus next input
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -60,8 +57,7 @@ export default function OTPEntry({
       .replace(/\D/g, "")
       .slice(0, 6);
     if (pasted.length === 6) {
-      const newOtp = pasted.split("");
-      setOtp(newOtp);
+      setOtp(pasted.split(""));
       inputRefs.current[5]?.focus();
     }
   };
@@ -111,20 +107,19 @@ export default function OTPEntry({
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/10 mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 mb-4">
           <ShieldCheck className="w-8 h-8 text-red-500" />
         </div>
-        <h1 className="text-3xl font-bold text-white font-[family-name:var(--font-outfit)]">
+        <h1 className="text-3xl font-bold text-gray-900 font-[family-name:var(--font-outfit)]">
           Enter Verification Code
         </h1>
-        <p className="text-gray-400 mt-2">
+        <p className="text-gray-500 mt-2">
           Code sent to{" "}
-          <span className="text-gray-200 font-medium">{maskedNumber}</span>
+          <span className="text-gray-700 font-medium">{maskedNumber}</span>
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* OTP Input Boxes */}
         <div className="flex justify-center gap-3" onPaste={handlePaste}>
           {otp.map((digit, index) => (
             <input
@@ -138,22 +133,22 @@ export default function OTPEntry({
               value={digit}
               onChange={(e) => handleChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
-              className="w-12 h-14 text-center text-xl font-bold bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+              className="w-12 h-14 text-center text-xl font-bold bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
               autoFocus={index === 0}
             />
           ))}
         </div>
 
         {error && (
-          <div className="px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-            <p className="text-red-400 text-sm text-center">{error}</p>
+          <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
+            <p className="text-red-600 text-sm text-center">{error}</p>
           </div>
         )}
 
         <button
           type="submit"
           disabled={loading || otp.join("").length !== 6}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-red-600/20 hover:shadow-red-600/30"
+          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-red-600/20 hover:shadow-red-600/30"
         >
           {loading ? (
             <>
@@ -165,12 +160,11 @@ export default function OTPEntry({
           )}
         </button>
 
-        {/* Resend */}
         <div className="text-center">
           {resendCooldown > 0 ? (
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-400 text-sm">
               Resend code in{" "}
-              <span className="text-gray-300 font-medium">
+              <span className="text-gray-600 font-medium">
                 {resendCooldown}s
               </span>
             </p>
@@ -179,7 +173,7 @@ export default function OTPEntry({
               type="button"
               onClick={handleResend}
               disabled={resending}
-              className="inline-flex items-center gap-1.5 text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-1.5 text-red-500 hover:text-red-600 text-sm font-medium transition-colors"
             >
               {resending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

@@ -39,7 +39,6 @@ export default function LoginPage() {
     if (data.isNewUser) {
       setStep("register");
     } else {
-      // Existing user — redirect based on role
       if (data.role === "coach" && data.verificationStatus === "pending") {
         router.push("/become-a-coach");
       } else if (data.role === "manager") {
@@ -62,7 +61,13 @@ export default function LoginPage() {
     if (!res.ok) throw new Error(data.error);
   };
 
-  const handleRegister = async (formData: Record<string, unknown>) => {
+  const handleRegister = async (formData: {
+    name: string;
+    email?: string;
+    dateOfBirth: string;
+    gender: string;
+    [key: string]: unknown;
+  }) => {
     const res = await fetch("/api/auth/complete-registration", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -74,12 +79,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <div className="p-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-white hover:text-red-400 transition-colors"
+          className="inline-flex items-center gap-2 text-gray-900 hover:text-red-600 transition-colors"
         >
           <Crown className="w-6 h-6 text-red-500" />
           <span className="font-bold text-lg font-[family-name:var(--font-outfit)]">
@@ -100,8 +105,8 @@ export default function LoginPage() {
                     step === s
                       ? "bg-red-600 text-white"
                       : ["phone", "otp", "register"].indexOf(step) > i
-                        ? "bg-red-600/20 text-red-400 border border-red-500/30"
-                        : "bg-gray-800 text-gray-500"
+                        ? "bg-red-100 text-red-600 border border-red-300"
+                        : "bg-gray-200 text-gray-400"
                   }`}
                 >
                   {i + 1}
@@ -110,8 +115,8 @@ export default function LoginPage() {
                   <div
                     className={`w-12 h-0.5 ${
                       ["phone", "otp", "register"].indexOf(step) > i
-                        ? "bg-red-600/40"
-                        : "bg-gray-700"
+                        ? "bg-red-300"
+                        : "bg-gray-200"
                     }`}
                   />
                 )}
@@ -119,25 +124,28 @@ export default function LoginPage() {
             ))}
           </div>
 
-          {step === "phone" && <PhoneEntry onSubmit={handleSendOTP} />}
-          {step === "otp" && (
-            <OTPEntry
-              phoneNumber={phoneNumber}
-              onSubmit={handleVerifyOTP}
-              onResend={handleResendOTP}
-            />
-          )}
-          {step === "register" && (
-            <StudentRegistrationForm onSubmit={handleRegister} />
-          )}
+          {/* Card Container */}
+          <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
+            {step === "phone" && <PhoneEntry onSubmit={handleSendOTP} />}
+            {step === "otp" && (
+              <OTPEntry
+                phoneNumber={phoneNumber}
+                onSubmit={handleVerifyOTP}
+                onResend={handleResendOTP}
+              />
+            )}
+            {step === "register" && (
+              <StudentRegistrationForm onSubmit={handleRegister} />
+            )}
+          </div>
 
           {/* Link to coach signup */}
           {step === "phone" && (
-            <p className="text-center text-gray-500 text-sm mt-8">
+            <p className="text-center text-gray-400 text-sm mt-8">
               Want to teach?{" "}
               <Link
                 href="/become-a-coach"
-                className="text-red-400 hover:text-red-300 font-medium transition-colors"
+                className="text-red-500 hover:text-red-600 font-medium transition-colors"
               >
                 Apply as a Coach
               </Link>

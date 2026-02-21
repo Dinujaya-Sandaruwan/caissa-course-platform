@@ -49,22 +49,22 @@ export default function PhoneEntry({
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/10 mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 mb-4">
           <Phone className="w-8 h-8 text-red-500" />
         </div>
-        <h1 className="text-3xl font-bold text-white font-[family-name:var(--font-outfit)]">
+        <h1 className="text-3xl font-bold text-gray-900 font-[family-name:var(--font-outfit)]">
           {title}
         </h1>
-        <p className="text-gray-400 mt-2">{subtitle}</p>
+        <p className="text-gray-500 mt-2">{subtitle}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             WhatsApp Number
           </label>
           <div className="flex gap-2">
-            <div className="flex items-center px-4 bg-gray-800 border border-gray-700 rounded-xl text-gray-300 text-sm font-medium">
+            <div className="flex items-center px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-600 text-sm font-medium">
               +94
             </div>
             <input
@@ -75,7 +75,7 @@ export default function PhoneEntry({
                 setError("");
               }}
               placeholder="7X XXX XXXX"
-              className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+              className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
               maxLength={10}
               autoFocus
             />
@@ -83,15 +83,15 @@ export default function PhoneEntry({
         </div>
 
         {error && (
-          <div className="px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-            <p className="text-red-400 text-sm">{error}</p>
+          <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
+            <p className="text-red-600 text-sm">{error}</p>
           </div>
         )}
 
         <button
           type="submit"
           disabled={loading || !phoneNumber.trim()}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-red-600/20 hover:shadow-red-600/30"
+          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-red-600/20 hover:shadow-red-600/30"
         >
           {loading ? (
             <>

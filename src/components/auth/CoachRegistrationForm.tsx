@@ -104,28 +104,27 @@ export default function CoachRegistrationForm({
   };
 
   const inputClasses =
-    "w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors";
-  const labelClasses = "block text-sm font-medium text-gray-300 mb-1.5";
+    "w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors";
+  const labelClasses = "block text-sm font-medium text-gray-700 mb-1.5";
 
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/10 mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 mb-4">
           <GraduationCap className="w-8 h-8 text-red-500" />
         </div>
-        <h1 className="text-3xl font-bold text-white font-[family-name:var(--font-outfit)]">
+        <h1 className="text-3xl font-bold text-gray-900 font-[family-name:var(--font-outfit)]">
           Coach Application
         </h1>
-        <p className="text-gray-400 mt-2">
+        <p className="text-gray-500 mt-2">
           Tell us about yourself to get started
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Required Fields */}
         <div>
           <label className={labelClasses}>
-            Name <span className="text-red-400">*</span>
+            Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -139,7 +138,7 @@ export default function CoachRegistrationForm({
 
         <div>
           <label className={labelClasses}>
-            Date of Birth <span className="text-red-400">*</span>
+            Date of Birth <span className="text-red-500">*</span>
           </label>
           <input
             type="date"
@@ -152,7 +151,7 @@ export default function CoachRegistrationForm({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelClasses}>
-              FIDE ID <span className="text-red-400">*</span>
+              FIDE ID <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -164,7 +163,7 @@ export default function CoachRegistrationForm({
           </div>
           <div>
             <label className={labelClasses}>
-              FIDE Rating <span className="text-red-400">*</span>
+              FIDE Rating <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
@@ -179,10 +178,10 @@ export default function CoachRegistrationForm({
         {/* Optional Fields Divider */}
         <div className="relative py-2">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-700" />
+            <div className="w-full border-t border-gray-200" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="px-3 bg-gray-900 text-gray-500 uppercase tracking-wider">
+            <span className="px-3 bg-white text-gray-400 uppercase tracking-wider">
               Optional Information
             </span>
           </div>
@@ -255,15 +254,15 @@ export default function CoachRegistrationForm({
         </div>
 
         {error && (
-          <div className="px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-            <p className="text-red-400 text-sm">{error}</p>
+          <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
+            <p className="text-red-600 text-sm">{error}</p>
           </div>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-red-600/20 hover:shadow-red-600/30 mt-2"
+          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-red-600/20 hover:shadow-red-600/30 mt-2"
         >
           {loading ? (
             <>
@@ -275,7 +274,7 @@ export default function CoachRegistrationForm({
           )}
         </button>
 
-        <p className="text-gray-500 text-xs text-center mt-2">
+        <p className="text-gray-400 text-xs text-center mt-2">
           Your application will be reviewed by our team. You&apos;ll be notified
           once approved.
         </p>
