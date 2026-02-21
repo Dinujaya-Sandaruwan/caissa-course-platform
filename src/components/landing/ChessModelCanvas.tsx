@@ -10,8 +10,8 @@ function Model() {
     <primitive
       object={scene}
       scale={1.5}
-      position={[0, 1.5, 0]}
-      rotation={[0, -Math.PI / 6, 0]}
+      position={[0, 1.6, 0]}
+      rotation={[0, -Math.PI / 5, Math.PI / -10]}
     />
   );
 }
