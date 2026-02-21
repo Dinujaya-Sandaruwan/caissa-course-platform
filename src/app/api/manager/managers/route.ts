@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
+import bcrypt from "bcryptjs";
 
 export async function GET() {
   try {
@@ -33,11 +34,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, whatsappNumber } = await req.json();
+    const { name, whatsappNumber, username, password } = await req.json();
 
-    if (!name || !whatsappNumber) {
+    if (!name || !whatsappNumber || !username || !password) {
       return NextResponse.json(
-        { error: "Name and WhatsApp number are required" },
+        { error: "Name, WhatsApp number, username, and password are required" },
         { status: 400 },
       );
     }
@@ -52,22 +53,44 @@ export async function POST(req: NextRequest) {
         ? cleaned
         : `94${cleaned}`;
 
-    const existingUser = await User.findOne({ whatsappNumber: fullNumber });
+    const existingUser = await User.findOne({
+      $or: [{ whatsappNumber: fullNumber }, { username }],
+    });
+
     if (existingUser) {
+      if (existingUser.username === username) {
+        return NextResponse.json(
+          { error: "A user with this username already exists" },
+          { status: 400 },
+        );
+      }
       return NextResponse.json(
         { error: "A user with this WhatsApp number already exists" },
         { status: 400 },
       );
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const newManager = await User.create({
       name,
       whatsappNumber: fullNumber,
+      username,
+      password: hashedPassword,
       role: "manager",
       status: "active",
     });
 
-    return NextResponse.json(newManager, { status: 201 });
+    return NextResponse.json(
+      {
+        _id: newManager._id,
+        name: newManager.name,
+        whatsappNumber: newManager.whatsappNumber,
+        status: newManager.status,
+        createdAt: newManager.createdAt,
+      },
+      { status: 201 },
+    );
   } catch (error) {
     console.error("Error creating manager:", error);
     return NextResponse.json(

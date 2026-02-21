@@ -21,6 +21,8 @@ export default function ManagersPage() {
   // Form state
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  const [newUsername, setNewUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -48,7 +50,12 @@ export default function ManagersPage() {
       const res = await fetch("/api/manager/managers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName, whatsappNumber: newPhone }),
+        body: JSON.stringify({
+          name: newName,
+          whatsappNumber: newPhone,
+          username: newUsername,
+          password: newPassword,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -56,6 +63,8 @@ export default function ManagersPage() {
       setIsAddModalOpen(false);
       setNewName("");
       setNewPhone("");
+      setNewUsername("");
+      setNewPassword("");
       fetchManagers();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to add manager");
@@ -278,6 +287,34 @@ export default function ManagersPage() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 font-medium transition-all"
+                  placeholder="e.g. manager123"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 font-medium transition-all"
+                  placeholder="Secure password"
+                />
+              </div>
+
               <div className="pt-6 flex gap-3">
                 <button
                   type="button"
@@ -288,7 +325,13 @@ export default function ManagersPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting || !newName || !newPhone}
+                  disabled={
+                    isSubmitting ||
+                    !newName ||
+                    !newPhone ||
+                    !newUsername ||
+                    !newPassword
+                  }
                   className="flex-1 px-4 py-3 text-sm font-bold bg-red-600 text-white rounded-xl hover:bg-red-500 disabled:opacity-50 shadow-[0_4px_14px_rgba(220,38,38,0.25)] transition-all transform hover:-translate-y-0.5"
                 >
                   {isSubmitting ? "Adding..." : "Add Manager"}
