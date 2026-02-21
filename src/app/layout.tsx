@@ -24,8 +24,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Caissa Course Platform",
-  description: "Learn chess from expert coaches",
+  title: "Caissa Chess Academy — Learn Chess from Expert Coaches",
+  description:
+    "Sri Lanka's first premium chess learning platform. Master the game with structured video courses from titled players and Grandmasters.",
+  icons: {
+    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♞</text></svg>",
+  },
 };
 
 export default function RootLayout({
