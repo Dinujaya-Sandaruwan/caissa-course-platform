@@ -7,7 +7,6 @@ import Link from "next/link";
 import PhoneEntry from "@/components/auth/PhoneEntry";
 import OTPEntry from "@/components/auth/OTPEntry";
 import CoachRegistrationForm from "@/components/auth/CoachRegistrationForm";
-import CoachPendingApproval from "@/components/auth/CoachPendingApproval";
 
 type Step = "phone" | "otp" | "register" | "pending";
 
@@ -44,7 +43,7 @@ export default function BecomeACoachPage() {
         if (data.verificationStatus === "approved") {
           router.push("/coach");
         } else {
-          setStep("pending");
+          router.push("/coach/pending");
         }
       } else if (data.role === "manager") {
         router.push("/manager");
@@ -75,7 +74,7 @@ export default function BecomeACoachPage() {
     if (!res.ok) throw new Error(data.error);
 
     if (data.role === "coach") {
-      setStep("pending");
+      router.push("/coach/pending");
     }
   };
 
@@ -165,7 +164,6 @@ export default function BecomeACoachPage() {
             {step === "register" && (
               <CoachRegistrationForm onSubmit={handleRegister} />
             )}
-            {step === "pending" && <CoachPendingApproval />}
           </div>
 
           {/* Link to student login */}

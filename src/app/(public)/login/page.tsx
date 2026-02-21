@@ -40,7 +40,7 @@ export default function LoginPage() {
       setStep("register");
     } else {
       if (data.role === "coach" && data.verificationStatus === "pending") {
-        router.push("/become-a-coach");
+        router.push("/coach/pending");
       } else if (data.role === "manager") {
         router.push("/manager");
       } else if (data.role === "coach") {
