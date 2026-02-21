@@ -6,73 +6,90 @@ export default function ManagerDashboardPage() {
       title: "Pending Coach Approvals",
       value: "0",
       icon: Users,
-      trend: "+0 this week",
-      color: "text-amber-600",
-      bgColor: "bg-amber-100",
+      trend: "Requires review",
+      iconBg: "from-rose-500 to-red-600",
+      shadowColor: "shadow-red-500/20",
     },
     {
       title: "Pending Course Reviews",
       value: "0",
       icon: Video,
-      trend: "Requires attention",
-      color: "text-blue-600",
-      bgColor: "bg-blue-100",
+      trend: "Awaiting publication",
+      iconBg: "from-orange-400 to-red-500",
+      shadowColor: "shadow-red-500/20",
     },
     {
       title: "Pending Receipt Reviews",
       value: "0",
       icon: ReceiptText,
       trend: "Recent payments",
-      color: "text-purple-600",
-      bgColor: "bg-purple-100",
+      iconBg: "from-pink-500 to-rose-600",
+      shadowColor: "shadow-rose-500/20",
     },
     {
       title: "Total Published Courses",
       value: "0",
       icon: BookOpen,
       trend: "Active on platform",
-      color: "text-green-600",
-      bgColor: "bg-green-100",
+      iconBg: "from-gray-800 to-gray-900",
+      shadowColor: "shadow-gray-900/20",
     },
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 font-[family-name:var(--font-outfit)]">
-          Dashboard Overview
-        </h1>
-        <p className="text-gray-500 mt-1">
-          Monitor platform activity and pending approvals.
-        </p>
+    <div className="space-y-10 relative z-10">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
+            Dashboard Overview
+          </h1>
+          <p className="text-gray-500 mt-2 text-lg">
+            Monitor platform activity and pending approvals.
+          </p>
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Premium Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
         {stats.map((stat) => (
           <div
             key={stat.title}
-            className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+            className="group relative bg-white rounded-[2rem] p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_30px_60px_rgba(220,38,38,0.08)] shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5"
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col h-full justify-between">
               <div
-                className={`w-12 h-12 rounded-lg flex items-center justify-center ${stat.bgColor}`}
+                className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br ${stat.iconBg} shadow-lg ${stat.shadowColor} mb-6 transition-transform duration-300 group-hover:scale-110`}
               >
-                <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                <stat.icon className="w-6 h-6 text-white" />
               </div>
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-1">
-                {stat.value}
-              </h3>
-              <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-              <p className="text-xs text-gray-500 mt-2">{stat.trend}</p>
+
+              <div>
+                <h3 className="text-5xl font-black text-gray-900 tracking-tight mb-2">
+                  {stat.value}
+                </h3>
+                <p className="text-base font-semibold text-gray-700 leading-snug">
+                  {stat.title}
+                </p>
+                <p className="text-sm text-gray-400 mt-3 font-medium bg-gray-50 inline-block px-3 py-1 rounded-full">
+                  {stat.trend}
+                </p>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Quick Actions / Recent Activity placeholders could go here later */}
+      {/* Ambient background watermark (fixed to bottom right of the canvas) */}
+      <div className="fixed bottom-[-10%] right-[-5%] overflow-hidden pointer-events-none opacity-[0.03] z-[-1]">
+        <svg
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-[800px] h-[800px] text-gray-900"
+        >
+          <path d="M19 22H5V20H19V22ZM17 18H7V15L9 12H15L17 15V18ZM15 10H9L12 4L15 10Z" />
+        </svg>
+      </div>
     </div>
   );
 }
