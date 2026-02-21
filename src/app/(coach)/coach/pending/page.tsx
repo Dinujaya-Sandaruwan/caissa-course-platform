@@ -34,14 +34,17 @@ export default async function CoachPendingPage() {
 
       {/* Header */}
       <header className="absolute top-0 w-full py-8 px-8 flex justify-between items-center z-10">
-        <Link href="/" className="flex items-center gap-2 group">
-          <span className="font-[family-name:var(--font-outfit)] font-black text-2xl text-gray-900 tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-red-600/20 group-hover:scale-105 transition-transform duration-300">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                <path d="M19 22H5V20H19V22ZM17 18H7V15L9 12H15L17 15V18ZM15 10H9L12 4L15 10Z" />
-              </svg>
-            </div>
-            Caissa <span className="text-red-600 font-light">Coach</span>
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-10 h-10 group-hover:scale-105 transition-transform">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="Caissa Chess Courses Logo"
+              className="object-contain w-full h-full"
+            />
+          </div>
+          <span className="font-[family-name:var(--font-outfit)] font-bold text-lg text-gray-900">
+            Caissa <span className="text-red-600">Chess Courses</span>
           </span>
         </Link>
         <form action="/api/auth/logout" method="POST">
