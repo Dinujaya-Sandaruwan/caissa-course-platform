@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { GraduationCap, Loader2 } from "lucide-react";
+import { Loader2, Crown } from "lucide-react";
 
 interface CoachRegistrationData {
   name: string;
@@ -104,51 +104,52 @@ export default function CoachRegistrationForm({
   };
 
   const inputClasses =
-    "w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors";
-  const labelClasses = "block text-sm font-medium text-gray-700 mb-1.5";
+    "w-full px-5 py-3.5 bg-slate-50 border border-gray-100 rounded-xl text-gray-900 font-medium placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all";
+  const labelClasses = "block text-sm font-bold text-gray-700 mb-2";
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 mb-4">
-          <GraduationCap className="w-8 h-8 text-red-500" />
+    <div className="w-full max-w-2xl mx-auto animate-[fade-in-up_0.4s_ease-out]">
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-[1.5rem] bg-red-600 shadow-xl shadow-red-600/20 mb-6 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+          <Crown className="w-10 h-10 text-white" strokeWidth={2.5} />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 font-[family-name:var(--font-outfit)]">
-          Coach Application
+        <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
+          Complete Your Profile
         </h1>
-        <p className="text-gray-500 mt-2">
-          Tell us about yourself to get started
+        <p className="text-gray-500 mt-3 text-lg">
+          Tell us about your chess journey and credentials
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className={labelClasses}>
-            Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) => updateField("name", e.target.value)}
-            placeholder="Your full name"
-            className={inputClasses}
-            autoFocus
-          />
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Core Info Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="sm:col-span-2">
+            <label className={labelClasses}>
+              Full Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => updateField("name", e.target.value)}
+              placeholder="e.g. Magnus Carlsen"
+              className={inputClasses}
+              autoFocus
+            />
+          </div>
 
-        <div>
-          <label className={labelClasses}>
-            Date of Birth <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="date"
-            value={form.dateOfBirth}
-            onChange={(e) => updateField("dateOfBirth", e.target.value)}
-            className={inputClasses}
-          />
-        </div>
+          <div>
+            <label className={labelClasses}>
+              Date of Birth <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={form.dateOfBirth}
+              onChange={(e) => updateField("dateOfBirth", e.target.value)}
+              className={inputClasses}
+            />
+          </div>
 
-        <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelClasses}>
               FIDE ID <span className="text-red-500">*</span>
@@ -176,107 +177,112 @@ export default function CoachRegistrationForm({
         </div>
 
         {/* Optional Fields Divider */}
-        <div className="relative py-2">
+        <div className="relative py-4">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
+            <div className="w-full border-t border-gray-100" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="px-3 bg-white text-gray-400 uppercase tracking-wider">
+            <span className="px-4 bg-white text-gray-400 font-bold uppercase tracking-wider">
               Optional Information
             </span>
           </div>
         </div>
 
-        <div>
-          <label className={labelClasses}>Address</label>
-          <input
-            type="text"
-            value={form.address}
-            onChange={(e) => updateField("address", e.target.value)}
-            placeholder="Your address"
-            className={inputClasses}
-          />
-        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label className={labelClasses}>Email Address</label>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => updateField("email", e.target.value)}
+              placeholder="you@example.com"
+              className={inputClasses}
+            />
+          </div>
+          <div>
+            <label className={labelClasses}>City / Location</label>
+            <input
+              type="text"
+              value={form.address}
+              onChange={(e) => updateField("address", e.target.value)}
+              placeholder="Your address"
+              className={inputClasses}
+            />
+          </div>
 
-        <div>
-          <label className={labelClasses}>Bio</label>
-          <textarea
-            value={form.bio}
-            onChange={(e) => updateField("bio", e.target.value)}
-            placeholder="Tell students about yourself..."
-            rows={3}
-            className={`${inputClasses} resize-none`}
-          />
-        </div>
+          <div className="sm:col-span-2">
+            <label className={labelClasses}>Short Bio</label>
+            <textarea
+              value={form.bio}
+              onChange={(e) => updateField("bio", e.target.value)}
+              placeholder="Tell students about your coaching style and philosophy..."
+              rows={3}
+              className={`${inputClasses} resize-none`}
+            />
+          </div>
 
-        <div>
-          <label className={labelClasses}>Specializations</label>
-          <input
-            type="text"
-            value={form.specializations}
-            onChange={(e) => updateField("specializations", e.target.value)}
-            placeholder="e.g. Openings, Endgames, Tactics (comma separated)"
-            className={inputClasses}
-          />
-        </div>
+          <div className="sm:col-span-2">
+            <label className={labelClasses}>Specializations</label>
+            <input
+              type="text"
+              value={form.specializations}
+              onChange={(e) => updateField("specializations", e.target.value)}
+              placeholder="e.g. Openings, Endgames, Tactics (comma separated)"
+              className={inputClasses}
+            />
+          </div>
 
-        <div>
-          <label className={labelClasses}>Top Achievements as Coach</label>
-          <textarea
-            value={form.coachAchievements}
-            onChange={(e) => updateField("coachAchievements", e.target.value)}
-            placeholder="One achievement per line..."
-            rows={2}
-            className={`${inputClasses} resize-none`}
-          />
-        </div>
+          <div>
+            <label className={labelClasses}>Top Achievements as Coach</label>
+            <textarea
+              value={form.coachAchievements}
+              onChange={(e) => updateField("coachAchievements", e.target.value)}
+              placeholder="One achievement per line..."
+              rows={4}
+              className={`${inputClasses} resize-none`}
+            />
+          </div>
 
-        <div>
-          <label className={labelClasses}>Top Achievements as Player</label>
-          <textarea
-            value={form.playerAchievements}
-            onChange={(e) => updateField("playerAchievements", e.target.value)}
-            placeholder="One achievement per line..."
-            rows={2}
-            className={`${inputClasses} resize-none`}
-          />
-        </div>
-
-        <div>
-          <label className={labelClasses}>Email</label>
-          <input
-            type="email"
-            value={form.email}
-            onChange={(e) => updateField("email", e.target.value)}
-            placeholder="you@example.com"
-            className={inputClasses}
-          />
+          <div>
+            <label className={labelClasses}>Top Achievements as Player</label>
+            <textarea
+              value={form.playerAchievements}
+              onChange={(e) =>
+                updateField("playerAchievements", e.target.value)
+              }
+              placeholder="One achievement per line..."
+              rows={4}
+              className={`${inputClasses} resize-none`}
+            />
+          </div>
         </div>
 
         {error && (
-          <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
-            <p className="text-red-600 text-sm">{error}</p>
+          <div className="px-5 py-4 bg-red-50 border border-red-100 rounded-xl mt-6">
+            <p className="text-red-600 text-sm font-bold">{error}</p>
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-red-600 hover:bg-red-700 disabled:bg-red-200 disabled:text-red-400 disabled:shadow-none disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-red-600/20 hover:shadow-red-600/30 mt-2"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Submitting Application...
-            </>
-          ) : (
-            "Submit Application"
-          )}
-        </button>
+        <div className="pt-4">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-red-600 hover:bg-red-500 disabled:bg-red-200 disabled:text-red-400 disabled:shadow-none disabled:cursor-not-allowed text-white text-lg font-extrabold rounded-2xl transition-all duration-300 shadow-[0_8px_20px_rgba(220,38,38,0.25)] hover:shadow-[0_12px_25px_rgba(220,38,38,0.35)] hover:-translate-y-1"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-6 h-6 animate-spin" />
+                Submitting Application...
+              </>
+            ) : (
+              "Submit Application"
+            )}
+          </button>
+        </div>
 
-        <p className="text-gray-400 text-xs text-center mt-2">
-          Your application will be reviewed by our team. You&apos;ll be notified
-          once approved.
+        <p className="text-gray-400 text-sm font-medium text-center mt-4">
+          Your application will be securely processed and reviewed by our
+          verification team.
         </p>
       </form>
     </div>

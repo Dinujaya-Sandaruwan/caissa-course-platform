@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Crown } from "lucide-react";
 import Link from "next/link";
 import PhoneEntry from "@/components/auth/PhoneEntry";
 import OTPEntry from "@/components/auth/OTPEntry";
@@ -79,106 +78,128 @@ export default function BecomeACoachPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <div className="p-6">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-gray-900 hover:text-red-600 transition-colors"
-        >
-          <Crown className="w-6 h-6 text-red-500" />
-          <span className="font-bold text-lg font-[family-name:var(--font-outfit)]">
-            Caissa Chess
-          </span>
-        </Link>
+    <div className="min-h-screen relative bg-white">
+      {/* Background — matching login and hero section style */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-40" />
+        <div className="absolute top-0 right-1/4 h-[500px] w-[500px] rounded-full bg-red-500/8 blur-[120px]" />
+        <div className="absolute bottom-0 left-1/4 h-[400px] w-[400px] rounded-full bg-red-400/6 blur-[100px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-red-50/50 blur-[150px]" />
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex items-center justify-center px-4 pb-12">
-        <div className="w-full max-w-md">
-          {/* Step Indicators (hidden on pending) */}
-          {step !== "pending" && (
-            <div className="flex items-center justify-center gap-2 mb-8">
-              {["phone", "otp", "register"].map((s, i) => (
-                <div key={s} className="flex items-center gap-2">
-                  <div className="flex flex-col items-center gap-2">
-                    <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-                        step === s
-                          ? "bg-red-600 text-white shadow-xl shadow-red-500/25 scale-110"
-                          : ["phone", "otp", "register"].indexOf(step) > i
-                            ? "bg-red-100 text-red-600"
-                            : "bg-white text-gray-400 border border-gray-200 shadow-sm"
-                      }`}
-                    >
-                      {["phone", "otp", "register"].indexOf(step) > i
-                        ? "✓"
-                        : i + 1}
-                    </div>
-                    <span
-                      className={`text-xs sm:text-sm font-semibold tracking-wide ${
-                        step === s
-                          ? "text-red-600"
-                          : ["phone", "otp", "register"].indexOf(step) > i
-                            ? "text-red-500"
-                            : "text-gray-400"
-                      }`}
-                    >
-                      {s === "phone"
-                        ? "Phone"
-                        : s === "otp"
-                          ? "Verify"
-                          : "Profile"}
-                    </span>
-                  </div>
-                  {i < 2 && (
-                    <div
-                      className={`w-12 sm:w-16 h-[3px] rounded-full mb-6 transition-colors duration-500 ${
-                        ["phone", "otp", "register"].indexOf(step) > i
-                          ? "bg-red-400"
-                          : "bg-gray-200"
-                      }`}
-                    />
-                  )}
-                </div>
-              ))}
+      <div className="relative z-10 flex flex-col min-h-screen">
+        {/* Header */}
+        <header className="px-6 py-5 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-10 h-10 group-hover:scale-105 transition-transform">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo.png"
+                alt="Caissa Chess Courses Logo"
+                className="object-contain w-full h-full"
+              />
             </div>
-          )}
+            <span className="font-[family-name:var(--font-outfit)] font-bold text-lg text-gray-900">
+              Caissa <span className="text-red-600">Coach</span>
+            </span>
+          </Link>
+        </header>
 
-          {/* Card Container */}
-          <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
+        {/* Main Form Area */}
+        <main className="flex-1 flex items-center justify-center px-4 py-12">
+          <div
+            className={`w-full ${step === "register" ? "max-w-4xl" : "max-w-md"} transition-all duration-500`}
+          >
+            {/* Step Indicators (hidden on pending) */}
+            {step !== "pending" && (
+              <div className="flex items-center justify-center gap-2 mb-8">
+                {["phone", "otp", "register"].map((s, i) => (
+                  <div key={s} className="flex items-center gap-2">
+                    <div className="flex flex-col items-center gap-2">
+                      <div
+                        className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                          step === s
+                            ? "bg-red-600 text-white shadow-xl shadow-red-500/25 scale-110"
+                            : ["phone", "otp", "register"].indexOf(step) > i
+                              ? "bg-red-100 text-red-600"
+                              : "bg-white text-gray-400 border border-gray-200 shadow-sm"
+                        }`}
+                      >
+                        {["phone", "otp", "register"].indexOf(step) > i
+                          ? "✓"
+                          : i + 1}
+                      </div>
+                      <span
+                        className={`text-xs sm:text-sm font-semibold tracking-wide ${
+                          step === s
+                            ? "text-red-600"
+                            : ["phone", "otp", "register"].indexOf(step) > i
+                              ? "text-red-500"
+                              : "text-gray-400"
+                        }`}
+                      >
+                        {s === "phone"
+                          ? "Phone"
+                          : s === "otp"
+                            ? "Verify"
+                            : "Profile"}
+                      </span>
+                    </div>
+                    {i < 2 && (
+                      <div
+                        className={`w-12 sm:w-16 h-[3px] rounded-full mb-6 transition-colors duration-500 ${
+                          ["phone", "otp", "register"].indexOf(step) > i
+                            ? "bg-red-400"
+                            : "bg-gray-200"
+                        }`}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Card Container */}
+            <div className="bg-white rounded-[2rem] shadow-[0_30px_60px_rgba(0,0,0,0.06)] border border-gray-100 p-8 sm:p-12 relative overflow-hidden">
+              {/* Subtle card glow */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-red-50 rounded-full blur-3xl opacity-50 pointer-events-none -translate-y-1/2 translate-x-1/2" />
+
+              <div className="relative z-10">
+                {step === "phone" && (
+                  <PhoneEntry
+                    onSubmit={handleSendOTP}
+                    title="Become a Coach"
+                    subtitle="Enter your WhatsApp number to apply"
+                  />
+                )}
+                {step === "otp" && (
+                  <OTPEntry
+                    phoneNumber={phoneNumber}
+                    onSubmit={handleVerifyOTP}
+                    onResend={handleResendOTP}
+                  />
+                )}
+                {step === "register" && (
+                  <CoachRegistrationForm onSubmit={handleRegister} />
+                )}
+              </div>
+            </div>
+
+            {/* Link to student login */}
             {step === "phone" && (
-              <PhoneEntry
-                onSubmit={handleSendOTP}
-                title="Become a Coach"
-                subtitle="Enter your WhatsApp number to apply"
-              />
-            )}
-            {step === "otp" && (
-              <OTPEntry
-                phoneNumber={phoneNumber}
-                onSubmit={handleVerifyOTP}
-                onResend={handleResendOTP}
-              />
-            )}
-            {step === "register" && (
-              <CoachRegistrationForm onSubmit={handleRegister} />
+              <p className="text-center text-gray-500 font-medium text-sm mt-8">
+                Looking to learn?{" "}
+                <Link
+                  href="/login"
+                  className="text-red-600 hover:text-red-700 font-bold transition-colors hover:underline"
+                >
+                  Sign in as a Student
+                </Link>
+              </p>
             )}
           </div>
-
-          {/* Link to student login */}
-          {step === "phone" && (
-            <p className="text-center text-gray-400 text-sm mt-8">
-              Looking to learn?{" "}
-              <Link
-                href="/login"
-                className="text-red-500 hover:text-red-600 font-medium transition-colors"
-              >
-                Sign in as a Student
-              </Link>
-            </p>
-          )}
-        </div>
+        </main>
       </div>
     </div>
   );
