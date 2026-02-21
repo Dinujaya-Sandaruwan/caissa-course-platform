@@ -120,6 +120,20 @@
             "description": "Clears the session cookie and logs the user out."
           },
           "response": []
+        },
+        {
+          "name": "Get Session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/session",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "session"]
+            },
+            "description": "Returns the current authenticated user's userId, role, and whatsappNumber. Returns 401 if not logged in."
+          },
+          "response": []
         }
       ]
     }
