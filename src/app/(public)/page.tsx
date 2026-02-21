@@ -4,6 +4,7 @@ import StatsBar from "@/components/landing/StatsBar";
 import FeaturedCourses from "@/components/landing/FeaturedCourses";
 import HowItWorks from "@/components/landing/HowItWorks";
 import LMSBanner from "@/components/landing/LMSBanner";
+import Footer from "@/components/landing/Footer";
 
 export default function LandingPage() {
   return (
@@ -16,6 +17,7 @@ export default function LandingPage() {
         <HowItWorks />
         <LMSBanner />
       </main>
+      <Footer />
     </>
   );
 }
