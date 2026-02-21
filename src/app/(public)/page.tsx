@@ -3,6 +3,7 @@ import HeroSection from "@/components/landing/HeroSection";
 import StatsBar from "@/components/landing/StatsBar";
 import FeaturedCourses from "@/components/landing/FeaturedCourses";
 import HowItWorks from "@/components/landing/HowItWorks";
+import LMSBanner from "@/components/landing/LMSBanner";
 
 export default function LandingPage() {
   return (
@@ -13,6 +14,7 @@ export default function LandingPage() {
         <StatsBar />
         <FeaturedCourses />
         <HowItWorks />
+        <LMSBanner />
       </main>
     </>
   );
