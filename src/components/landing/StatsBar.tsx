@@ -1,10 +1,4 @@
-import {
-  BookOpen,
-  Users,
-  GraduationCap,
-  Layers,
-  TrendingUp,
-} from "lucide-react";
+import { BookOpen, Users, GraduationCap, TrendingUp } from "lucide-react";
 
 const stats = [
   {

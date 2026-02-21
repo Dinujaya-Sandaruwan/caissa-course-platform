@@ -100,6 +100,7 @@ export default function LoginPage() {
         <header className="px-6 py-5 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="w-10 h-10 group-hover:scale-105 transition-transform">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/logo.png"
                 alt="Caissa Chess Courses Logo"
