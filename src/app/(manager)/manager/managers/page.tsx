@@ -90,58 +90,59 @@ export default function ManagersPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-8 relative z-10">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 font-[family-name:var(--font-outfit)]">
+          <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
             Platform Managers
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-gray-500 mt-2 text-lg">
             Manage admin access and permissions.
           </p>
         </div>
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors"
+          className="group flex items-center gap-2.5 px-6 py-3 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-full transition-all duration-300 shadow-[0_8px_20px_rgba(220,38,38,0.25)] hover:shadow-[0_12px_25px_rgba(220,38,38,0.35)] hover:-translate-y-0.5"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-5 h-5 transition-transform group-hover:rotate-90" />
           Add Manager
         </button>
       </div>
 
       {/* Filters/Search */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="bg-white p-2 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-gray-900/5 max-w-md">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
             placeholder="Search by name or number..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 text-sm placeholder-gray-400"
+            className="w-full pl-12 pr-4 py-3 bg-transparent border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 text-sm font-medium text-gray-900 placeholder-gray-400 transition-all"
           />
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-8 py-5 text-left text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50">
                   Manager
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-8 py-5 text-left text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50">
                   WhatsApp
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-8 py-5 text-left text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-8 py-5 text-left text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50">
                   Joined
                 </th>
-                <th className="relative px-6 py-3">
+                <th className="px-8 py-5 right text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50">
                   <span className="sr-only">Actions</span>
                 </th>
               </tr>
@@ -168,44 +169,47 @@ export default function ManagersPage() {
                 </tr>
               ) : (
                 filteredManagers.map((manager) => (
-                  <tr key={manager._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold text-sm">
+                  <tr
+                    key={manager._id}
+                    className="hover:bg-slate-50/80 transition-colors group"
+                  >
+                    <td className="px-8 py-5 whitespace-nowrap">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-600 font-bold text-sm shadow-sm group-hover:bg-red-600 group-hover:text-white transition-colors">
                           {manager.name.charAt(0).toUpperCase()}
                         </div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-bold text-gray-900">
                           {manager.name}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-8 py-5 whitespace-nowrap text-sm font-medium text-gray-500">
                       +{manager.whatsappNumber}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-8 py-5 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
                           manager.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                            ? "bg-emerald-50 text-emerald-600 border border-emerald-200/50"
+                            : "bg-red-50 text-red-600 border border-red-200/50"
                         }`}
                       >
                         {manager.status.charAt(0).toUpperCase() +
                           manager.status.slice(1)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-8 py-5 whitespace-nowrap text-sm font-medium text-gray-500">
                       {new Date(manager.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-8 py-5 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() =>
                           handleStatusChange(manager._id, manager.status)
                         }
-                        className={`text-sm ${
+                        className={`text-sm px-4 py-2 rounded-lg font-bold transition-all ${
                           manager.status === "active"
-                            ? "text-red-600 hover:text-red-900"
-                            : "text-green-600 hover:text-green-900"
+                            ? "text-red-500 hover:bg-red-50"
+                            : "text-emerald-600 hover:bg-emerald-50"
                         }`}
                       >
                         {manager.status === "active" ? "Suspend" : "Activate"}
@@ -221,28 +225,28 @@ export default function ManagersPage() {
 
       {/* Add Manager Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900 font-[family-name:var(--font-outfit)]">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.15)] w-full max-w-md overflow-hidden transform transition-all">
+            <div className="px-8 py-6 flex justify-between items-center">
+              <h3 className="text-2xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
                 Add New Manager
               </h3>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
               >
                 ✕
               </button>
             </div>
-            <form onSubmit={handleAddManager} className="p-6 space-y-4">
+            <form onSubmit={handleAddManager} className="px-8 pb-8 space-y-5">
               {error && (
-                <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                <div className="p-4 bg-red-50 text-red-600 text-sm font-medium rounded-2xl border border-red-100/50">
                   {error}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-bold text-gray-700 mb-2">
                   Full Name
                 </label>
                 <input
@@ -250,37 +254,42 @@ export default function ManagersPage() {
                   required
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 font-medium transition-all"
                   placeholder="e.g. Jane Doe"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-bold text-gray-700 mb-2">
                   WhatsApp Number
                 </label>
-                <input
-                  type="tel"
-                  required
-                  value={newPhone}
-                  onChange={(e) => setNewPhone(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
-                  placeholder="e.g. 771234567"
-                />
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
+                    +94
+                  </span>
+                  <input
+                    type="tel"
+                    required
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 font-medium transition-all"
+                    placeholder="771234567"
+                  />
+                </div>
               </div>
 
-              <div className="pt-4 flex justify-end gap-3">
+              <div className="pt-6 flex gap-3">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
+                  className="flex-1 px-4 py-3 text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 rounded-xl transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || !newName || !newPhone}
-                  className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                  className="flex-1 px-4 py-3 text-sm font-bold bg-red-600 text-white rounded-xl hover:bg-red-500 disabled:opacity-50 shadow-[0_4px_14px_rgba(220,38,38,0.25)] transition-all transform hover:-translate-y-0.5"
                 >
                   {isSubmitting ? "Adding..." : "Add Manager"}
                 </button>
