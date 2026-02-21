@@ -60,6 +60,52 @@
             "description": "Verifies the OTP and returns session cookie. Returns isNewUser: true if user needs to complete registration, or isNewUser: false with role if user exists."
           },
           "response": []
+        },
+        {
+          "name": "Complete Registration (Student)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Kasun Perera\",\n  \"email\": \"kasun@example.com\",\n  \"role\": \"student\",\n  \"dateOfBirth\": \"2005-03-15\",\n  \"gender\": \"male\",\n  \"skillLevel\": \"beginner\",\n  \"city\": \"Colombo\",\n  \"preferredLanguage\": \"en\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/complete-registration",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "complete-registration"]
+            },
+            "description": "Completes registration for a new student after OTP verification. Creates User + StudentProfile."
+          },
+          "response": []
+        },
+        {
+          "name": "Complete Registration (Coach)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"GM Arjun Sharma\",\n  \"email\": \"arjun@example.com\",\n  \"role\": \"coach\",\n  \"dateOfBirth\": \"1990-08-20\",\n  \"fideId\": \"123456789\",\n  \"fideRating\": 2450,\n  \"address\": \"123 Chess Lane, Colombo\",\n  \"coachAchievements\": [\"National Coach Award 2023\"],\n  \"playerAchievements\": [\"Sri Lanka Open Champion 2022\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/complete-registration",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "complete-registration"]
+            },
+            "description": "Completes registration for a new coach after OTP verification. Creates User + CoachProfile with pending verification."
+          },
+          "response": []
         }
       ]
     }
