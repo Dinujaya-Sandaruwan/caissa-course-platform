@@ -3,6 +3,70 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Enhanced Professional Color Palette */
+  --primary-red: #dc2626;
+  --secondary-red: #b91c1c;
+  --accent-red: #ef4444;
+  --light-red: #fca5a5;
+  --lighter-red: #fecaca;
+  --lightest-red: #fee2e2;
+
+  /* Refined Neutrals */
+  --dark-bg: #0a0a0a;
+  --darker-bg: #030303;
+  --white: #ffffff;
+  --off-white: #fafafa;
+  --gray-50: #fafafa;
+  --gray-100: #f4f4f5;
+  --gray-200: #e4e4e7;
+  --gray-300: #d4d4d8;
+  --gray-400: #a1a1aa;
+  --gray-500: #71717a;
+  --gray-600: #52525b;
+  --gray-700: #3f3f46;
+  --gray-800: #27272a;
+  --gray-900: #18181b;
+
+  /* Refined Accent Colors */
+  --success-green: #16a34a;
+  --light-green: #4ade80;
+  --warning-yellow: #eab308;
+  --warning-orange: #f97316;
+  --error-red: #dc2626;
+  --info-blue: #2563eb;
+  --purple: #7c3aed;
+  --light-purple: #a78bfa;
+  --gradient-start: #dc2626;
+  --gradient-end: #f97316;
+  --black: #000000;
+
+  /* Professional Gradients */
+  --gradient-primary: linear-gradient(
+    135deg,
+    var(--primary-red) 0%,
+    var(--accent-red) 100%
+  );
+  --gradient-soft: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-red) 10%, transparent) 0%,
+    color-mix(in srgb, var(--accent-red) 5%, transparent) 100%
+  );
+  --gradient-success: linear-gradient(
+    135deg,
+    var(--success-green) 0%,
+    var(--light-green) 100%
+  );
+  --gradient-purple: linear-gradient(
+    135deg,
+    var(--purple) 0%,
+    var(--light-purple) 100%
+  );
+  --gradient-subtle: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-red) 3%, transparent) 0%,
+    color-mix(in srgb, var(--accent-red) 1%, transparent) 100%
+  );
 }
 
 @theme inline {
@@ -10,6 +74,42 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Mapping custom colors to Tailwind classes */
+  --color-primary-red: var(--primary-red);
+  --color-secondary-red: var(--secondary-red);
+  --color-accent-red: var(--accent-red);
+  --color-light-red: var(--light-red);
+  --color-lighter-red: var(--lighter-red);
+  --color-lightest-red: var(--lightest-red);
+
+  --color-dark-bg: var(--dark-bg);
+  --color-darker-bg: var(--darker-bg);
+  --color-white: var(--white);
+  --color-off-white: var(--off-white);
+
+  --color-gray-50: var(--gray-50);
+  --color-gray-100: var(--gray-100);
+  --color-gray-200: var(--gray-200);
+  --color-gray-300: var(--gray-300);
+  --color-gray-400: var(--gray-400);
+  --color-gray-500: var(--gray-500);
+  --color-gray-600: var(--gray-600);
+  --color-gray-700: var(--gray-700);
+  --color-gray-800: var(--gray-800);
+  --color-gray-900: var(--gray-900);
+
+  --color-success-green: var(--success-green);
+  --color-light-green: var(--light-green);
+  --color-warning-yellow: var(--warning-yellow);
+  --color-warning-orange: var(--warning-orange);
+  --color-error-red: var(--error-red);
+  --color-info-blue: var(--info-blue);
+  --color-purple: var(--purple);
+  --color-light-purple: var(--light-purple);
+  --color-gradient-start: var(--gradient-start);
+  --color-gradient-end: var(--gradient-end);
+  --color-black: var(--black);
 }
 
 @media (prefers-color-scheme: dark) {
