@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
 
     // 3. Generate a random 6-digit OTP
     const otp = String(Math.floor(100000 + Math.random() * 900000));
+    console.log(`[DEV OTP LOGGER] OTP for ${cleanNumber} is: ${otp}`);
 
     // 4. Hash the OTP
     const otpHash = await bcrypt.hash(otp, 10);
