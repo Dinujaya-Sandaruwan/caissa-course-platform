@@ -73,21 +73,22 @@ export default function CoachesPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 relative z-10">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 font-[family-name:var(--font-outfit)]">
+          <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
             Pending Coach Applications
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-gray-500 mt-2 text-lg">
             Review and approve new coach registrations.
           </p>
         </div>
         <button
           onClick={fetchPendingCoaches}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          className="group flex items-center gap-2.5 px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-full transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 ring-1 ring-black/5 hover:-translate-y-0.5"
         >
-          <RefreshCw className="w-4 h-4" />
+          <RefreshCw className="w-5 h-5 transition-transform group-hover:rotate-180" />
           Refresh
         </button>
       </div>
@@ -99,60 +100,60 @@ export default function CoachesPage() {
       )}
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="animate-spin w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full mb-4" />
-          <p className="text-gray-500">Loading applications...</p>
+        <div className="flex flex-col items-center justify-center py-32">
+          <div className="animate-spin w-10 h-10 border-4 border-red-500 border-t-red-100 rounded-full mb-6" />
+          <p className="text-gray-500 font-medium">Loading applications...</p>
         </div>
       ) : coaches.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-12 text-center shadow-sm">
-          <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-green-500" />
+        <div className="bg-white rounded-[2rem] p-16 text-center shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5 transition-all">
+          <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <Check className="w-10 h-10 text-emerald-500" />
           </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-1">
+          <h3 className="text-2xl font-extrabold text-gray-900 mb-2 font-[family-name:var(--font-outfit)] tracking-tight">
             All caught up!
           </h3>
-          <p className="text-gray-500">
+          <p className="text-gray-500 text-lg">
             There are no pending coach applications to review right now.
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {coaches.map((coach) => (
             <div
               key={coach._id}
-              className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
+              className="group bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_60px_rgba(220,38,38,0.08)]"
             >
               {/* Header area */}
-              <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between bg-gray-50/50">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold text-xl">
+              <div className="border-b border-gray-100 px-8 py-6 flex flex-col sm:flex-row sm:items-center justify-between bg-slate-50/50 gap-4">
+                <div className="flex items-center gap-5">
+                  <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-600 font-bold text-2xl shadow-sm group-hover:bg-red-600 group-hover:text-white transition-colors">
                     {coach.userId.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900">
+                    <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">
                       {coach.userId.name}
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm font-medium text-gray-500 mt-0.5">
                       Applied {new Date(coach.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 w-full sm:w-auto mt-4 sm:mt-0">
                   <button
                     disabled={verifyingId === coach._id}
                     onClick={() => setRejectingId(coach._id)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-6 py-3 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all disabled:opacity-50"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-5 h-5" />
                     Reject
                   </button>
                   <button
                     disabled={verifyingId === coach._id}
                     onClick={() => handleVerify(coach._id, "approved")}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50 shadow-sm"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-6 py-3 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl transition-all disabled:opacity-50 shadow-[0_8px_20px_rgba(5,150,105,0.25)] hover:shadow-[0_12px_25px_rgba(5,150,105,0.35)] hover:-translate-y-0.5"
                   >
-                    <Check className="w-4 h-4" />
-                    Approve Request
+                    <Check className="w-5 h-5" />
+                    Approve
                   </button>
                 </div>
               </div>
@@ -239,34 +240,45 @@ export default function CoachesPage() {
 
       {/* Reject Modal */}
       {rejectingId && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-[fade-in-up_0.2s_ease-out]">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.15)] w-full max-w-md overflow-hidden transform transition-all">
+            <div className="px-8 py-6 flex justify-between items-center">
+              <h3 className="text-2xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
                 Reject Application
               </h3>
+              <button
+                onClick={() => {
+                  setRejectingId(null);
+                  setRejectNotes("");
+                }}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
+                ✕
+              </button>
             </div>
-            <div className="p-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+
+            <div className="px-8 pb-4">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 Reason for Rejection (Required)
               </label>
               <textarea
                 value={rejectNotes}
                 onChange={(e) => setRejectNotes(e.target.value)}
                 placeholder="Please explain why the application is being rejected. This will be visible to the coach."
-                className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 resize-none"
+                className="w-full h-32 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 font-medium transition-all resize-none"
               />
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs font-semibold text-gray-500 mt-3">
                 A notification will be sent to their WhatsApp.
               </p>
             </div>
-            <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-100">
+
+            <div className="px-8 py-6 flex gap-3">
               <button
                 onClick={() => {
                   setRejectingId(null);
                   setRejectNotes("");
                 }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg"
+                className="flex-1 px-4 py-3 text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 rounded-xl transition-colors"
               >
                 Cancel
               </button>
@@ -275,10 +287,10 @@ export default function CoachesPage() {
                 onClick={() =>
                   handleVerify(rejectingId, "rejected", rejectNotes)
                 }
-                className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+                className="flex-1 px-4 py-3 text-sm font-bold bg-red-600 text-white rounded-xl hover:bg-red-500 disabled:opacity-50 shadow-[0_4px_14px_rgba(220,38,38,0.25)] transition-all transform hover:-translate-y-0.5"
               >
                 {verifyingId === rejectingId
-                  ? "Rejecting..."
+                  ? "Processing..."
                   : "Confirm Rejection"}
               </button>
             </div>
