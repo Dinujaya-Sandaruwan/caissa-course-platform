@@ -4,6 +4,8 @@ export interface IUser extends Document {
   whatsappNumber: string;
   name: string;
   email?: string;
+  username?: string;
+  password?: string;
   role: "student" | "coach" | "manager";
   status: "active" | "suspended";
   profilePhoto?: string;
@@ -29,6 +31,15 @@ const UserSchema = new Schema<IUser>(
       type: String,
       trim: true,
       lowercase: true,
+    },
+    username: {
+      type: String,
+      trim: true,
+      unique: true,
+      sparse: true, // Only unique if it exists
+    },
+    password: {
+      type: String,
     },
     role: {
       type: String,
