@@ -314,7 +314,7 @@ Create a `middleware.ts` file at the root of the project. This middleware should
 
 ### Step 25 — Create the User Model
 
-Inside `models`, create `User.ts`. Define a Mongoose schema with the following fields:
+Inside `models`, create `User.ts`. This is the shared base model for all user types (students, coaches, managers). Define a Mongoose schema with the following fields:
 
 - `whatsappNumber` — String, required, unique
 - `name` — String, required
@@ -322,9 +322,10 @@ Inside `models`, create `User.ts`. Define a Mongoose schema with the following f
 - `role` — String, enum of `student`, `coach`, `manager`, required
 - `status` — String, enum of `active`, `suspended`, default `active`
 - `profilePhoto` — String, optional
+- `lastLoginAt` — Date, optional
 - `createdAt` and `updatedAt` — handled by Mongoose timestamps option
 
-Enable the `timestamps` option. Export the model.
+Role-specific fields are stored in separate profile models (`StudentProfile`, `CoachProfile`). Enable the `timestamps` option. Export the model.
 
 ---
 
@@ -347,8 +348,15 @@ Create a TTL index on the `expiresAt` field with `expireAfterSeconds: 0` — thi
 Inside `models`, create `CoachProfile.ts`. Define a Mongoose schema with:
 
 - `userId` — ObjectId, ref to User, required, unique
+- `dateOfBirth` — Date, required
+- `address` — String, optional
+- `fideId` — String, required
+- `fideRating` — Number, required
+- `cvUrl` — String, optional (uploaded PDF path)
 - `bio` — String, optional
 - `specializations` — array of Strings, default empty array
+- `coachAchievements` — array of Strings, default empty array (top achievements as a coach)
+- `playerAchievements` — array of Strings, default empty array (top achievements as a player)
 - `verificationStatus` — String, enum of `pending`, `approved`, `rejected`, default `pending`
 - `verificationNotes` — String, optional
 - `verifiedBy` — ObjectId, ref to User, optional
@@ -364,12 +372,14 @@ Export the model.
 Inside `models`, create `StudentProfile.ts`. Define a Mongoose schema with:
 
 - `userId` — ObjectId, ref to User, required, unique
-- `dateOfBirth` — Date, optional
-- `city` — String, optional
+- `dateOfBirth` — Date, required
+- `gender` — String, enum of `male`, `female`, `other`, required
+- `fideId` — String, optional
 - `skillLevel` — String, enum of `beginner`, `intermediate`, `advanced`, `expert`, default `beginner`
-- `chessRating` — Number, optional
-- `ratingPlatform` — String, enum of `fide`, `lichess`, `chesscom`, `none`, default `none`
+- `city` — String, optional
 - `preferredLanguage` — String, enum of `en`, `si`, `ta`, default `en`
+- `parentName` — String, optional (required if player is under 13)
+- `parentDateOfBirth` — Date, optional (required if player is under 13)
 - `totalCoursesCompleted` — Number, default 0
 - `totalStudyHours` — Number, default 0
 - `referredBy` — ObjectId, ref to User, optional
