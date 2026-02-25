@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   ArrowRight,
+  ArrowLeft,
   X,
   Sparkles,
   BookOpen,
@@ -10,6 +11,15 @@ import {
   BarChart3,
   Tag,
   FileText,
+  Plus,
+  ChevronDown,
+  ChevronRight,
+  GripVertical,
+  Video,
+  CheckCircle2,
+  Loader2,
+  Trash2,
+  Upload,
 } from "lucide-react";
 
 type CourseLevel = "beginner" | "intermediate" | "advanced";
@@ -20,6 +30,26 @@ interface CourseMetadata {
   price: string;
   level: CourseLevel;
   tags: string[];
+}
+
+interface LessonDraft {
+  id: string;
+  title: string;
+  videoFile: File | null;
+  videoStatus: "pending" | "selected" | "uploading" | "uploaded";
+  uploadProgress: number;
+}
+
+interface ChapterDraft {
+  id: string;
+  title: string;
+  lessons: LessonDraft[];
+  isExpanded: boolean;
+}
+
+let idCounter = 0;
+function generateId() {
+  return `draft_${Date.now()}_${idCounter++}`;
 }
 
 export default function CreateCoursePage() {
@@ -33,6 +63,9 @@ export default function CreateCoursePage() {
   });
   const [tagInput, setTagInput] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [chapters, setChapters] = useState<ChapterDraft[]>([]);
+  const [step2Error, setStep2Error] = useState("");
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // ─── Tag Management ────────────────────────────────────
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -85,6 +118,145 @@ export default function CreateCoursePage() {
     }
   };
 
+  // ─── Chapter / Lesson Management ─────────────────────
+  const addChapter = () => {
+    setChapters((prev) => [
+      ...prev,
+      {
+        id: generateId(),
+        title: "",
+        lessons: [],
+        isExpanded: true,
+      },
+    ]);
+    setStep2Error("");
+  };
+
+  const updateChapterTitle = (chapterId: string, title: string) => {
+    setChapters((prev) =>
+      prev.map((ch) => (ch.id === chapterId ? { ...ch, title } : ch)),
+    );
+  };
+
+  const removeChapter = (chapterId: string) => {
+    setChapters((prev) => prev.filter((ch) => ch.id !== chapterId));
+  };
+
+  const toggleChapter = (chapterId: string) => {
+    setChapters((prev) =>
+      prev.map((ch) =>
+        ch.id === chapterId ? { ...ch, isExpanded: !ch.isExpanded } : ch,
+      ),
+    );
+  };
+
+  const addLesson = (chapterId: string) => {
+    setChapters((prev) =>
+      prev.map((ch) =>
+        ch.id === chapterId
+          ? {
+              ...ch,
+              lessons: [
+                ...ch.lessons,
+                {
+                  id: generateId(),
+                  title: "",
+                  videoFile: null,
+                  videoStatus: "pending",
+                  uploadProgress: 0,
+                },
+              ],
+              isExpanded: true,
+            }
+          : ch,
+      ),
+    );
+    setStep2Error("");
+  };
+
+  const updateLessonTitle = (
+    chapterId: string,
+    lessonId: string,
+    title: string,
+  ) => {
+    setChapters((prev) =>
+      prev.map((ch) =>
+        ch.id === chapterId
+          ? {
+              ...ch,
+              lessons: ch.lessons.map((l) =>
+                l.id === lessonId ? { ...l, title } : l,
+              ),
+            }
+          : ch,
+      ),
+    );
+  };
+
+  const removeLesson = (chapterId: string, lessonId: string) => {
+    setChapters((prev) =>
+      prev.map((ch) =>
+        ch.id === chapterId
+          ? { ...ch, lessons: ch.lessons.filter((l) => l.id !== lessonId) }
+          : ch,
+      ),
+    );
+  };
+
+  const handleVideoSelect = (
+    chapterId: string,
+    lessonId: string,
+    file: File,
+  ) => {
+    setChapters((prev) =>
+      prev.map((ch) =>
+        ch.id === chapterId
+          ? {
+              ...ch,
+              lessons: ch.lessons.map((l) =>
+                l.id === lessonId
+                  ? { ...l, videoFile: file, videoStatus: "selected" }
+                  : l,
+              ),
+            }
+          : ch,
+      ),
+    );
+  };
+
+  const validateStep2 = (): boolean => {
+    if (chapters.length === 0) {
+      setStep2Error("Add at least one chapter to your course");
+      return false;
+    }
+    for (const ch of chapters) {
+      if (!ch.title.trim()) {
+        setStep2Error("All chapters must have a title");
+        return false;
+      }
+      if (ch.lessons.length === 0) {
+        setStep2Error(
+          `Chapter "${ch.title || "Untitled"}" needs at least one lesson`,
+        );
+        return false;
+      }
+      for (const l of ch.lessons) {
+        if (!l.title.trim()) {
+          setStep2Error("All lessons must have a title");
+          return false;
+        }
+      }
+    }
+    setStep2Error("");
+    return true;
+  };
+
+  const handleGoToStep3 = () => {
+    if (validateStep2()) {
+      setStep(3);
+    }
+  };
+
   // ─── Level Config ─────────────────────────────────────
   const levels: {
     value: CourseLevel;
@@ -113,21 +285,317 @@ export default function CreateCoursePage() {
   ];
 
   // ─── Render ───────────────────────────────────────────
-  if (step === 2) {
+
+  // Step 3 placeholder (Step 64)
+  if (step === 3) {
     return (
-      <div className="max-w-3xl mx-auto py-8">
+      <div className="space-y-8 animate-[fade-in-up_0.4s_ease-out]">
         <div className="bg-white rounded-3xl p-10 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100">
           <h2 className="text-2xl font-bold text-gray-900 font-[family-name:var(--font-outfit)]">
-            Step 2 — Chapters &amp; Lessons
+            Step 3 — Review &amp; Submit
           </h2>
           <p className="text-gray-500 mt-2 text-sm">
-            This step will be built in Step 63. Click Back to return.
+            This step will be built in Step 64.
           </p>
           <button
-            onClick={() => setStep(1)}
+            onClick={() => setStep(2)}
             className="mt-6 px-6 py-3 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
           >
-            ← Back to Course Details
+            ← Back to Chapters
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 2: Chapter & Lesson Manager
+  if (step === 2) {
+    const totalLessons = chapters.reduce(
+      (acc, ch) => acc + ch.lessons.length,
+      0,
+    );
+    const videosSelected = chapters.reduce(
+      (acc, ch) =>
+        acc + ch.lessons.filter((l) => l.videoStatus !== "pending").length,
+      0,
+    );
+
+    return (
+      <div className="space-y-8 animate-[fade-in-up_0.4s_ease-out]">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-6 border-b border-gray-100">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/20">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xs font-bold text-red-500 tracking-widest uppercase bg-red-50 px-3 py-1 rounded-full">
+                New Course
+              </span>
+            </div>
+            <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
+              Chapters &amp; Lessons
+            </h1>
+            <p className="text-gray-500 mt-2 text-lg font-medium">
+              Build your course curriculum by adding chapters and lessons.
+            </p>
+          </div>
+        </div>
+
+        {/* Step Indicator */}
+        <div className="flex items-center gap-3">
+          {[
+            { num: 1, label: "Course Details" },
+            { num: 2, label: "Chapters & Lessons" },
+            { num: 3, label: "Review & Submit" },
+          ].map((s, i) => (
+            <div key={s.num} className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                    step === s.num
+                      ? "bg-red-600 text-white shadow-lg shadow-red-500/25 scale-110"
+                      : step > s.num
+                        ? "bg-red-100 text-red-600"
+                        : "bg-gray-100 text-gray-400"
+                  }`}
+                >
+                  {step > s.num ? "✓" : s.num}
+                </div>
+                <span
+                  className={`text-sm font-semibold hidden sm:inline ${
+                    step === s.num
+                      ? "text-gray-900"
+                      : step > s.num
+                        ? "text-red-500"
+                        : "text-gray-400"
+                  }`}
+                >
+                  {s.label}
+                </span>
+              </div>
+              {i < 2 && (
+                <div
+                  className={`w-8 sm:w-16 h-[3px] rounded-full transition-colors ${
+                    step > s.num ? "bg-red-400" : "bg-gray-200"
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Stats Bar */}
+        <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
+          <span className="flex items-center gap-1.5">
+            <BookOpen className="w-4 h-4 text-red-400" />
+            {chapters.length} chapter{chapters.length !== 1 ? "s" : ""}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Video className="w-4 h-4 text-red-400" />
+            {totalLessons} lesson{totalLessons !== 1 ? "s" : ""}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Upload className="w-4 h-4 text-red-400" />
+            {videosSelected} video{videosSelected !== 1 ? "s" : ""} selected
+          </span>
+        </div>
+
+        {/* Chapters List */}
+        <div className="space-y-4">
+          {chapters.map((chapter, chIdx) => (
+            <div
+              key={chapter.id}
+              className="bg-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)]"
+            >
+              {/* Chapter Header */}
+              <div
+                className="flex items-center gap-3 p-5 cursor-pointer"
+                onClick={() => toggleChapter(chapter.id)}
+              >
+                <div className="text-gray-300 hover:text-gray-500 transition-colors">
+                  <GripVertical className="w-5 h-5" />
+                </div>
+                <button
+                  type="button"
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleChapter(chapter.id);
+                  }}
+                >
+                  {chapter.isExpanded ? (
+                    <ChevronDown className="w-5 h-5" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5" />
+                  )}
+                </button>
+                <span className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center text-sm font-bold text-red-600 border border-red-100">
+                  {chIdx + 1}
+                </span>
+                <input
+                  type="text"
+                  value={chapter.title}
+                  onChange={(e) =>
+                    updateChapterTitle(chapter.id, e.target.value)
+                  }
+                  onClick={(e) => e.stopPropagation()}
+                  placeholder="Chapter title..."
+                  className="flex-1 text-base font-bold text-gray-900 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
+                />
+                <span className="text-xs text-gray-400 font-medium hidden sm:inline">
+                  {chapter.lessons.length} lesson
+                  {chapter.lessons.length !== 1 ? "s" : ""}
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeChapter(chapter.id);
+                  }}
+                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Expanded Lessons */}
+              {chapter.isExpanded && (
+                <div className="border-t border-gray-100 bg-gray-50/50">
+                  <div className="p-4 space-y-2">
+                    {chapter.lessons.map((lesson, lIdx) => (
+                      <div
+                        key={lesson.id}
+                        className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-gray-100 shadow-sm group"
+                      >
+                        <span className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 shrink-0">
+                          {lIdx + 1}
+                        </span>
+                        <input
+                          type="text"
+                          value={lesson.title}
+                          onChange={(e) =>
+                            updateLessonTitle(
+                              chapter.id,
+                              lesson.id,
+                              e.target.value,
+                            )
+                          }
+                          placeholder="Lesson title..."
+                          className="flex-1 text-sm font-medium text-gray-800 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
+                        />
+
+                        {/* Video Status */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {lesson.videoStatus === "pending" && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                fileInputRefs.current[lesson.id]?.click()
+                              }
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-500 bg-gray-100 hover:bg-red-50 hover:text-red-600 rounded-lg transition-all"
+                            >
+                              <Video className="w-3.5 h-3.5" />
+                              Add Video
+                            </button>
+                          )}
+                          {lesson.videoStatus === "selected" && (
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-lg">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              Video ready
+                            </span>
+                          )}
+                          {lesson.videoStatus === "uploading" && (
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-600 bg-amber-50 rounded-lg">
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              {lesson.uploadProgress}%
+                            </span>
+                          )}
+                          {lesson.videoStatus === "uploaded" && (
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-lg">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              Uploaded
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Hidden file input */}
+                        <input
+                          ref={(el) => {
+                            fileInputRefs.current[lesson.id] = el;
+                          }}
+                          type="file"
+                          accept="video/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handleVideoSelect(chapter.id, lesson.id, file);
+                            }
+                          }}
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => removeLesson(chapter.id, lesson.id)}
+                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* Add Lesson Button */}
+                    <button
+                      type="button"
+                      onClick={() => addLesson(chapter.id)}
+                      className="flex items-center gap-2 w-full px-4 py-3 text-sm font-semibold text-gray-500 hover:text-red-600 hover:bg-white rounded-2xl border-2 border-dashed border-gray-200 hover:border-red-300 transition-all duration-200"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Lesson
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Add Chapter Button */}
+          <button
+            type="button"
+            onClick={addChapter}
+            className="flex items-center gap-3 w-full px-6 py-5 text-base font-bold text-gray-500 hover:text-red-600 bg-white hover:bg-red-50/50 rounded-3xl border-2 border-dashed border-gray-200 hover:border-red-300 shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-gray-100 group-hover:bg-red-100 flex items-center justify-center transition-colors">
+              <Plus className="w-5 h-5" />
+            </div>
+            Add Chapter
+          </button>
+        </div>
+
+        {/* Error Message */}
+        {step2Error && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-4 text-sm text-red-600 font-medium flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+            {step2Error}
+          </div>
+        )}
+
+        {/* Navigation Actions */}
+        <div className="flex justify-between items-center">
+          <button
+            onClick={() => setStep(1)}
+            className="group flex items-center gap-2 px-6 py-3.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            Back to Course Details
+          </button>
+          <button
+            onClick={handleGoToStep3}
+            className="group flex items-center gap-2.5 px-8 py-4 bg-red-600 text-white text-base font-bold rounded-2xl hover:bg-red-700 shadow-xl shadow-red-600/20 hover:shadow-red-600/30 transition-all duration-200 hover:-translate-y-0.5"
+          >
+            Review &amp; Submit
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       </div>
