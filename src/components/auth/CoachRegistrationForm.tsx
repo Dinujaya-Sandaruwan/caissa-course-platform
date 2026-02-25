@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, Crown } from "lucide-react";
+import { useState, useRef } from "react";
+import { Loader2, Camera, UserCircle2, Crown } from "lucide-react";
 
 interface CoachRegistrationData {
   name: string;
@@ -9,6 +9,7 @@ interface CoachRegistrationData {
   dateOfBirth: string;
   fideId: string;
   fideRating: number;
+  profilePicture?: File | null;
   address?: string;
   bio?: string;
   specializations?: string[];
@@ -35,8 +36,27 @@ export default function CoachRegistrationForm({
     coachAchievements: "",
     playerAchievements: "",
   });
+  const [profilePic, setProfilePic] = useState<File | null>(null);
+  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(
+    null,
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image must be less than 5MB");
+        return;
+      }
+      setProfilePic(file);
+      setProfilePicPreview(URL.createObjectURL(file));
+      setError("");
+    }
+  };
 
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -71,6 +91,7 @@ export default function CoachRegistrationForm({
         dateOfBirth: form.dateOfBirth,
         fideId: form.fideId.trim(),
         fideRating: Number(form.fideRating),
+        profilePicture: profilePic,
       };
       if (form.email?.trim()) data.email = form.email.trim();
       if (form.address?.trim()) data.address = form.address.trim();
@@ -122,6 +143,45 @@ export default function CoachRegistrationForm({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Profile Picture Upload */}
+        <div className="flex flex-col items-center mb-8">
+          <div
+            className="relative w-32 h-32 rounded-full mb-3 cursor-pointer group"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div className="absolute inset-0 rounded-full border-2 border-dashed border-gray-300 bg-slate-50 overflow-hidden transition-all group-hover:border-red-400 group-hover:bg-red-50 flex items-center justify-center shadow-inner">
+              {profilePicPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={profilePicPreview}
+                  alt="Profile preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <UserCircle2 className="w-16 h-16 text-gray-400 group-hover:text-red-400 transition-colors" />
+              )}
+            </div>
+
+            <div
+              className={`absolute bottom-0 right-0 p-2 rounded-full border-2 border-white shadow-md transition-colors ${profilePicPreview ? "bg-white text-gray-700 hover:text-red-600" : "bg-red-600 text-white hover:bg-red-700"}`}
+            >
+              <Camera className="w-5 h-5" />
+            </div>
+          </div>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageChange}
+            accept="image/*"
+            className="hidden"
+          />
+          <span className="text-sm font-bold text-gray-700">Profile Photo</span>
+          <span className="text-xs text-gray-500 mt-1">
+            Recommend 1:1 ratio, max 5MB
+          </span>
+        </div>
+
         {/* Core Info Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className="sm:col-span-2">

@@ -64,10 +64,32 @@ export default function BecomeACoachPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleRegister = async (formData: any) => {
+    let body;
+    let headers: Record<string, string> = {};
+
+    if (formData.profilePicture) {
+      const fb = new FormData();
+      Object.keys(formData).forEach((key) => {
+        if (key === "profilePicture") {
+          fb.append(key, formData[key]);
+        } else if (Array.isArray(formData[key])) {
+          fb.append(key, JSON.stringify(formData[key]));
+        } else if (formData[key] !== undefined) {
+          fb.append(key, formData[key]);
+        }
+      });
+      fb.append("role", "coach");
+      body = fb;
+      // Let browser set Content-Type mapping with boundary
+    } else {
+      body = JSON.stringify({ ...formData, role: "coach" });
+      headers = { "Content-Type": "application/json" };
+    }
+
     const res = await fetch("/api/auth/complete-registration", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...formData, role: "coach" }),
+      headers,
+      body,
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);

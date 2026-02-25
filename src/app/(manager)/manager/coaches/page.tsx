@@ -9,12 +9,16 @@ interface PendingCoach {
     _id: string;
     name: string;
     whatsappNumber: string;
+    email?: string;
+    profilePhoto?: string;
   };
-  nationalId: string;
-  dob: string;
+  dateOfBirth: string | Date;
   fideId?: string;
   fideRating?: number;
-  about: string;
+  bio?: string;
+  specializations?: string[];
+  coachAchievements?: string[];
+  playerAchievements?: string[];
   createdAt: string;
 }
 
@@ -126,8 +130,17 @@ export default function CoachesPage() {
               {/* Header area */}
               <div className="border-b border-gray-100 px-8 py-6 flex flex-col sm:flex-row sm:items-center justify-between bg-slate-50/50 gap-4">
                 <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-600 font-bold text-2xl shadow-sm group-hover:bg-red-600 group-hover:text-white transition-colors">
-                    {coach.userId.name.charAt(0).toUpperCase()}
+                  <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 font-extrabold text-2xl shadow-sm overflow-hidden group-hover:shadow-md transition-all">
+                    {coach.userId.profilePhoto ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={coach.userId.profilePhoto}
+                        alt={coach.userId.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      coach.userId.name.charAt(0).toUpperCase()
+                    )}
                   </div>
                   <div>
                     <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">
@@ -162,48 +175,59 @@ export default function CoachesPage() {
               <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
                       Personal Details
                     </h4>
-                    <dl className="space-y-2">
+                    <dl className="space-y-3">
                       <div className="flex justify-between border-b border-gray-100 pb-2">
                         <dt className="text-sm text-gray-500">WhatsApp</dt>
-                        <dd className="text-sm font-medium text-gray-900">
+                        <dd className="text-sm font-bold text-gray-900">
                           +{coach.userId.whatsappNumber}
                         </dd>
                       </div>
                       <div className="flex justify-between border-b border-gray-100 pb-2">
-                        <dt className="text-sm text-gray-500">National ID</dt>
-                        <dd className="text-sm font-medium text-gray-900">
-                          {coach.nationalId}
+                        <dt className="text-sm text-gray-500">Date of Birth</dt>
+                        <dd className="text-sm font-bold text-gray-900">
+                          {coach.dateOfBirth
+                            ? new Date(coach.dateOfBirth).toLocaleDateString(
+                                undefined,
+                                {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                },
+                              )
+                            : "N/A"}
                         </dd>
                       </div>
                       <div className="flex justify-between border-b border-gray-100 pb-2">
-                        <dt className="text-sm text-gray-500">Date of Birth</dt>
+                        <dt className="text-sm text-gray-500">Email</dt>
                         <dd className="text-sm font-medium text-gray-900">
-                          {new Date(coach.dob).toLocaleDateString()}
+                          {coach.userId.email || (
+                            <span className="text-gray-400">Not provided</span>
+                          )}
                         </dd>
                       </div>
                     </dl>
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-6">
+                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 mt-6 sm:mt-0">
                       Chess Credentials
                     </h4>
-                    <dl className="space-y-2">
+                    <dl className="space-y-3">
                       <div className="flex justify-between border-b border-gray-100 pb-2">
                         <dt className="text-sm text-gray-500">FIDE ID</dt>
-                        <dd className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                        <dd className="text-sm font-bold text-gray-900 flex items-center gap-2">
                           {coach.fideId ? (
                             <>
-                              {coach.fideId}
                               <a
                                 href={`https://ratings.fide.com/profile/${coach.fideId}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-blue-500 hover:text-blue-600"
+                                className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
                               >
+                                {coach.fideId}
                                 <ExternalLink className="w-3.5 h-3.5" />
                               </a>
                             </>
@@ -214,9 +238,11 @@ export default function CoachesPage() {
                       </div>
                       <div className="flex justify-between border-b border-gray-100 pb-2">
                         <dt className="text-sm text-gray-500">FIDE Rating</dt>
-                        <dd className="text-sm font-medium text-gray-900">
+                        <dd className="text-sm font-extrabold text-red-600 bg-red-50 px-3 py-0.5 rounded-lg border border-red-100">
                           {coach.fideRating || (
-                            <span className="text-gray-400">N/A</span>
+                            <span className="text-gray-400 font-medium">
+                              N/A
+                            </span>
                           )}
                         </dd>
                       </div>
@@ -224,12 +250,72 @@ export default function CoachesPage() {
                   </div>
                 </div>
 
-                <div>
-                  <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                    About / Experience
-                  </h4>
-                  <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 leading-relaxed border border-gray-100 min-h-[150px] whitespace-pre-wrap">
-                    {coach.about}
+                <div className="mt-8 pt-8 border-t border-gray-100 px-6 pb-6">
+                  {/* Bio block */}
+                  {coach.bio && (
+                    <div className="mb-8">
+                      <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        About the Coach
+                      </h4>
+                      <p className="text-sm text-gray-700 leading-relaxed bg-slate-50 p-5 rounded-2xl border border-gray-100 whitespace-pre-wrap">
+                        {coach.bio}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Specializations */}
+                    {((coach.specializations?.length ?? 0) > 0 ||
+                      coach.specializations?.[0] !== "") && (
+                      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                          Specializations
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {coach.specializations?.map(
+                            (spec: string, i: number) =>
+                              spec.trim() && (
+                                <span
+                                  key={i}
+                                  className="px-3 py-1 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold rounded-lg"
+                                >
+                                  {spec}
+                                </span>
+                              ),
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Coach Achievements */}
+                    {(coach.coachAchievements?.length ?? 0) > 0 && (
+                      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                          Coaching Achievements
+                        </h4>
+                        <ul className="text-sm text-gray-700 space-y-2 list-disc pl-4">
+                          {coach.coachAchievements?.map(
+                            (item: string, i: number) =>
+                              item.trim() && <li key={i}>{item}</li>,
+                          )}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Player Achievements */}
+                    {(coach.playerAchievements?.length ?? 0) > 0 && (
+                      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                          Player Achievements
+                        </h4>
+                        <ul className="text-sm text-gray-700 space-y-2 list-disc pl-4">
+                          {coach.playerAchievements?.map(
+                            (item: string, i: number) =>
+                              item.trim() && <li key={i}>{item}</li>,
+                          )}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

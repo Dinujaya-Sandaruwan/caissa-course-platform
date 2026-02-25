@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -61,12 +62,35 @@ export default function LoginPage() {
     if (!res.ok) throw new Error(data.error);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleRegister = async (formData: any) => {
+  const handleRegister = async (
+    formData: Record<string, any>,
+    regRole: "student" | "coach",
+  ) => {
+    let body;
+    let headers: Record<string, string> = {};
+
+    if (formData.profilePicture) {
+      const fb = new FormData();
+      Object.keys(formData).forEach((key) => {
+        if (key === "profilePicture") {
+          fb.append(key, formData[key]);
+        } else if (Array.isArray(formData[key])) {
+          fb.append(key, JSON.stringify(formData[key]));
+        } else if (formData[key] !== undefined) {
+          fb.append(key, formData[key]);
+        }
+      });
+      fb.append("role", regRole);
+      body = fb;
+    } else {
+      body = JSON.stringify({ ...formData, role: regRole });
+      headers = { "Content-Type": "application/json" };
+    }
+
     const res = await fetch("/api/auth/complete-registration", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...formData, role: "student" }),
+      headers,
+      body,
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
@@ -184,7 +208,9 @@ export default function LoginPage() {
               />
             )}
             {step === "register" && (
-              <StudentRegistrationForm onSubmit={handleRegister} />
+              <StudentRegistrationForm
+                onSubmit={(data) => handleRegister(data, "student")}
+              />
             )}
           </div>
 

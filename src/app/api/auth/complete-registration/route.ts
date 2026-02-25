@@ -1,4 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
+import crypto from "crypto";
 import { connectDB } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import User from "@/models/User";
@@ -19,7 +23,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const contentType = request.headers.get("content-type") || "";
+    const body: Record<string, any> = {};
+    let profilePhotoUrl: string | undefined = undefined;
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await request.formData();
+      formData.forEach((value, key) => {
+        if (key !== "profilePicture") {
+          body[key] = value;
+        }
+      });
+
+      const file = formData.get("profilePicture") as File | null;
+      if (file && file.size > 0) {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+
+        const uploadDir =
+          process.env.UPLOAD_DIR || path.join(process.cwd(), "public/uploads");
+
+        // Ensure directory exists
+        try {
+          await mkdir(uploadDir, { recursive: true });
+        } catch {
+          // ignore if exists
+        }
+
+        const fileName = `${crypto.randomUUID()}-${file.name.replace(/\s+/g, "_")}`;
+        const filePath = path.join(uploadDir, fileName);
+        await writeFile(filePath, buffer);
+
+        // The URL should be relative for next/image or standard img tag
+        // assuming UPLOAD_DIR is inside public/
+        profilePhotoUrl = `/uploads/${fileName}`;
+      }
+    } else {
+      const jsonBody = await request.json();
+      Object.assign(body, jsonBody);
+    }
+
     const { name, email, role } = body;
 
     // 2. Validate input
@@ -54,6 +97,7 @@ export async function POST(request: NextRequest) {
       name: name.trim(),
       email: email?.trim() || undefined,
       role,
+      profilePhoto: profilePhotoUrl,
       lastLoginAt: new Date(),
     });
 
@@ -64,10 +108,21 @@ export async function POST(request: NextRequest) {
         dateOfBirth: body.dateOfBirth,
         address: body.address,
         fideId: body.fideId,
-        fideRating: body.fideRating,
+        fideRating: Number(body.fideRating) || 0,
         cvUrl: body.cvUrl,
-        coachAchievements: body.coachAchievements || [],
-        playerAchievements: body.playerAchievements || [],
+        bio: body.bio,
+        specializations:
+          typeof body.specializations === "string"
+            ? JSON.parse(body.specializations)
+            : body.specializations || [],
+        coachAchievements:
+          typeof body.coachAchievements === "string"
+            ? JSON.parse(body.coachAchievements)
+            : body.coachAchievements || [],
+        playerAchievements:
+          typeof body.playerAchievements === "string"
+            ? JSON.parse(body.playerAchievements)
+            : body.playerAchievements || [],
         verificationStatus: "pending",
       });
     } else if (role === "student") {
