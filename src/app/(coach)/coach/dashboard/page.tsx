@@ -1,14 +1,53 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Users, BookOpen, Clock, FilePlus, PlusSquare } from "lucide-react";
+import Link from "next/link";
+
+interface CourseStat {
+  status: string;
+  enrollmentCount: number;
+}
 
 export default function CoachDashboardPage() {
+  const [courses, setCourses] = useState<CourseStat[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        const res = await fetch("/api/coach/courses");
+        if (res.ok) {
+          const data = await res.json();
+          setCourses(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch courses:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCourses();
+  }, []);
+
+  const totalStudents = courses.reduce(
+    (acc, course) => acc + (course.enrollmentCount || 0),
+    0,
+  );
+  const publishedCourses = courses.filter(
+    (c) => c.status === "published",
+  ).length;
+  const pendingCourses = courses.filter(
+    (c) => c.status === "pending_review",
+  ).length;
+  const draftCourses = courses.filter((c) => c.status === "draft").length;
+
   const stats = [
     {
       label: "Total Students",
-      value: "0",
+      value: loading ? "..." : totalStudents.toString(),
       icon: Users,
-      trend: "+0 this week",
+      trend: "All time enrollments",
       trendUp: true,
       color: "from-blue-500 to-blue-600",
       bgClass: "bg-blue-50",
@@ -16,9 +55,9 @@ export default function CoachDashboardPage() {
     },
     {
       label: "Published Courses",
-      value: "0",
+      value: loading ? "..." : publishedCourses.toString(),
       icon: BookOpen,
-      trend: "All active",
+      trend: "Live on platform",
       trendUp: true,
       color: "from-emerald-500 to-emerald-600",
       bgClass: "bg-emerald-50",
@@ -26,7 +65,7 @@ export default function CoachDashboardPage() {
     },
     {
       label: "Pending Review",
-      value: "0",
+      value: loading ? "..." : pendingCourses.toString(),
       icon: Clock,
       trend: "Awaiting approval",
       trendUp: true,
@@ -36,7 +75,7 @@ export default function CoachDashboardPage() {
     },
     {
       label: "Draft Courses",
-      value: "0",
+      value: loading ? "..." : draftCourses.toString(),
       icon: FilePlus,
       trend: "In progress",
       trendUp: true,
@@ -107,10 +146,13 @@ export default function CoachDashboardPage() {
             Quick Actions
           </h2>
           <div className="space-y-3">
-            <button className="w-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-bold py-3.5 px-4 rounded-xl transition-colors border border-red-100 flex items-center justify-center gap-2">
+            <Link
+              href="/coach/courses/new"
+              className="w-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-bold py-3.5 px-4 rounded-xl transition-colors border border-red-100 flex items-center justify-center gap-2"
+            >
               <PlusSquare className="w-5 h-5" />
               Create New Course
-            </button>
+            </Link>
           </div>
         </div>
       </div>

@@ -1,0 +1,132 @@
+
+> caissa-course-platform@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.28:3000
+- Environments: .env
+
+✓ Starting...
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+✓ Ready in 5.3s
+✓ Finished filesystem cache database compaction in 15.8s
+○ Compiling /manager/dashboard ...
+⨯ ./src/app/(coach)/coach/dashboard/page.tsx:1:20
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m"react"[39m[33m;[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { [33mUsers[39m[33m,[39m [33mBookOpen[39m[33m,[39m [33mClock[39m[33m,[39m [33mFilePlus[39m[33m,[39m [33mPlusSquare[39m } [36mfrom[39m [32m"lucide-react"[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m"next/link"[39m[33m;[39m
+ [90m 4 |[39m[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+
+./src/app/(coach)/coach/dashboard/page.tsx:1:10
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m"react"[39m[33m;[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { [33mUsers[39m[33m,[39m [33mBookOpen[39m[33m,[39m [33mClock[39m[33m,[39m [33mFilePlus[39m[33m,[39m [33mPlusSquare[39m } [36mfrom[39m [32m"lucide-react"[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m"next/link"[39m[33m;[39m
+ [90m 4 |[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+ GET /coach/dashboard 500 in 39.3s (compile: 37.7s, proxy.ts: 1512ms, render: 83ms)
+ GET /manager/dashboard 200 in 41s (compile: 36.7s, proxy.ts: 1840ms, render: 2.6s)
+⨯ ./src/app/(coach)/coach/dashboard/page.tsx:1:20
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m"react"[39m[33m;[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { [33mUsers[39m[33m,[39m [33mBookOpen[39m[33m,[39m [33mClock[39m[33m,[39m [33mFilePlus[39m[33m,[39m [33mPlusSquare[39m } [36mfrom[39m [32m"lucide-react"[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m"next/link"[39m[33m;[39m
+ [90m 4 |[39m[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+
+./src/app/(coach)/coach/dashboard/page.tsx:1:10
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m"react"[39m[33m;[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { [33mUsers[39m[33m,[39m [33mBookOpen[39m[33m,[39m [33mClock[39m[33m,[39m [33mFilePlus[39m[33m,[39m [33mPlusSquare[39m } [36mfrom[39m [32m"lucide-react"[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m"next/link"[39m[33m;[39m
+ [90m 4 |[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+✓ Compiled in 0ms
+ GET /coach/dashboard 500 in 686ms (compile: 131ms, proxy.ts: 427ms, render: 128ms)
+ GET /manager/dashboard 200 in 920ms (compile: 27ms, proxy.ts: 24ms, render: 870ms)
+ GET /manager/dashboard 200 in 432ms (compile: 16ms, proxy.ts: 11ms, render: 405ms)
+ GET /manager/dashboard 200 in 2.4s (compile: 343ms, proxy.ts: 599ms, render: 1443ms)
+ GET /manager/dashboard 200 in 841ms (compile: 48ms, proxy.ts: 26ms, render: 767ms)
+ GET /manager/dashboard 200 in 803ms (compile: 52ms, proxy.ts: 23ms, render: 727ms)
+ GET /manager/dashboard 200 in 1481ms (compile: 77ms, proxy.ts: 96ms, render: 1308ms)
+ GET /manager/dashboard 200 in 1087ms (compile: 70ms, proxy.ts: 23ms, render: 993ms)
+ GET /manager/dashboard 200 in 880ms (compile: 27ms, proxy.ts: 82ms, render: 771ms)
+ GET /manager/dashboard 200 in 777ms (compile: 13ms, proxy.ts: 36ms, render: 729ms)
+ GET /manager/dashboard 200 in 734ms (compile: 32ms, proxy.ts: 19ms, render: 683ms)
+ GET /manager/dashboard 200 in 632ms (compile: 7ms, proxy.ts: 53ms, render: 571ms)
+ GET /manager/dashboard 200 in 541ms (compile: 10ms, proxy.ts: 27ms, render: 504ms)
+ GET /manager/dashboard 200 in 656ms (compile: 8ms, proxy.ts: 30ms, render: 619ms)
+ GET /manager/dashboard 200 in 619ms (compile: 22ms, proxy.ts: 16ms, render: 581ms)
+ GET /manager/dashboard 200 in 602ms (compile: 6ms, proxy.ts: 9ms, render: 587ms)
+ GET /manager/dashboard 200 in 586ms (compile: 11ms, proxy.ts: 9ms, render: 566ms)
+ GET /manager/dashboard 200 in 621ms (compile: 6ms, proxy.ts: 12ms, render: 603ms)
+ GET /manager/dashboard 200 in 638ms (compile: 234ms, proxy.ts: 27ms, render: 376ms)
+ GET /manager/dashboard 200 in 291ms (compile: 11ms, proxy.ts: 8ms, render: 273ms)
+ GET /manager/dashboard 200 in 259ms (compile: 4ms, proxy.ts: 16ms, render: 239ms)
+ GET /manager/dashboard 200 in 282ms (compile: 7ms, proxy.ts: 10ms, render: 265ms)
+ GET /manager/dashboard 200 in 266ms (compile: 19ms, proxy.ts: 28ms, render: 219ms)
+ GET /manager/dashboard 200 in 192ms (compile: 8ms, proxy.ts: 6ms, render: 178ms)
+ GET /manager/dashboard 200 in 212ms (compile: 6ms, proxy.ts: 9ms, render: 197ms)
+ GET /manager/dashboard 200 in 330ms (compile: 6ms, proxy.ts: 7ms, render: 317ms)
+ GET /manager/dashboard 200 in 362ms (compile: 3ms, proxy.ts: 8ms, render: 350ms)
+ GET /manager/dashboard 200 in 449ms (compile: 4ms, proxy.ts: 11ms, render: 434ms)
+ GET /manager/dashboard 200 in 498ms (compile: 6ms, proxy.ts: 4ms, render: 488ms)
+ GET /manager/dashboard 200 in 458ms (compile: 8ms, proxy.ts: 11ms, render: 439ms)
+ GET /manager/dashboard 200 in 428ms (compile: 7ms, proxy.ts: 22ms, render: 399ms)
+ GET /manager/dashboard 200 in 350ms (compile: 21ms, proxy.ts: 50ms, render: 279ms)
+ GET /manager/dashboard 200 in 213ms (compile: 29ms, proxy.ts: 16ms, render: 169ms)
+ GET /manager/dashboard 200 in 171ms (compile: 5ms, proxy.ts: 8ms, render: 157ms)
+ GET /manager/dashboard 200 in 294ms (compile: 3ms, proxy.ts: 6ms, render: 285ms)
+ GET /manager/dashboard 200 in 330ms (compile: 4ms, proxy.ts: 6ms, render: 320ms)
+ GET /manager/dashboard 200 in 305ms (compile: 3ms, proxy.ts: 5ms, render: 297ms)
+ GET /manager/dashboard 200 in 309ms (compile: 6ms, proxy.ts: 1988µs, render: 302ms)
+ GET /manager/dashboard 200 in 308ms (compile: 11ms, proxy.ts: 5ms, render: 292ms)
+ GET /manager/dashboard 200 in 244ms (compile: 8ms, proxy.ts: 16ms, render: 219ms)
+ GET /manager/dashboard 200 in 157ms (compile: 3ms, proxy.ts: 6ms, render: 147ms)
+ GET /manager/dashboard 200 in 160ms (compile: 1528µs, proxy.ts: 2ms, render: 157ms)
+ GET /manager/dashboard 200 in 166ms (compile: 2ms, proxy.ts: 8ms, render: 156ms)
+ GET /manager/dashboard 200 in 170ms (compile: 1503µs, proxy.ts: 5ms, render: 163ms)
+ GET /manager/dashboard 200 in 151ms (compile: 3ms, proxy.ts: 5ms, render: 142ms)
+ GET /manager/dashboard 200 in 143ms (compile: 4ms, proxy.ts: 5ms, render: 134ms)
+ GET /manager/dashboard 200 in 118ms (compile: 2ms, proxy.ts: 10ms, render: 107ms)
+ GET /manager/dashboard 200 in 85ms (compile: 2ms, proxy.ts: 3ms, render: 80ms)
+ GET /manager/dashboard 200 in 58ms (compile: 7ms, proxy.ts: 5ms, render: 46ms)
+✓ Compiled in 519ms
+ GET /manager/dashboard 200 in 570ms (compile: 44ms, proxy.ts: 55ms, render: 472ms)
+ GET /coach/dashboard 200 in 752ms (compile: 359ms, proxy.ts: 13ms, render: 381ms)
+ GET /api/coach/courses 200 in 491ms (compile: 424ms, proxy.ts: 34ms, render: 34ms)
