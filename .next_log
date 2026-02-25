@@ -786,3 +786,4 @@ You're importing a component that needs `useState`. This React Hook only works i
  GET /manager/dashboard 200 in 138ms (compile: 4ms, proxy.ts: 6ms, render: 129ms)
  GET /manager/dashboard 200 in 107ms (compile: 2ms, proxy.ts: 4ms, render: 101ms)
 ✓ Compiled in 1351ms
+✓ Compiled in 780ms

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   ArrowLeft,
@@ -20,6 +21,8 @@ import {
   Loader2,
   Trash2,
   Upload,
+  Send,
+  AlertTriangle,
 } from "lucide-react";
 
 type CourseLevel = "beginner" | "intermediate" | "advanced";
@@ -66,6 +69,10 @@ export default function CreateCoursePage() {
   const [chapters, setChapters] = useState<ChapterDraft[]>([]);
   const [step2Error, setStep2Error] = useState("");
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState("");
+  const [submitError, setSubmitError] = useState("");
 
   // ─── Tag Management ────────────────────────────────────
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -257,6 +264,131 @@ export default function CreateCoursePage() {
     }
   };
 
+  // ─── Submit Chain ─────────────────────────────────────
+  const handleSubmitCourse = async () => {
+    setIsSubmitting(true);
+    setSubmitError("");
+
+    try {
+      // 1. Create the course draft
+      setSubmitStatus("Creating course...");
+      const courseRes = await fetch("/api/coach/courses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: metadata.title.trim(),
+          description: metadata.description.trim(),
+          price: Number(metadata.price),
+          level: metadata.level,
+          tags: metadata.tags,
+        }),
+      });
+
+      if (!courseRes.ok) {
+        const err = await courseRes.json();
+        throw new Error(err.error || "Failed to create course");
+      }
+
+      const course = await courseRes.json();
+      const courseId = course._id;
+
+      // 2. Create chapters and lessons sequentially
+      for (let chIdx = 0; chIdx < chapters.length; chIdx++) {
+        const ch = chapters[chIdx];
+        setSubmitStatus(
+          `Creating chapter ${chIdx + 1}/${chapters.length}: ${ch.title}...`,
+        );
+
+        const chapterRes = await fetch(
+          `/api/coach/courses/${courseId}/chapters`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: ch.title.trim() }),
+          },
+        );
+
+        if (!chapterRes.ok) {
+          const err = await chapterRes.json();
+          throw new Error(err.error || `Failed to create chapter: ${ch.title}`);
+        }
+
+        const chapterData = await chapterRes.json();
+        const chapterId = chapterData._id;
+
+        // 3. Create lessons for this chapter
+        for (let lIdx = 0; lIdx < ch.lessons.length; lIdx++) {
+          const lesson = ch.lessons[lIdx];
+          setSubmitStatus(
+            `Creating lesson ${lIdx + 1}/${ch.lessons.length} in "${ch.title}"...`,
+          );
+
+          const lessonRes = await fetch(
+            `/api/coach/courses/${courseId}/chapters/${chapterId}/lessons`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ title: lesson.title.trim() }),
+            },
+          );
+
+          if (!lessonRes.ok) {
+            const err = await lessonRes.json();
+            throw new Error(
+              err.error || `Failed to create lesson: ${lesson.title}`,
+            );
+          }
+
+          const lessonData = await lessonRes.json();
+
+          // 4. Upload video if one was selected
+          if (lesson.videoFile) {
+            setSubmitStatus(`Uploading video for "${lesson.title}"...`);
+
+            const formData = new FormData();
+            formData.append("video", lesson.videoFile);
+
+            const uploadRes = await fetch(
+              `/api/coach/courses/${courseId}/chapters/${chapterId}/lessons/${lessonData._id}/upload`,
+              {
+                method: "POST",
+                body: formData,
+              },
+            );
+
+            if (!uploadRes.ok) {
+              const err = await uploadRes.json();
+              throw new Error(
+                err.error || `Failed to upload video for: ${lesson.title}`,
+              );
+            }
+          }
+        }
+      }
+
+      // 5. Submit for review
+      setSubmitStatus("Submitting course for review...");
+      const submitRes = await fetch(`/api/coach/courses/${courseId}/submit`, {
+        method: "POST",
+      });
+
+      if (!submitRes.ok) {
+        const err = await submitRes.json();
+        throw new Error(err.error || "Failed to submit course for review");
+      }
+
+      setSubmitStatus("Course submitted successfully! Redirecting...");
+      setTimeout(() => {
+        router.push("/coach/courses");
+      }, 1500);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : "An unexpected error occurred",
+      );
+      setIsSubmitting(false);
+    }
+  };
+
   // ─── Level Config ─────────────────────────────────────
   const levels: {
     value: CourseLevel;
@@ -286,22 +418,263 @@ export default function CreateCoursePage() {
 
   // ─── Render ───────────────────────────────────────────
 
-  // Step 3 placeholder (Step 64)
+  // Step 3: Review & Submit
   if (step === 3) {
+    const totalLessonsStep3 = chapters.reduce(
+      (acc, ch) => acc + ch.lessons.length,
+      0,
+    );
+    const lessonsWithVideo = chapters.reduce(
+      (acc, ch) => acc + ch.lessons.filter((l) => l.videoFile).length,
+      0,
+    );
+    const lessonsWithoutVideo = totalLessonsStep3 - lessonsWithVideo;
+
     return (
       <div className="space-y-8 animate-[fade-in-up_0.4s_ease-out]">
-        <div className="bg-white rounded-3xl p-10 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100">
-          <h2 className="text-2xl font-bold text-gray-900 font-[family-name:var(--font-outfit)]">
-            Step 3 — Review &amp; Submit
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-6 border-b border-gray-100">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/20">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xs font-bold text-red-500 tracking-widest uppercase bg-red-50 px-3 py-1 rounded-full">
+                New Course
+              </span>
+            </div>
+            <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
+              Review &amp; Submit
+            </h1>
+            <p className="text-gray-500 mt-2 text-lg font-medium">
+              Review your course details before submitting for review.
+            </p>
+          </div>
+        </div>
+
+        {/* Step Indicator */}
+        <div className="flex items-center gap-3">
+          {[
+            { num: 1, label: "Course Details" },
+            { num: 2, label: "Chapters & Lessons" },
+            { num: 3, label: "Review & Submit" },
+          ].map((s, i) => (
+            <div key={s.num} className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                    step === s.num
+                      ? "bg-red-600 text-white shadow-lg shadow-red-500/25 scale-110"
+                      : step > s.num
+                        ? "bg-red-100 text-red-600"
+                        : "bg-gray-100 text-gray-400"
+                  }`}
+                >
+                  {step > s.num ? "✓" : s.num}
+                </div>
+                <span
+                  className={`text-sm font-semibold hidden sm:inline ${
+                    step === s.num
+                      ? "text-gray-900"
+                      : step > s.num
+                        ? "text-red-500"
+                        : "text-gray-400"
+                  }`}
+                >
+                  {s.label}
+                </span>
+              </div>
+              {i < 2 && (
+                <div
+                  className={`w-8 sm:w-16 h-[3px] rounded-full transition-colors ${
+                    step > s.num ? "bg-red-400" : "bg-gray-200"
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Course Metadata Summary Card */}
+        <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-red-500" />
+            Course Details
           </h2>
-          <p className="text-gray-500 mt-2 text-sm">
-            This step will be built in Step 64.
-          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                Title
+              </p>
+              <p className="text-base font-semibold text-gray-900">
+                {metadata.title}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                Level
+              </p>
+              <p className="text-base font-semibold text-gray-900 capitalize">
+                {levels.find((l) => l.value === metadata.level)?.icon}{" "}
+                {metadata.level}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                Price
+              </p>
+              <p className="text-base font-semibold text-gray-900">
+                Rs. {metadata.price}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                Tags
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {metadata.tags.length > 0 ? (
+                  metadata.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-2.5 py-0.5 text-xs font-semibold text-red-600 bg-red-50 rounded-full border border-red-100"
+                    >
+                      {tag}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-gray-400">No tags</span>
+                )}
+              </div>
+            </div>
+            <div className="sm:col-span-2">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                Description
+              </p>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                {metadata.description}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Curriculum Summary Card */}
+        <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <Video className="w-5 h-5 text-red-500" />
+            Curriculum
+            <span className="ml-auto text-sm font-medium text-gray-400">
+              {chapters.length} chapter{chapters.length !== 1 ? "s" : ""} ·{" "}
+              {totalLessonsStep3} lesson{totalLessonsStep3 !== 1 ? "s" : ""}
+            </span>
+          </h2>
+          <div className="space-y-4">
+            {chapters.map((ch, chIdx) => (
+              <div
+                key={ch.id}
+                className="border border-gray-100 rounded-2xl overflow-hidden"
+              >
+                <div className="flex items-center gap-3 px-5 py-3 bg-gray-50/80">
+                  <span className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-xs font-bold text-red-600 border border-red-100">
+                    {chIdx + 1}
+                  </span>
+                  <span className="text-sm font-bold text-gray-900">
+                    {ch.title}
+                  </span>
+                  <span className="ml-auto text-xs text-gray-400">
+                    {ch.lessons.length} lesson
+                    {ch.lessons.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {ch.lessons.map((lesson, lIdx) => (
+                    <div
+                      key={lesson.id}
+                      className="flex items-center gap-3 px-5 py-2.5"
+                    >
+                      <span className="w-5 h-5 rounded-md bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400">
+                        {lIdx + 1}
+                      </span>
+                      <span className="text-sm text-gray-700 flex-1">
+                        {lesson.title}
+                      </span>
+                      {lesson.videoFile ? (
+                        <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Video
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-xs font-semibold text-amber-500">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          No video
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Warning: Missing Videos */}
+        {lessonsWithoutVideo > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-amber-700">
+                {lessonsWithoutVideo} lesson
+                {lessonsWithoutVideo !== 1 ? "s are" : " is"} missing a video
+              </p>
+              <p className="text-xs text-amber-600 mt-0.5">
+                You can still submit, but lessons without videos will need
+                uploads later.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Submit Error */}
+        {submitError && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-4 text-sm text-red-600 font-medium flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+            {submitError}
+          </div>
+        )}
+
+        {/* Submitting Progress */}
+        {isSubmitting && (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl px-5 py-4 flex items-center gap-3">
+            <Loader2 className="w-5 h-5 text-blue-500 animate-spin shrink-0" />
+            <p className="text-sm font-medium text-blue-700">{submitStatus}</p>
+          </div>
+        )}
+
+        {/* Navigation Actions */}
+        <div className="flex justify-between items-center">
           <button
             onClick={() => setStep(2)}
-            className="mt-6 px-6 py-3 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+            disabled={isSubmitting}
+            className="group flex items-center gap-2 px-6 py-3.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
           >
-            ← Back to Chapters
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            Back to Chapters
+          </button>
+          <button
+            onClick={handleSubmitCourse}
+            disabled={isSubmitting}
+            className="group flex items-center gap-2.5 px-8 py-4 bg-red-600 text-white text-base font-bold rounded-2xl hover:bg-red-700 shadow-xl shadow-red-600/20 hover:shadow-red-600/30 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              <>
+                <Send className="w-5 h-5" />
+                Submit for Review
+              </>
+            )}
           </button>
         </div>
       </div>
