@@ -43,9 +43,9 @@ export default function LoginPage() {
       if (data.role === "coach" && data.verificationStatus === "pending") {
         router.push("/coach/pending");
       } else if (data.role === "manager") {
-        router.push("/manager");
+        router.push("/manager/dashboard");
       } else if (data.role === "coach") {
-        router.push("/coach");
+        router.push("/coach/dashboard");
       } else {
         router.push("/student");
       }
@@ -94,7 +94,12 @@ export default function LoginPage() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
-    router.push("/student");
+
+    if (data.role === "coach") {
+      router.push("/coach/pending");
+    } else {
+      router.push("/student");
+    }
   };
 
   const features = [
