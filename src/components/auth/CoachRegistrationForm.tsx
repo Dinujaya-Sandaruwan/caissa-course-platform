@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Loader2, Camera, UserCircle2, Crown } from "lucide-react";
+import imageCompression from "browser-image-compression";
 
 interface CoachRegistrationData {
   name: string;
@@ -44,17 +45,35 @@ export default function CoachRegistrationForm({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [photoError, setPhotoError] = useState("");
+  const [compressing, setCompressing] = useState(false);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError("Image must be less than 5MB");
-        return;
-      }
-      setProfilePic(file);
-      setProfilePicPreview(URL.createObjectURL(file));
-      setError("");
+    // Reset the input so the same file can be re-selected after an error
+    e.target.value = "";
+    setPhotoError("");
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setPhotoError("Only image files are allowed (JPG, PNG, WEBP, etc.)");
+      return;
+    }
+
+    try {
+      setCompressing(true);
+      const compressed = await imageCompression(file, {
+        maxSizeMB: 1, // Target: under 1MB
+        maxWidthOrHeight: 512, // Profile pics don't need to be huge
+        useWebWorker: true, // Non-blocking — keeps UI responsive
+        fileType: "image/webp", // Compress to WebP for best ratio
+      });
+      setProfilePic(compressed as unknown as File);
+      setProfilePicPreview(URL.createObjectURL(compressed));
+    } catch {
+      setPhotoError("Failed to process the image. Please try another file.");
+    } finally {
+      setCompressing(false);
     }
   };
 
@@ -150,7 +169,14 @@ export default function CoachRegistrationForm({
             onClick={() => fileInputRef.current?.click()}
           >
             <div className="absolute inset-0 rounded-full border-2 border-dashed border-gray-300 bg-slate-50 overflow-hidden transition-all group-hover:border-red-400 group-hover:bg-red-50 flex items-center justify-center shadow-inner">
-              {profilePicPreview ? (
+              {compressing ? (
+                <div className="flex flex-col items-center gap-1">
+                  <Loader2 className="w-8 h-8 text-red-400 animate-spin" />
+                  <span className="text-[10px] text-red-400 font-bold">
+                    Compressing...
+                  </span>
+                </div>
+              ) : profilePicPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={profilePicPreview}
@@ -180,6 +206,14 @@ export default function CoachRegistrationForm({
           <span className="text-xs text-gray-500 mt-1">
             Recommend 1:1 ratio, max 5MB
           </span>
+          {/* Inline photo error — shown right below the avatar */}
+          {photoError && (
+            <div className="flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
+              <span className="text-xs font-semibold text-red-600">
+                {photoError}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Core Info Grid */}
