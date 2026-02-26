@@ -47,7 +47,7 @@ export default function HeroSection() {
             </Link>
 
             <Link
-              href="/login?intent=coach"
+              href="/become-a-coach"
               className="group flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-200 hover:border-gray-300 font-semibold px-8 py-4 rounded-full transition-all duration-300"
             >
               <PlayCircle className="w-5 h-5 text-gray-500 group-hover:text-primary-red transition-colors" />

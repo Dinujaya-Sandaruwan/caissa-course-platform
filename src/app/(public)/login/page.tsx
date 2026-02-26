@@ -41,7 +41,7 @@ export default function LoginPage() {
       setStep("register");
     } else {
       if (data.role === "coach" && data.verificationStatus === "pending") {
-        router.push("/coach/pending");
+        router.push("/coach-pending");
       } else if (data.role === "manager") {
         router.push("/manager/dashboard");
       } else if (data.role === "coach") {
@@ -96,7 +96,7 @@ export default function LoginPage() {
     if (!res.ok) throw new Error(data.error);
 
     if (data.role === "coach") {
-      router.push("/coach/pending");
+      router.push("/coach-pending");
     } else {
       router.push("/student");
     }
