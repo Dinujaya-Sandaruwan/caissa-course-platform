@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, BookOpen, Loader2, ChevronDown } from "lucide-react";
+import {
+  Users,
+  BookOpen,
+  Loader2,
+  ChevronDown,
+  AlertTriangle,
+} from "lucide-react";
 
 interface CourseOption {
   _id: string;
@@ -22,6 +28,7 @@ export default function CoachStudentsPage() {
   const [selectedCourse, setSelectedCourse] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(false);
+  const [error, setError] = useState("");
 
   // Initial fetch — get courses list
   useEffect(() => {
@@ -37,6 +44,7 @@ export default function CoachStudentsPage() {
         }
       } catch (error) {
         console.error("Failed to fetch courses:", error);
+        setError("Failed to load courses. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -70,6 +78,22 @@ export default function CoachStudentsPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <AlertTriangle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+          <p className="text-gray-700 font-semibold">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-5 py-2 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }

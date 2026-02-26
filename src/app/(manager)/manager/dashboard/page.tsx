@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Users, BookOpen, ReceiptText, Video, Loader2 } from "lucide-react";
+import {
+  Users,
+  BookOpen,
+  ReceiptText,
+  Video,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react";
 
 interface DashboardData {
   pendingCoaches: number;
@@ -14,6 +21,7 @@ interface DashboardData {
 export default function ManagerDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function fetchDashboard() {
@@ -24,6 +32,7 @@ export default function ManagerDashboardPage() {
         }
       } catch (error) {
         console.error("Failed to fetch dashboard:", error);
+        setError("Failed to load dashboard data. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -83,6 +92,14 @@ export default function ManagerDashboardPage() {
           </p>
         </div>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl">
+          <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
+          <p className="text-sm font-semibold text-red-700">{error}</p>
+        </div>
+      )}
 
       {/* Premium Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
