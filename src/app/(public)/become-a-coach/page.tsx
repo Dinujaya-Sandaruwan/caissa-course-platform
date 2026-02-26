@@ -42,7 +42,7 @@ export default function BecomeACoachPage() {
         if (data.verificationStatus === "approved") {
           router.push("/coach");
         } else {
-          router.push("/coach/pending");
+          router.push("/coach-pending");
         }
       } else if (data.role === "manager") {
         router.push("/manager");
@@ -71,7 +71,14 @@ export default function BecomeACoachPage() {
       const fb = new FormData();
       Object.keys(formData).forEach((key) => {
         if (key === "profilePicture" || key === "profilePictureThumbnail") {
-          if (formData[key]) fb.append(key, formData[key]);
+          if (formData[key]) {
+            // For the thumbnail, provide a fallback name since it's a generated Blob/File
+            const filename =
+              key === "profilePictureThumbnail"
+                ? "thumbnail.webp"
+                : formData[key].name || "photo.jpg";
+            fb.append(key, formData[key], filename);
+          }
         } else if (Array.isArray(formData[key])) {
           fb.append(key, JSON.stringify(formData[key]));
         } else if (formData[key] !== undefined) {
@@ -95,7 +102,7 @@ export default function BecomeACoachPage() {
     if (!res.ok) throw new Error(data.error);
 
     if (data.role === "coach") {
-      router.push("/coach/pending");
+      router.push("/coach-pending");
     }
   };
 
