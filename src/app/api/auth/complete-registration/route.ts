@@ -26,24 +26,27 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get("content-type") || "";
     const body: Record<string, any> = {};
     let profilePhotoUrl: string | undefined = undefined;
+    let profilePhotoThumbnailUrl: string | undefined = undefined;
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData();
       formData.forEach((value, key) => {
-        if (key !== "profilePicture") {
+        if (key !== "profilePicture" && key !== "profilePictureThumbnail") {
           body[key] = value;
         }
       });
 
-      const file = formData.get("profilePicture") as File | null;
-      if (file && file.size > 0) {
+      const processFile = async (
+        file: File | null,
+      ): Promise<string | undefined> => {
+        if (!file || file.size === 0) return undefined;
+
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
         const uploadDir =
           process.env.UPLOAD_DIR || path.join(process.cwd(), "public/uploads");
 
-        // Ensure directory exists
         try {
           await mkdir(uploadDir, { recursive: true });
         } catch {
@@ -54,10 +57,15 @@ export async function POST(request: NextRequest) {
         const filePath = path.join(uploadDir, fileName);
         await writeFile(filePath, buffer);
 
-        // The URL should be relative for next/image or standard img tag
-        // assuming UPLOAD_DIR is inside public/
-        profilePhotoUrl = `/api/files/${fileName}`;
-      }
+        return `/api/files/${fileName}`;
+      };
+
+      profilePhotoUrl = await processFile(
+        formData.get("profilePicture") as File | null,
+      );
+      profilePhotoThumbnailUrl = await processFile(
+        formData.get("profilePictureThumbnail") as File | null,
+      );
     } else {
       const jsonBody = await request.json();
       Object.assign(body, jsonBody);
@@ -98,6 +106,7 @@ export async function POST(request: NextRequest) {
       email: email?.trim() || undefined,
       role,
       profilePhoto: profilePhotoUrl,
+      profilePhotoThumbnail: profilePhotoThumbnailUrl,
       lastLoginAt: new Date(),
     });
 

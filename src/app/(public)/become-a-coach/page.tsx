@@ -70,8 +70,8 @@ export default function BecomeACoachPage() {
     if (formData.profilePicture) {
       const fb = new FormData();
       Object.keys(formData).forEach((key) => {
-        if (key === "profilePicture") {
-          fb.append(key, formData[key]);
+        if (key === "profilePicture" || key === "profilePictureThumbnail") {
+          if (formData[key]) fb.append(key, formData[key]);
         } else if (Array.isArray(formData[key])) {
           fb.append(key, JSON.stringify(formData[key]));
         } else if (formData[key] !== undefined) {

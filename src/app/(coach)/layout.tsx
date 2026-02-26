@@ -30,7 +30,7 @@ export default async function CoachLayout({
   }
 
   const dbUser = await User.findById(user.userId)
-    .select("name profilePhoto")
+    .select("name profilePhoto profilePhotoThumbnail")
     .lean();
   const userName = dbUser?.name || "Coach";
 
@@ -69,10 +69,12 @@ export default async function CoachLayout({
               <div className="bg-gray-50 rounded-2xl p-4">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-red-600 font-bold text-lg border border-gray-100 overflow-hidden">
-                    {dbUser?.profilePhoto ? (
+                    {dbUser?.profilePhotoThumbnail || dbUser?.profilePhoto ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={dbUser.profilePhoto}
+                        src={
+                          dbUser.profilePhotoThumbnail || dbUser.profilePhoto
+                        }
                         alt={userName}
                         className="w-full h-full object-cover"
                       />

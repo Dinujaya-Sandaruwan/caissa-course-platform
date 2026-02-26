@@ -11,6 +11,7 @@ interface PendingCoach {
     whatsappNumber: string;
     email?: string;
     profilePhoto?: string;
+    profilePhotoThumbnail?: string;
   };
   dateOfBirth: string | Date;
   fideId?: string;
@@ -131,10 +132,14 @@ export default function CoachesPage() {
               <div className="border-b border-gray-100 px-8 py-6 flex flex-col sm:flex-row sm:items-center justify-between bg-slate-50/50 gap-4">
                 <div className="flex items-center gap-5">
                   <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 font-extrabold text-2xl shadow-sm overflow-hidden group-hover:shadow-md transition-all">
-                    {coach.userId.profilePhoto ? (
+                    {coach.userId.profilePhotoThumbnail ||
+                    coach.userId.profilePhoto ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={coach.userId.profilePhoto}
+                        src={
+                          coach.userId.profilePhotoThumbnail ||
+                          coach.userId.profilePhoto
+                        }
                         alt={coach.userId.name}
                         className="w-full h-full object-cover"
                       />

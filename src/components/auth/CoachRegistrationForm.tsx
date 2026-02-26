@@ -11,6 +11,7 @@ interface CoachRegistrationData {
   fideId: string;
   fideRating: number;
   profilePicture?: File | null;
+  profilePictureThumbnail?: File | null;
   address?: string;
   bio?: string;
   specializations?: string[];
@@ -38,6 +39,9 @@ export default function CoachRegistrationForm({
     playerAchievements: "",
   });
   const [profilePic, setProfilePic] = useState<File | null>(null);
+  const [profilePicThumbnail, setProfilePicThumbnail] = useState<File | null>(
+    null,
+  );
   const [profilePicPreview, setProfilePicPreview] = useState<string | null>(
     null,
   );
@@ -60,16 +64,27 @@ export default function CoachRegistrationForm({
       return;
     }
 
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError("Image must be less than 5MB");
+      return;
+    }
+
     try {
       setCompressing(true);
-      const compressed = await imageCompression(file, {
-        maxSizeMB: 1, // Target: under 1MB
-        maxWidthOrHeight: 512, // Profile pics don't need to be huge
-        useWebWorker: true, // Non-blocking — keeps UI responsive
-        fileType: "image/webp", // Compress to WebP for best ratio
+      // Keep the original (or a reasonably sized version)
+      setProfilePic(file);
+
+      // Generate the tiny thumbnail
+      const thumbnail = await imageCompression(file, {
+        maxSizeMB: 0.1, // Target: under 100KB for thumbnail
+        maxWidthOrHeight: 256, // Small square
+        useWebWorker: true,
+        fileType: "image/webp",
       });
-      setProfilePic(compressed as unknown as File);
-      setProfilePicPreview(URL.createObjectURL(compressed));
+
+      setProfilePicThumbnail(thumbnail as unknown as File);
+      // Show the thumbnail in the preview circle to save memory
+      setProfilePicPreview(URL.createObjectURL(thumbnail));
     } catch {
       setPhotoError("Failed to process the image. Please try another file.");
     } finally {
@@ -111,6 +126,7 @@ export default function CoachRegistrationForm({
         fideId: form.fideId.trim(),
         fideRating: Number(form.fideRating),
         profilePicture: profilePic,
+        profilePictureThumbnail: profilePicThumbnail,
       };
       if (form.email?.trim()) data.email = form.email.trim();
       if (form.address?.trim()) data.address = form.address.trim();

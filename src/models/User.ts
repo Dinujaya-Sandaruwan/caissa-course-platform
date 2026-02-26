@@ -9,6 +9,7 @@ export interface IUser extends Document {
   role: "student" | "coach" | "manager";
   status: "active" | "suspended";
   profilePhoto?: string;
+  profilePhotoThumbnail?: string;
   lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -52,6 +53,9 @@ const UserSchema = new Schema<IUser>(
       default: "active",
     },
     profilePhoto: {
+      type: String,
+    },
+    profilePhotoThumbnail: {
       type: String,
     },
     lastLoginAt: {
