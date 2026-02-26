@@ -18,10 +18,7 @@ export async function GET(request: NextRequest) {
     const query: Record<string, unknown> = { status: "published" };
 
     if (search.trim()) {
-      query.$or = [
-        { title: { $regex: search.trim(), $options: "i" } },
-        { description: { $regex: search.trim(), $options: "i" } },
-      ];
+      query.$text = { $search: search.trim() };
     }
 
     if (level && ["beginner", "intermediate", "advanced"].includes(level)) {
@@ -37,22 +34,27 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Build sort
-    let sortObj: Record<string, 1 | -1> = { createdAt: -1 };
-    switch (sort) {
-      case "popular":
-        sortObj = { enrollmentCount: -1, _id: -1 };
-        break;
-      case "price_asc":
-        sortObj = { price: 1, _id: -1 };
-        break;
-      case "price_desc":
-        sortObj = { price: -1, _id: -1 };
-        break;
-      case "newest":
-      default:
-        sortObj = { createdAt: -1, _id: -1 };
-        break;
+    // Build sort — use text relevance when searching
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let sortObj: Record<string, any> = { createdAt: -1, _id: -1 };
+    if (search.trim()) {
+      sortObj = { score: { $meta: "textScore" }, _id: -1 };
+    } else {
+      switch (sort) {
+        case "popular":
+          sortObj = { enrollmentCount: -1, _id: -1 };
+          break;
+        case "price_asc":
+          sortObj = { price: 1, _id: -1 };
+          break;
+        case "price_desc":
+          sortObj = { price: -1, _id: -1 };
+          break;
+        case "newest":
+        default:
+          sortObj = { createdAt: -1, _id: -1 };
+          break;
+      }
     }
 
     const courses = await Course.find(query)
