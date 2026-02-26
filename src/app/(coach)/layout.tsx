@@ -22,10 +22,11 @@ export default async function CoachLayout({
 
   await connectDB();
 
-  // Verify coach status
+  // Verify coach profile is approved — redirect to /coach-pending (outside this layout)
+  // Using /coach-pending instead of /coach/pending to avoid an infinite redirect loop
   const profile = await CoachProfile.findOne({ userId: user.userId }).lean();
   if (!profile || profile.verificationStatus !== "approved") {
-    redirect("/coach/pending");
+    redirect("/coach-pending");
   }
 
   const dbUser = await User.findById(user.userId)
