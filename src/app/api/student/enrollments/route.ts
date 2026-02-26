@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     const filePath = path.join(receiptsDir, filename);
     await writeFile(filePath, buffer);
 
-    const receiptImageUrl = `/uploads/receipts/${filename}`;
+    const receiptImageUrl = `/api/files/receipts/${filename}`;
 
     // Create enrollment
     const enrollment = await Enrollment.create({

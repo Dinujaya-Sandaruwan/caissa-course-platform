@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
         // The URL should be relative for next/image or standard img tag
         // assuming UPLOAD_DIR is inside public/
-        profilePhotoUrl = `/uploads/${fileName}`;
+        profilePhotoUrl = `/api/files/${fileName}`;
       }
     } else {
       const jsonBody = await request.json();

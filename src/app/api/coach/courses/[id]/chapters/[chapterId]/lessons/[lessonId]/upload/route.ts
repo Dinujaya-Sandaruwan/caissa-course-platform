@@ -115,7 +115,7 @@ export async function POST(
     await writeFile(fullFilePath, buffer);
 
     // Generate the public web URL path to save to the DB
-    const relativeUrl = `/${uploadDir.replace(/^public\//, "")}/courses/${courseId}/${fileName}`;
+    const relativeUrl = `/api/files/courses/${courseId}/${fileName}`;
 
     // Update the lesson
     lesson.tempVideoPath = relativeUrl;
