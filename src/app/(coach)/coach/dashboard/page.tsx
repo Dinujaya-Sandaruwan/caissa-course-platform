@@ -1,85 +1,81 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, BookOpen, Clock, FilePlus, PlusSquare } from "lucide-react";
+import {
+  Users,
+  BookOpen,
+  Clock,
+  FilePlus,
+  PlusSquare,
+  Loader2,
+} from "lucide-react";
 import Link from "next/link";
 
-interface CourseStat {
-  status: string;
-  enrollmentCount: number;
+interface RecentEnrollment {
+  _id: string;
+  studentName: string;
+  courseTitle: string;
+  enrolledAt: string;
+}
+
+interface DashboardData {
+  totalStudents: number;
+  totalPublished: number;
+  totalPending: number;
+  totalDraft: number;
+  recentEnrollments: RecentEnrollment[];
 }
 
 export default function CoachDashboardPage() {
-  const [courses, setCourses] = useState<CourseStat[]>([]);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchCourses() {
+    async function fetchDashboard() {
       try {
-        const res = await fetch("/api/coach/courses");
+        const res = await fetch("/api/coach/dashboard");
         if (res.ok) {
-          const data = await res.json();
-          setCourses(data);
+          setData(await res.json());
         }
       } catch (error) {
-        console.error("Failed to fetch courses:", error);
+        console.error("Failed to fetch dashboard:", error);
       } finally {
         setLoading(false);
       }
     }
-    fetchCourses();
+    fetchDashboard();
   }, []);
-
-  const totalStudents = courses.reduce(
-    (acc, course) => acc + (course.enrollmentCount || 0),
-    0,
-  );
-  const publishedCourses = courses.filter(
-    (c) => c.status === "published",
-  ).length;
-  const pendingCourses = courses.filter(
-    (c) => c.status === "pending_review",
-  ).length;
-  const draftCourses = courses.filter((c) => c.status === "draft").length;
 
   const stats = [
     {
       label: "Total Students",
-      value: loading ? "..." : totalStudents.toString(),
+      value: loading ? "..." : (data?.totalStudents ?? 0).toString(),
       icon: Users,
       trend: "All time enrollments",
-      trendUp: true,
-      color: "from-blue-500 to-blue-600",
       bgClass: "bg-blue-50",
       textClass: "text-blue-600",
     },
     {
       label: "Published Courses",
-      value: loading ? "..." : publishedCourses.toString(),
+      value: loading ? "..." : (data?.totalPublished ?? 0).toString(),
       icon: BookOpen,
       trend: "Live on platform",
-      trendUp: true,
-      color: "from-emerald-500 to-emerald-600",
       bgClass: "bg-emerald-50",
       textClass: "text-emerald-600",
     },
     {
       label: "Pending Review",
-      value: loading ? "..." : pendingCourses.toString(),
+      value: loading ? "..." : (data?.totalPending ?? 0).toString(),
       icon: Clock,
       trend: "Awaiting approval",
-      trendUp: true,
-      color: "from-amber-500 to-amber-600",
       bgClass: "bg-amber-50",
       textClass: "text-amber-600",
     },
     {
       label: "Draft Courses",
-      value: loading ? "..." : draftCourses.toString(),
+      value: loading ? "..." : (data?.totalDraft ?? 0).toString(),
       icon: FilePlus,
       trend: "In progress",
-      trendUp: true,
-      color: "from-purple-500 to-purple-600",
       bgClass: "bg-purple-50",
       textClass: "text-purple-600",
     },
@@ -131,16 +127,68 @@ export default function CoachDashboardPage() {
         })}
       </div>
 
-      {/* Placeholders for upcoming sections */}
+      {/* Bottom Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
+        {/* Recent Enrollments */}
         <div className="lg:col-span-2 bg-white rounded-3xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100 min-h-[400px]">
           <h2 className="text-xl font-bold text-gray-900 mb-6 font-[family-name:var(--font-outfit)]">
             Recent Enrolled Students
           </h2>
-          <div className="flex items-center justify-center h-[200px] text-gray-400 font-medium">
-            No recent activity
-          </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center h-[200px]">
+              <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
+            </div>
+          ) : !data?.recentEnrollments?.length ? (
+            <div className="flex items-center justify-center h-[200px] text-gray-400 font-medium">
+              No enrollments yet
+            </div>
+          ) : (
+            <div className="space-y-0 divide-y divide-gray-100">
+              {/* Table Header */}
+              <div className="grid grid-cols-[1fr_1fr_100px] gap-3 pb-3">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                  Student
+                </span>
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                  Course
+                </span>
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider text-right">
+                  Date
+                </span>
+              </div>
+              {/* Rows */}
+              {data.recentEnrollments.map((enrollment) => (
+                <div
+                  key={enrollment._id}
+                  className="grid grid-cols-[1fr_1fr_100px] gap-3 py-3.5 items-center"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600 shrink-0">
+                      {enrollment.studentName.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900 truncate">
+                      {enrollment.studentName}
+                    </span>
+                  </div>
+                  <span className="text-sm text-gray-600 truncate">
+                    {enrollment.courseTitle}
+                  </span>
+                  <span className="text-xs text-gray-400 text-right">
+                    {enrollment.enrolledAt
+                      ? new Date(enrollment.enrolledAt).toLocaleDateString(
+                          "en-US",
+                          { month: "short", day: "numeric" },
+                        )
+                      : "—"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Quick Actions */}
         <div className="bg-white rounded-3xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100 min-h-[400px]">
           <h2 className="text-xl font-bold text-gray-900 mb-6 font-[family-name:var(--font-outfit)]">
             Quick Actions
@@ -152,6 +200,13 @@ export default function CoachDashboardPage() {
             >
               <PlusSquare className="w-5 h-5" />
               Create New Course
+            </Link>
+            <Link
+              href="/coach/courses"
+              className="w-full bg-gray-50 text-gray-700 hover:bg-gray-100 font-bold py-3.5 px-4 rounded-xl transition-colors border border-gray-200 flex items-center justify-center gap-2"
+            >
+              <BookOpen className="w-5 h-5" />
+              My Courses
             </Link>
           </div>
         </div>
