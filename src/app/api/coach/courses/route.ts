@@ -3,6 +3,12 @@ import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
 import CoachProfile from "@/models/CoachProfile";
+import {
+  validateRequiredString,
+  validateNumber,
+  validateEnum,
+  stripHtml,
+} from "@/lib/validation";
 
 export async function GET(request: NextRequest) {
   try {
@@ -50,23 +56,46 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { title, description, price, level, tags } = body;
 
-    if (!title || !description || price === undefined || !level) {
-      return NextResponse.json(
-        {
-          error: "Missing required fields: title, description, price, or level",
-        },
-        { status: 400 },
-      );
-    }
+    // Validate required fields
+    const titleResult = validateRequiredString(title, "Title");
+    if ("error" in titleResult)
+      return NextResponse.json({ error: titleResult.error }, { status: 400 });
+
+    const descResult = validateRequiredString(description, "Description");
+    if ("error" in descResult)
+      return NextResponse.json({ error: descResult.error }, { status: 400 });
+
+    const priceResult = validateNumber(price, "Price", {
+      required: true,
+      min: 0,
+      max: 1000000,
+    });
+    if ("error" in priceResult)
+      return NextResponse.json({ error: priceResult.error }, { status: 400 });
+
+    const levelResult = validateEnum(level, "Level", [
+      "beginner",
+      "intermediate",
+      "advanced",
+    ]);
+    if ("error" in levelResult)
+      return NextResponse.json({ error: levelResult.error }, { status: 400 });
+
+    // Sanitize tags
+    const safeTags = Array.isArray(tags)
+      ? tags
+          .filter((t: unknown) => typeof t === "string")
+          .map((t: string) => stripHtml(t))
+      : [];
 
     // Create a new draft course
     const newCourse = await Course.create({
       coach: user.userId,
-      title: title.trim(),
-      description: description.trim(),
-      price: Number(price),
-      level,
-      tags: Array.isArray(tags) ? tags : [],
+      title: titleResult.value,
+      description: descResult.value,
+      price: priceResult.value,
+      level: levelResult.value,
+      tags: safeTags,
       status: "draft",
     });
 

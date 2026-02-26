@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Enrollment from "@/models/Enrollment";
 import Progress from "@/models/Progress";
+import { isValidObjectId } from "@/lib/validation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,6 +18,13 @@ export async function POST(request: NextRequest) {
     if (!lessonId || !courseId) {
       return NextResponse.json(
         { error: "lessonId and courseId are required" },
+        { status: 400 },
+      );
+    }
+
+    if (!isValidObjectId(lessonId) || !isValidObjectId(courseId)) {
+      return NextResponse.json(
+        { error: "Invalid lessonId or courseId format" },
         { status: 400 },
       );
     }

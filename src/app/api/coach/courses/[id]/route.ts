@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
 import Chapter from "@/models/Chapter";
 import Lesson from "@/models/Lesson";
+import { stripHtml, validateOptionalString } from "@/lib/validation";
 
 export async function GET(
   request: NextRequest,
@@ -89,12 +90,29 @@ export async function PATCH(
     const body = await request.json();
     const { title, description, price, level, tags, thumbnailUrl } = body;
 
-    if (title !== undefined) course.title = title.trim();
-    if (description !== undefined) course.description = description.trim();
-    if (price !== undefined) course.price = Number(price);
-    if (level !== undefined) course.level = level;
-    if (tags !== undefined) course.tags = Array.isArray(tags) ? tags : [];
-    if (thumbnailUrl !== undefined) course.thumbnailUrl = thumbnailUrl;
+    if (title !== undefined) course.title = stripHtml(String(title));
+    if (description !== undefined)
+      course.description = stripHtml(String(description));
+    if (price !== undefined) {
+      const p = Number(price);
+      if (isNaN(p) || p < 0)
+        return NextResponse.json({ error: "Invalid price" }, { status: 400 });
+      course.price = p;
+    }
+    if (level !== undefined) {
+      if (!["beginner", "intermediate", "advanced"].includes(level))
+        return NextResponse.json({ error: "Invalid level" }, { status: 400 });
+      course.level = level;
+    }
+    if (tags !== undefined) {
+      course.tags = Array.isArray(tags)
+        ? tags
+            .filter((t: unknown) => typeof t === "string")
+            .map((t: string) => stripHtml(t))
+        : [];
+    }
+    if (thumbnailUrl !== undefined)
+      course.thumbnailUrl = validateOptionalString(thumbnailUrl) || "";
 
     await course.save();
 
