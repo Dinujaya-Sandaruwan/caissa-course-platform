@@ -3,7 +3,10 @@ import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import CoachProfile from "@/models/CoachProfile";
 import User from "@/models/User";
-import { sendWhatsAppVerificationUpdate } from "@/lib/whatsapp";
+import {
+  notifyCoachAccountApproved,
+  notifyCoachAccountRejected,
+} from "@/lib/whatsapp";
 
 import mongoose from "mongoose";
 
@@ -67,16 +70,14 @@ export async function PATCH(
     // Send WhatsApp notification
     try {
       if (user?.whatsappNumber) {
-        await sendWhatsAppVerificationUpdate(
-          user.whatsappNumber,
-          user.name,
-          action,
-          notes,
-        );
+        if (action === "approved") {
+          await notifyCoachAccountApproved(user.whatsappNumber);
+        } else {
+          await notifyCoachAccountRejected(user.whatsappNumber, notes);
+        }
       }
     } catch (waError) {
       console.error("Failed to send WhatsApp verification update:", waError);
-      // We don't fail the API call if the notification fails
     }
 
     return NextResponse.json({ success: true, profile: coachProfile });

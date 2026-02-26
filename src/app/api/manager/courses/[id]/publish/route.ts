@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
 import Chapter from "@/models/Chapter";
 import Lesson from "@/models/Lesson";
-import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { notifyCoachCoursePublished } from "@/lib/whatsapp";
 
 export async function PATCH(
   request: NextRequest,
@@ -67,14 +67,10 @@ export async function PATCH(
 
     // Notify the coach
     const populatedCoach = course.coach as unknown as {
-      name?: string;
       phone?: string;
     };
     if (populatedCoach?.phone) {
-      await sendWhatsAppMessage(
-        populatedCoach.phone,
-        `🚀 Your course *"${course.title}"* is now *LIVE*!\n\nStudents can now enroll and start learning. Congratulations, ${populatedCoach.name || "Coach"}! 🎉`,
-      );
+      await notifyCoachCoursePublished(populatedCoach.phone, course.title);
     }
 
     return NextResponse.json({

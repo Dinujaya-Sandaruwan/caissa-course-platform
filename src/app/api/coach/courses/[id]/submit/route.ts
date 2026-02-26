@@ -4,7 +4,8 @@ import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
 import Chapter from "@/models/Chapter";
 import Lesson from "@/models/Lesson";
-import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { notifyManagerNewCourseSubmission } from "@/lib/whatsapp";
+import User from "@/models/User";
 
 export async function POST(
   request: NextRequest,
@@ -70,9 +71,11 @@ export async function POST(
     // 5. Send a WhatsApp notification to the manager
     const managerNumber = process.env.MANAGER_WHATSAPP_NUMBER;
     if (managerNumber) {
-      await sendWhatsAppMessage(
+      const coach = await User.findById(user.userId).select("name").lean();
+      await notifyManagerNewCourseSubmission(
         managerNumber,
-        `📚 *New Course Submitted for Review*\n\nCourse: *${course.title}*\nLevel: ${course.level}\nChapters: ${chapters.length}\nLessons: ${lessonCount}\n\nPlease log into the Manager Portal to review and approve this course.`,
+        course.title,
+        coach?.name || "Coach",
       );
     }
 

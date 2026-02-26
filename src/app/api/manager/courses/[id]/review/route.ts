@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
-import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import {
+  notifyCoachCourseApproved,
+  notifyCoachCourseRejected,
+  notifyCoachCourseOnHold,
+} from "@/lib/whatsapp";
 
 export async function PATCH(
   request: NextRequest,
@@ -60,25 +64,17 @@ export async function PATCH(
 
     // Send WhatsApp notification to the coach
     const populatedCoach = course.coach as unknown as {
-      name?: string;
       phone?: string;
     };
     const coachPhone = populatedCoach?.phone;
-    const coachName = populatedCoach?.name || "Coach";
-    const courseTitle = course.title;
 
     if (coachPhone) {
-      let message = "";
       if (action === "approved") {
-        message = `🎉 Great news, ${coachName}!\n\nYour course *"${courseTitle}"* has been *approved* by our review team!\n\nIt is now ready to be published. You will be notified once it goes live.`;
+        await notifyCoachCourseApproved(coachPhone, course.title);
       } else if (action === "rejected") {
-        message = `Hello ${coachName},\n\nYour course *"${courseTitle}"* has been *reviewed* and requires some changes.\n\n📝 *Feedback:* ${notes || "No specific notes provided."}\n\nPlease revise and resubmit when ready.`;
+        await notifyCoachCourseRejected(coachPhone, course.title, notes);
       } else if (action === "held") {
-        message = `Hello ${coachName},\n\nYour course *"${courseTitle}"* is still under review. The reviewer has left a note:\n\n📝 *Note:* ${notes || "No specific notes provided."}\n\nNo action is needed from you at this time.`;
-      }
-
-      if (message) {
-        await sendWhatsAppMessage(coachPhone, message);
+        await notifyCoachCourseOnHold(coachPhone, course.title, notes);
       }
     }
 

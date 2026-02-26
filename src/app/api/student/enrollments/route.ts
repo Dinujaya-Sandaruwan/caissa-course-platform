@@ -3,7 +3,8 @@ import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
 import Enrollment from "@/models/Enrollment";
-import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { notifyManagerNewReceipt } from "@/lib/whatsapp";
+import User from "@/models/User";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
@@ -124,9 +125,11 @@ export async function POST(request: NextRequest) {
     // Notify manager
     const managerPhone = process.env.MANAGER_WHATSAPP_NUMBER;
     if (managerPhone) {
-      await sendWhatsAppMessage(
+      const student = await User.findById(session.userId).select("name").lean();
+      await notifyManagerNewReceipt(
         managerPhone,
-        `💳 *New Enrollment Receipt*\n\nA student has submitted a payment receipt for *"${course.title}"*.\n\nAmount: Rs. ${course.price?.toLocaleString()}\nRef: ${referenceNumber.trim()}\n\nPlease review in the Manager Panel.`,
+        student?.name || "Student",
+        course.title,
       );
     }
 

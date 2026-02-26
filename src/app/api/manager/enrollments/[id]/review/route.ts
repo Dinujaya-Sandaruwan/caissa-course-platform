@@ -3,7 +3,10 @@ import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Enrollment from "@/models/Enrollment";
 import Course from "@/models/Course";
-import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import {
+  notifyStudentEnrollmentApproved,
+  notifyStudentEnrollmentRejected,
+} from "@/lib/whatsapp";
 
 export async function PATCH(
   request: NextRequest,
@@ -64,20 +67,19 @@ export async function PATCH(
     await enrollment.save();
 
     // Send WhatsApp notification to the student
-    const student = enrollment.studentId as unknown as {
-      name?: string;
-      phone?: string;
-    };
+    const student = enrollment.studentId as unknown as { phone?: string };
     const course = enrollment.courseId as unknown as { title?: string };
 
-    if (student?.phone) {
-      let message = "";
+    if (student?.phone && course?.title) {
       if (action === "approved") {
-        message = `🎉 Congratulations, ${student.name || "Student"}!\n\nYour enrollment for *"${course?.title}"* has been *approved*!\n\nYou can now access all course content. Happy learning! 📚`;
+        await notifyStudentEnrollmentApproved(student.phone, course.title);
       } else {
-        message = `Hello ${student.name || "Student"},\n\nYour enrollment for *"${course?.title}"* could not be approved.\n\n📝 *Reason:* ${notes || "Payment could not be verified."}\n\nPlease resubmit with a valid payment receipt.`;
+        await notifyStudentEnrollmentRejected(
+          student.phone,
+          course.title,
+          notes,
+        );
       }
-      await sendWhatsAppMessage(student.phone, message);
     }
 
     return NextResponse.json({
