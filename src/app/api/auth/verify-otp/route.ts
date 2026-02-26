@@ -39,9 +39,18 @@ export async function POST(request: NextRequest) {
     session.attempts += 1;
 
     if (session.attempts > 5) {
+      // Lock this number for 30 minutes
+      const lockedUntil = new Date(Date.now() + 30 * 60 * 1000);
+      await OTPSession.updateMany(
+        { whatsappNumber: whatsappNumber.trim() },
+        { $set: { lockedUntil } },
+      );
       await OTPSession.deleteOne({ _id: session._id });
       return NextResponse.json(
-        { error: "Too many failed attempts. Please request a new OTP." },
+        {
+          error:
+            "Too many failed attempts. This number is locked for 30 minutes.",
+        },
         { status: 429 },
       );
     }

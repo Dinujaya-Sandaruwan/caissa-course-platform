@@ -5,6 +5,7 @@ export interface IOTPSession extends Document {
   otpHash: string;
   expiresAt: Date;
   attempts: number;
+  lockedUntil?: Date;
   createdAt: Date;
 }
 
@@ -25,6 +26,10 @@ const OTPSessionSchema = new Schema<IOTPSession>({
   attempts: {
     type: Number,
     default: 0,
+  },
+  lockedUntil: {
+    type: Date,
+    default: null,
   },
   createdAt: {
     type: Date,

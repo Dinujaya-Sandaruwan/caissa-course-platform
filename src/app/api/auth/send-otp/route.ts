@@ -25,7 +25,25 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    // 2. Rate limiting — max 3 OTPs in the last 10 minutes
+    // 2. Check lockout — if any session for this number has lockedUntil in the future, block
+    const lockedSession = await OTPSession.findOne({
+      whatsappNumber: cleanNumber,
+      lockedUntil: { $gt: new Date() },
+    });
+
+    if (lockedSession) {
+      const minutesLeft = Math.ceil(
+        (lockedSession.lockedUntil!.getTime() - Date.now()) / 60000,
+      );
+      return NextResponse.json(
+        {
+          error: `Too many failed attempts. Please try again in ${minutesLeft} minute${minutesLeft > 1 ? "s" : ""}.`,
+        },
+        { status: 429 },
+      );
+    }
+
+    // 3. Rate limiting — max 3 OTPs in the last 10 minutes
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
     const recentAttempts = await OTPSession.countDocuments({
       whatsappNumber: cleanNumber,
@@ -39,27 +57,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Generate a random 6-digit OTP
+    // 4. Generate a random 6-digit OTP
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     console.log(`[DEV OTP LOGGER] OTP for ${cleanNumber} is: ${otp}`);
 
-    // 4. Hash the OTP
+    // 5. Hash the OTP
     const otpHash = await bcrypt.hash(otp, 10);
 
-    // 5. Save OTPSession with 5-minute expiry
+    // 6. Save OTPSession with 5-minute expiry
     await OTPSession.create({
       whatsappNumber: cleanNumber,
       otpHash,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
 
-    // 6. Send OTP via WhatsApp
+    // 7. Send OTP via WhatsApp
     await sendWhatsAppMessage(
       cleanNumber,
       `Your Caissa Chess Academy verification code is: *${otp}*\n\nThis code expires in 5 minutes. Do not share it with anyone.`,
     );
 
-    // 7. Return success (never return the OTP in the response)
+    // 8. Return success (never return the OTP in the response)
     return NextResponse.json(
       { message: "OTP sent successfully" },
       { status: 200 },
