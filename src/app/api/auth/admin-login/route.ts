@@ -77,6 +77,9 @@ export async function POST(req: NextRequest) {
 
     // Generate a random 6-digit OTP
     const otp = String(Math.floor(100000 + Math.random() * 900000));
+    console.log(
+      `\n=============================\n[TESTING] ADMIN LOGIN OTP: ${otp}\n=============================\n`,
+    );
     const otpHash = await bcrypt.hash(otp, 10);
 
     // Save OTPSession with 5-minute expiry
