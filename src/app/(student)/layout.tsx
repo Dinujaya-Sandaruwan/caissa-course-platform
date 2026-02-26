@@ -5,7 +5,7 @@ import User from "@/models/User";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
 import React from "react";
-import StudentNavLinks from "./StudentNavLinks";
+import StudentNavLinks from "@/components/StudentNavLinks";
 
 export default async function StudentLayout({
   children,
