@@ -6,13 +6,8 @@ import Link from "next/link";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import SearchBar from "@/components/ui/SearchBar";
-import {
-  SlidersHorizontal,
-  Users,
-  BookOpen,
-  Loader2,
-  ChevronDown,
-} from "lucide-react";
+import CourseFilters from "@/components/ui/CourseFilters";
+import { Users, BookOpen, Loader2 } from "lucide-react";
 
 interface PublicCourse {
   _id: string;
@@ -103,19 +98,6 @@ function CoursesContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, levelParam, sortParam]);
 
-  // Helper to update a single URL param
-  function updateParam(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    window.history.replaceState(null, "", `?${params.toString()}`);
-    // Force re-render by dispatching popstate
-    window.dispatchEvent(new PopStateEvent("popstate"));
-  }
-
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Header */}
@@ -138,36 +120,8 @@ function CoursesContent() {
             {/* Search */}
             <SearchBar placeholder="Search courses..." paramName="search" />
 
-            {/* Level Filter */}
-            <div className="relative">
-              <SlidersHorizontal className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              <select
-                value={levelParam}
-                onChange={(e) => updateParam("level", e.target.value)}
-                className="appearance-none pl-10 pr-10 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 text-sm font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 cursor-pointer"
-              >
-                <option value="">All Levels</option>
-                <option value="beginner">🌱 Beginner</option>
-                <option value="intermediate">⚔️ Intermediate</option>
-                <option value="advanced">👑 Advanced</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            </div>
-
-            {/* Sort */}
-            <div className="relative">
-              <select
-                value={sortParam}
-                onChange={(e) => updateParam("sort", e.target.value)}
-                className="appearance-none pl-4 pr-10 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 text-sm font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 cursor-pointer"
-              >
-                <option value="newest">Newest</option>
-                <option value="popular">Most Popular</option>
-                <option value="price_asc">Price: Low → High</option>
-                <option value="price_desc">Price: High → Low</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            </div>
+            {/* Filters */}
+            <CourseFilters />
           </div>
         </div>
       </section>
