@@ -15,7 +15,7 @@ const footerLinks = {
   forCoaches: {
     title: "For Coaches",
     links: [
-      { label: "Become a Coach", href: "/teach" },
+      { label: "Become a Coach", href: "/login?intent=coach" },
       { label: "How It Works", href: "#" },
       { label: "Coach Dashboard", href: "#" },
       { label: "Coach Resources", href: "#" },

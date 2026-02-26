@@ -34,13 +34,13 @@ export default function Navbar() {
           <div className="hidden md:flex flex-1 items-center justify-end space-x-8">
             {/* Nav Links */}
             <div className="flex space-x-6">
-              {["Courses", "Coaches", "About"].map((item) => (
+              {[{ label: "Courses", href: "/courses" }].map((item) => (
                 <Link
-                  key={item}
-                  href={`#${item.toLowerCase()}`}
+                  key={item.label}
+                  href={item.href}
                   className="font-sans text-gray-600 hover:text-primary-red font-medium text-sm transition-colors py-2"
                 >
-                  {item}
+                  {item.label}
                 </Link>
               ))}
             </div>
@@ -87,14 +87,14 @@ export default function Navbar() {
         className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
       >
         <div className="px-4 pt-2 pb-6 space-y-1 sm:px-3 bg-white border-b border-gray-200">
-          {["Courses", "Coaches", "About"].map((item) => (
+          {[{ label: "Courses", href: "/courses" }].map((item) => (
             <Link
-              key={item}
-              href={`#${item.toLowerCase()}`}
+              key={item.label}
+              href={item.href}
               className="block px-3 py-3 rounded-md text-base font-medium text-gray-600 hover:text-primary-red hover:bg-gray-50 transition-colors"
               onClick={() => setIsOpen(false)}
             >
-              {item}
+              {item.label}
             </Link>
           ))}
           <div className="pt-4 flex flex-col gap-3 px-3">
