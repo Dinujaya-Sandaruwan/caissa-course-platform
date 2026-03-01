@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { Clock, ShieldCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import LogoutButton from "@/components/auth/LogoutButton";
+import { connectDB } from "@/lib/db";
+import CoachProfile from "@/models/CoachProfile";
 
 export default async function CoachPendingPage() {
   const session = await getSessionUser();
@@ -15,8 +17,14 @@ export default async function CoachPendingPage() {
     redirect(`/${session.role}/dashboard`);
   }
 
-  // Once the coach layout is built, we'll verify checking CoachProfile.verificationStatus
-  // For now, this is a dedicated page just to display the pending state.
+  await connectDB();
+  const coach = await CoachProfile.findOne({ userId: session.userId });
+
+  if (coach && coach.verificationStatus === "approved") {
+    redirect("/coach/dashboard");
+  }
+
+  // Pending page will only show if verificationStatus is pending or rejected
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden">
