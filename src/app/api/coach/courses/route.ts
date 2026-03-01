@@ -158,9 +158,10 @@ export async function POST(request: NextRequest) {
     await fs.rename(fullTempThumbnailPath, fullOriginalPath);
 
     // Format frontend URL to omit 'public/'
-    const basePath = UPLOAD_DIR.startsWith("public/")
-      ? `/${UPLOAD_DIR.slice(7)}`
-      : `/${UPLOAD_DIR}`;
+    const cleanUploadDir = UPLOAD_DIR.replace(/^\.\//, "");
+    const basePath = cleanUploadDir.startsWith("public/")
+      ? `/${cleanUploadDir.slice(7)}`
+      : `/${cleanUploadDir}`;
     const thumbnailOriginalUrl = `${basePath}/courses/${tempCourseId.toString()}/${originalFileName}`;
 
     // Compress using Sharp to WebP

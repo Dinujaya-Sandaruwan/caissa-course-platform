@@ -195,10 +195,11 @@ export async function PATCH(
         const fullOriginalPath = path.join(courseDir, originalFileName);
 
         await fs.rename(fullTempThumbnailPath, fullOriginalPath);
-
-        const basePath = UPLOAD_DIR.startsWith("public/")
-          ? `/${UPLOAD_DIR.slice(7)}`
-          : `/${UPLOAD_DIR}`;
+        // Format frontend URL to omit 'public/'
+        const cleanUploadDir = UPLOAD_DIR.replace(/^\.\//, "");
+        const basePath = cleanUploadDir.startsWith("public/")
+          ? `/${cleanUploadDir.slice(7)}`
+          : `/${cleanUploadDir}`;
         const thumbnailOriginalUrl = `${basePath}/courses/${course._id.toString()}/${originalFileName}`;
 
         const compressedFileName = `thumbnail-${crypto.randomBytes(4).toString("hex")}.webp`;
@@ -250,9 +251,11 @@ export async function PATCH(
 
           await fs.rename(fullTempPath, fullVideoPath);
 
-          const basePath = UPLOAD_DIR.startsWith("public/")
-            ? `/${UPLOAD_DIR.slice(7)}`
-            : `/${UPLOAD_DIR}`;
+          // Format frontend URL to omit 'public/'
+          const cleanUploadDir = UPLOAD_DIR.replace(/^\.\//, "");
+          const basePath = cleanUploadDir.startsWith("public/")
+            ? `/${cleanUploadDir.slice(7)}`
+            : `/${cleanUploadDir}`;
           const relativeUrl = `${basePath}/courses/${course._id.toString()}/${videoFileName}`;
 
           course.tempPreviewVideoPath = relativeUrl;

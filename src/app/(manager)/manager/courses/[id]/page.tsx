@@ -712,9 +712,21 @@ export default function ManagerCourseDetailPage() {
                     </div>
 
                     {lesson.tempVideoPath && (
-                      <p className="text-[10px] text-gray-400 pl-8 truncate">
-                        Temp file: {lesson.tempVideoPath}
-                      </p>
+                      <div className="flex items-center gap-2 pl-8 pt-1">
+                        <p className="text-[10px] text-gray-400 truncate flex-1 leading-relaxed">
+                          Temp file:{" "}
+                          {lesson.tempVideoPath.split("/").pop() ||
+                            lesson.tempVideoPath}
+                        </p>
+                        <a
+                          href={lesson.tempVideoPath}
+                          download
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 rounded-md transition-colors shrink-0"
+                        >
+                          <Download className="w-3 h-3" />
+                          Download
+                        </a>
+                      </div>
                     )}
                   </div>
                 ))}
