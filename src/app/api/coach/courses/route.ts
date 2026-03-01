@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
+import Tag from "@/models/Tag";
 import CoachProfile from "@/models/CoachProfile";
 import {
   validateRequiredString,
@@ -98,6 +99,19 @@ export async function POST(request: NextRequest) {
       tags: safeTags,
       status: "draft",
     });
+
+    // Register tags in the global Tag collection for autocomplete
+    if (safeTags.length > 0) {
+      await Promise.all(
+        safeTags.map((tagName: string) =>
+          Tag.findOneAndUpdate(
+            { name: tagName },
+            { $inc: { usageCount: 1 } },
+            { upsert: true, new: true },
+          ),
+        ),
+      );
+    }
 
     return NextResponse.json(newCourse, { status: 201 });
   } catch (error) {

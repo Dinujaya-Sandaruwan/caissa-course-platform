@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
+import Tag from "@/models/Tag";
 import Chapter from "@/models/Chapter";
 import Lesson from "@/models/Lesson";
 import { stripHtml, validateOptionalString } from "@/lib/validation";
@@ -105,11 +106,43 @@ export async function PATCH(
       course.level = level;
     }
     if (tags !== undefined) {
-      course.tags = Array.isArray(tags)
+      const oldTags: string[] = course.tags || [];
+      const newTags: string[] = Array.isArray(tags)
         ? tags
             .filter((t: unknown) => typeof t === "string")
             .map((t: string) => stripHtml(t))
         : [];
+
+      // Diff: find added and removed tags
+      const addedTags = newTags.filter((t) => !oldTags.includes(t));
+      const removedTags = oldTags.filter((t) => !newTags.includes(t));
+
+      // Increment usageCount for new tags (upsert)
+      if (addedTags.length > 0) {
+        await Promise.all(
+          addedTags.map((tagName) =>
+            Tag.findOneAndUpdate(
+              { name: tagName },
+              { $inc: { usageCount: 1 } },
+              { upsert: true, new: true },
+            ),
+          ),
+        );
+      }
+
+      // Decrement usageCount for removed tags
+      if (removedTags.length > 0) {
+        await Promise.all(
+          removedTags.map((tagName) =>
+            Tag.findOneAndUpdate(
+              { name: tagName, usageCount: { $gt: 0 } },
+              { $inc: { usageCount: -1 } },
+            ),
+          ),
+        );
+      }
+
+      course.tags = newTags;
     }
     if (thumbnailUrl !== undefined)
       course.thumbnailUrl = validateOptionalString(thumbnailUrl) || "";

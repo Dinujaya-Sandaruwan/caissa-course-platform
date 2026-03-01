@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -75,14 +75,114 @@ export default function CreateCoursePage() {
   const [submitError, setSubmitError] = useState("");
 
   // ─── Tag Management ────────────────────────────────────
+  const [tagSuggestions, setTagSuggestions] = useState<
+    { name: string; usageCount: number }[]
+  >([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const tagInputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchTagSuggestions = useCallback(
+    async (query: string) => {
+      if (!query.trim()) {
+        setTagSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `/api/tags?q=${encodeURIComponent(query.trim())}`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          // Filter out tags already added
+          const filtered = data.filter(
+            (t: { name: string }) => !metadata.tags.includes(t.name),
+          );
+          setTagSuggestions(filtered);
+          setShowSuggestions(filtered.length > 0);
+          setSelectedSuggestionIndex(-1);
+        }
+      } catch {
+        // Silently fail — autocomplete is a nice-to-have
+      }
+    },
+    [metadata.tags],
+  );
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!tagInput.trim()) {
+      setTagSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    debounceRef.current = setTimeout(() => {
+      fetchTagSuggestions(tagInput);
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [tagInput, fetchTagSuggestions]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(e.target as Node) &&
+        tagInputRef.current &&
+        !tagInputRef.current.contains(e.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const addTag = (tag: string) => {
+    const trimmed = tag.trim();
+    if (
+      trimmed &&
+      !metadata.tags.includes(trimmed) &&
+      metadata.tags.length < 10
+    ) {
+      setMetadata((prev) => ({ ...prev, tags: [...prev.tags, trimmed] }));
+      setTagInput("");
+      setShowSuggestions(false);
+      setTagSuggestions([]);
+    }
+  };
+
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedSuggestionIndex((prev) =>
+        prev < tagSuggestions.length - 1 ? prev + 1 : prev,
+      );
+      return;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedSuggestionIndex((prev) => (prev > 0 ? prev - 1 : -1));
+      return;
+    }
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
-      const tag = tagInput.trim();
-      if (tag && !metadata.tags.includes(tag) && metadata.tags.length < 10) {
-        setMetadata((prev) => ({ ...prev, tags: [...prev.tags, tag] }));
-        setTagInput("");
+      if (
+        selectedSuggestionIndex >= 0 &&
+        tagSuggestions[selectedSuggestionIndex]
+      ) {
+        addTag(tagSuggestions[selectedSuggestionIndex].name);
+      } else {
+        addTag(tagInput);
       }
+    }
+    if (e.key === "Escape") {
+      setShowSuggestions(false);
     }
   };
 
@@ -1215,21 +1315,64 @@ export default function CreateCoursePage() {
                   <button
                     type="button"
                     onClick={() => handleRemoveTag(tag)}
-                    className="text-red-400 hover:text-red-600 transition-colors"
+                    className="text-red-400 hover:text-red-600 transition-colors cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </span>
               ))}
             </div>
-            <input
-              type="text"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleAddTag}
-              placeholder="e.g., opening, defense, strategy..."
-              className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 text-base font-medium transition-all duration-200 focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
-            />
+            <div className="relative">
+              <input
+                ref={tagInputRef}
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleAddTag}
+                onFocus={() => {
+                  if (tagSuggestions.length > 0) setShowSuggestions(true);
+                }}
+                placeholder="e.g., opening, defense, strategy..."
+                className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 text-base font-medium transition-all duration-200 focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+              />
+              {/* Autocomplete Dropdown */}
+              {showSuggestions && tagSuggestions.length > 0 && (
+                <div
+                  ref={suggestionsRef}
+                  className="absolute z-20 top-full mt-2 w-full bg-white rounded-2xl border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden"
+                >
+                  {tagSuggestions.map((suggestion, idx) => (
+                    <button
+                      key={suggestion.name}
+                      type="button"
+                      onClick={() => addTag(suggestion.name)}
+                      className={`w-full flex items-center justify-between px-5 py-3 text-left text-sm font-medium transition-colors cursor-pointer ${
+                        idx === selectedSuggestionIndex
+                          ? "bg-red-50 text-red-700"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Tag className="w-3.5 h-3.5 text-gray-400" />
+                        {suggestion.name}
+                      </span>
+                      <span className="text-xs text-gray-400 font-semibold">
+                        {suggestion.usageCount} course
+                        {suggestion.usageCount !== 1 ? "s" : ""}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {tagInput.trim() &&
+              tagSuggestions.length === 0 &&
+              tagInput.trim().length >= 2 && (
+                <p className="text-xs text-gray-400 mt-2 font-medium">
+                  Press Enter to add &ldquo;{tagInput.trim()}&rdquo; as a new
+                  tag
+                </p>
+              )}
           </div>
         </div>
 
