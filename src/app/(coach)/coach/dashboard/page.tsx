@@ -35,7 +35,9 @@ export default function CoachDashboardPage() {
   useEffect(() => {
     async function fetchDashboard() {
       try {
-        const res = await fetch("/api/coach/dashboard");
+        const res = await fetch("/api/coach/dashboard", {
+          cache: "no-store",
+        });
         if (res.ok) {
           setData(await res.json());
         }
@@ -67,10 +69,10 @@ export default function CoachDashboardPage() {
       textClass: "text-emerald-600",
     },
     {
-      label: "Pending Review",
+      label: "Pending / Approved",
       value: loading ? "..." : (data?.totalPending ?? 0).toString(),
       icon: Clock,
-      trend: "Awaiting approval",
+      trend: "Awaiting publication",
       bgClass: "bg-amber-50",
       textClass: "text-amber-600",
     },

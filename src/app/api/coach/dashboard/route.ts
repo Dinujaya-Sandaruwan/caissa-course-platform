@@ -4,6 +4,8 @@ import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
 import Enrollment from "@/models/Enrollment";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const session = await getSessionUser();
@@ -21,12 +23,18 @@ export async function GET() {
     const courseIds = courses.map((c) => c._id);
 
     // Stats
-    const publishedCourses = courses.filter((c) => c.status === "published");
+    const publishedCourses = courses.filter(
+      (c) => (c.status || "").toLowerCase() === "published",
+    );
     const totalPublished = publishedCourses.length;
     const totalPending = courses.filter(
-      (c) => c.status === "pending_review",
+      (c) =>
+        (c.status || "").toLowerCase() === "pending_review" ||
+        (c.status || "").toLowerCase() === "approved",
     ).length;
-    const totalDraft = courses.filter((c) => c.status === "draft").length;
+    const totalDraft = courses.filter(
+      (c) => !c.status || (c.status || "").toLowerCase() === "draft",
+    ).length;
     const totalStudents = publishedCourses.reduce(
       (acc, c) => acc + (c.enrollmentCount || 0),
       0,

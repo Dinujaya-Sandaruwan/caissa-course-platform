@@ -60,6 +60,13 @@ const statusConfig: Record<
     border: "border-emerald-200",
     icon: CheckCircle2,
   },
+  approved: {
+    label: "Approved",
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    border: "border-blue-200",
+    icon: CheckCircle2,
+  },
   rejected: {
     label: "Rejected",
     color: "text-red-600",
@@ -185,6 +192,7 @@ export default function CoachCoursesPage() {
                     <span className="text-sm font-medium">No Image</span>
                   </div>
                 )}
+
                 {/* Status Badge overlay */}
                 <div className="absolute top-3 right-3">
                   <span
@@ -286,11 +294,18 @@ export default function CoachCoursesPage() {
                     </div>
                   )}
 
-                  {/* Action for Published Courses */}
                   {course.status === "published" && (
                     <div className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-emerald-700 bg-emerald-50 rounded-xl border border-emerald-200">
                       <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                       Live and Accepting Students
+                    </div>
+                  )}
+
+                  {/* Action for Approved Courses */}
+                  {course.status === "approved" && (
+                    <div className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-blue-700 bg-blue-50 rounded-xl border border-blue-200">
+                      <CheckCircle2 className="w-5 h-5 text-blue-500" />
+                      Approved! Awaiting Manager Publication...
                     </div>
                   )}
                 </div>
