@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Menu, X, LogOut } from "lucide-react";
 import Link from "next/link";
 import ManagerNavLinks from "./ManagerNavLinks";
+import LogoutButton from "@/components/auth/LogoutButton";
 
 export default function MobileManagerNav({ userName }: { userName: string }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -73,15 +74,7 @@ export default function MobileManagerNav({ userName }: { userName: string }) {
                 </p>
               </div>
             </div>
-            <form action="/api/auth/logout" method="POST">
-              <button
-                type="submit"
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </button>
-            </form>
+            <LogoutButton className="w-full justify-center mt-1" />
           </div>
         </div>
       </div>

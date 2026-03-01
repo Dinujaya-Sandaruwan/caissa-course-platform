@@ -7,6 +7,7 @@ import { LogOut } from "lucide-react";
 import React from "react";
 import ManagerNavLinks from "./ManagerNavLinks";
 import MobileManagerNav from "./MobileManagerNav";
+import LogoutButton from "@/components/auth/LogoutButton";
 
 export default async function ManagerLayout({
   children,
@@ -67,15 +68,7 @@ export default async function ManagerLayout({
                     </p>
                   </div>
                 </div>
-                <form action="/api/auth/logout" method="POST">
-                  <button
-                    type="submit"
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Sign Out
-                  </button>
-                </form>
+                <LogoutButton className="w-full justify-center mt-1" />
               </div>
             </div>
           </aside>

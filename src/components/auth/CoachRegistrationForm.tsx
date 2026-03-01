@@ -64,17 +64,19 @@ export default function CoachRegistrationForm({
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setPhotoError("Image must be less than 5MB");
-      return;
-    }
-
     try {
       setCompressing(true);
-      // Keep the original (or a reasonably sized version)
-      setProfilePic(file);
 
-      // Generate the tiny thumbnail
+      // 1. Compress the MAIN image so we never store massive files (max 3MB)
+      const compressedMain = await imageCompression(file, {
+        maxSizeMB: 3,
+        maxWidthOrHeight: 2048, // Generous max size for "full size" photos
+        useWebWorker: true,
+        fileType: "image/webp",
+      });
+      setProfilePic(compressedMain as unknown as File);
+
+      // 2. Generate the tiny thumbnail
       const thumbnail = await imageCompression(file, {
         maxSizeMB: 0.1, // Target: under 100KB for thumbnail
         maxWidthOrHeight: 256, // Small square

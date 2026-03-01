@@ -1,7 +1,8 @@
 import { getSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Clock, ShieldCheck, ArrowRight, LogOut } from "lucide-react";
+import { Clock, ShieldCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import LogoutButton from "@/components/auth/LogoutButton";
 
 export default async function CoachPendingPage() {
   const session = await getSessionUser();
@@ -47,15 +48,7 @@ export default async function CoachPendingPage() {
             Caissa <span className="text-red-600">Chess Courses</span>
           </span>
         </Link>
-        <form action="/api/auth/logout" method="POST">
-          <button
-            type="submit"
-            className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-gray-600 bg-white hover:bg-gray-50 border border-gray-100 rounded-full transition-all duration-300 shadow-sm hover:shadow-md ring-1 ring-black/5 hover:-translate-y-0.5"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </button>
-        </form>
+        <LogoutButton />
       </header>
 
       {/* Main Content */}

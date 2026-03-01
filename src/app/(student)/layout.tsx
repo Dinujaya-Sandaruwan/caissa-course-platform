@@ -6,6 +6,7 @@ import Link from "next/link";
 import { LogOut } from "lucide-react";
 import React from "react";
 import StudentNavLinks from "@/components/StudentNavLinks";
+import LogoutButton from "@/components/auth/LogoutButton";
 
 export default async function StudentLayout({
   children,
@@ -56,15 +57,7 @@ export default async function StudentLayout({
                   {userName}
                 </span>
               </div>
-              <form action="/api/auth/logout" method="POST">
-                <button
-                  type="submit"
-                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Sign Out</span>
-                </button>
-              </form>
+              <LogoutButton variant="icon" />
             </div>
           </div>
 
