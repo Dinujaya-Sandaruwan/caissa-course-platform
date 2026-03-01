@@ -8,6 +8,7 @@ export interface ICourse extends Document {
   thumbnailUrl?: string;
   thumbnailOriginalUrl?: string;
   previewVideoUrl?: string;
+  tempPreviewVideoPath?: string;
   level: "beginner" | "intermediate" | "advanced";
   tags: string[];
   status:
@@ -56,6 +57,9 @@ const CourseSchema = new Schema<ICourse>(
       type: String,
     },
     previewVideoUrl: {
+      type: String,
+    },
+    tempPreviewVideoPath: {
       type: String,
     },
     level: {

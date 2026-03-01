@@ -101,6 +101,7 @@ export async function PATCH(
       tags,
       thumbnailUrl,
       tempThumbnailPath,
+      tempPreviewVideoPath,
     } = body;
 
     if (title !== undefined) course.title = stripHtml(String(title));
@@ -214,6 +215,47 @@ export async function PATCH(
         course.thumbnailOriginalUrl = thumbnailOriginalUrl;
       } catch (err) {
         console.error("Error processing updated thumbnail:", err);
+      }
+    }
+
+    // Handle preview video temp file
+    if (tempPreviewVideoPath && typeof tempPreviewVideoPath === "string") {
+      const UPLOAD_DIR = process.env.UPLOAD_DIR || "public/uploads";
+      const tempFileName = tempPreviewVideoPath.split("/").pop();
+      if (tempFileName) {
+        const fullTempPath = path.join(
+          process.cwd(),
+          UPLOAD_DIR,
+          "temp",
+          tempFileName,
+        );
+
+        try {
+          await fs.access(fullTempPath);
+
+          const courseDir = path.join(
+            process.cwd(),
+            UPLOAD_DIR,
+            "courses",
+            course._id.toString(),
+          );
+          await fs.mkdir(courseDir, { recursive: true });
+
+          const ext = path.extname(tempPreviewVideoPath);
+          const videoFileName = `preview-video-${crypto.randomBytes(4).toString("hex")}${ext}`;
+          const fullVideoPath = path.join(courseDir, videoFileName);
+
+          await fs.rename(fullTempPath, fullVideoPath);
+
+          const basePath = UPLOAD_DIR.startsWith("public/")
+            ? `/${UPLOAD_DIR.slice(7)}`
+            : `/${UPLOAD_DIR}`;
+          const relativeUrl = `${basePath}/courses/${course._id.toString()}/${videoFileName}`;
+
+          course.tempPreviewVideoPath = relativeUrl;
+        } catch (err) {
+          console.error("Error processing preview video:", err);
+        }
       }
     }
 

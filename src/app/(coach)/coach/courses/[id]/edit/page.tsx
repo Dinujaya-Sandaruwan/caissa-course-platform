@@ -117,6 +117,18 @@ export default function EditCoursePage() {
     { chapterId: string; lessonId: string }[]
   >([]);
 
+  // Preview video state
+  const [previewVideoFile, setPreviewVideoFile] = useState<File | null>(null);
+  const [previewVideoFileName, setPreviewVideoFileName] = useState("");
+  const [previewVideoFileSize, setPreviewVideoFileSize] = useState(0);
+  const [previewVideoStatus, setPreviewVideoStatus] = useState<
+    "pending" | "selected" | "uploading" | "uploaded" | "error"
+  >("pending");
+  const [previewVideoProgress, setPreviewVideoProgress] = useState(0);
+  const [previewVideoTempPath, setPreviewVideoTempPath] = useState("");
+  const [previewVideoError, setPreviewVideoError] = useState("");
+  const previewVideoInputRef = useRef<HTMLInputElement | null>(null);
+
   // Fetch course on mount
   useEffect(() => {
     const fetchCourse = async () => {
@@ -136,6 +148,14 @@ export default function EditCoursePage() {
           thumbnailUploadStatus: data.thumbnailUrl ? "success" : "idle",
           thumbnailUploadProgress: data.thumbnailUrl ? 100 : 0,
         });
+
+        // Initialize preview video from existing data
+        if (data.tempPreviewVideoPath) {
+          setPreviewVideoTempPath(data.tempPreviewVideoPath);
+          setPreviewVideoFileName("Existing Preview Video");
+          setPreviewVideoStatus("uploaded");
+          setPreviewVideoProgress(100);
+        }
 
         const mappedChapters: ChapterDraft[] = data.chapters.map((ch: any) => ({
           id: ch._id,
@@ -621,7 +641,7 @@ export default function EditCoursePage() {
     chapterId: string;
     lessonId: string;
     file: File;
-    type: "video" | "material";
+    type: "video" | "material" | "previewVideo";
     materialId?: string;
   };
 
@@ -682,6 +702,10 @@ export default function EditCoursePage() {
           progress: 0,
           error: "",
         });
+      } else if (item.type === "previewVideo") {
+        setPreviewVideoStatus("uploading");
+        setPreviewVideoProgress(0);
+        setPreviewVideoError("");
       }
 
       try {
@@ -702,6 +726,8 @@ export default function EditCoursePage() {
                   updateMaterialUploadState(item.lessonId, item.materialId, {
                     progress: percent,
                   });
+                } else if (item.type === "previewVideo") {
+                  setPreviewVideoProgress(percent);
                 }
               }
             });
@@ -745,6 +771,10 @@ export default function EditCoursePage() {
             progress: 100,
             tempPath: result.tempPath,
           });
+        } else if (item.type === "previewVideo") {
+          setPreviewVideoStatus("uploaded");
+          setPreviewVideoProgress(100);
+          setPreviewVideoTempPath(result.tempPath);
         }
       } catch (error) {
         const errorMsg =
@@ -761,6 +791,10 @@ export default function EditCoursePage() {
             progress: 0,
             error: errorMsg,
           });
+        } else if (item.type === "previewVideo") {
+          setPreviewVideoStatus("error");
+          setPreviewVideoProgress(0);
+          setPreviewVideoError(errorMsg);
         }
       }
 
@@ -1051,6 +1085,13 @@ export default function EditCoursePage() {
         !metadata.tempThumbnailPath.startsWith("/public/uploads/courses")
       ) {
         coursePayload.tempThumbnailPath = metadata.tempThumbnailPath;
+      }
+      // Attach preview video if newly uploaded
+      if (
+        previewVideoTempPath &&
+        previewVideoTempPath.startsWith("/api/files/temp/")
+      ) {
+        coursePayload.tempPreviewVideoPath = previewVideoTempPath;
       }
 
       const courseRes = await fetch(`/api/coach/courses/${courseId}`, {
@@ -1576,6 +1617,154 @@ export default function EditCoursePage() {
             <Upload className="w-4 h-4 text-red-400" />
             {videosSelected} video{videosSelected !== 1 ? "s" : ""} selected
           </span>
+        </div>
+
+        {/* Preview Video Upload */}
+        <div className="bg-white rounded-[2rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center">
+              <Video className="w-4 h-4 text-red-500" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">Preview Video</h3>
+              <p className="text-xs text-gray-500">
+                This video will be visible to all students before they purchase
+                the course.
+              </p>
+            </div>
+          </div>
+
+          {previewVideoStatus === "pending" && (
+            <label className="flex flex-col items-center justify-center gap-3 py-8 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:border-red-300 hover:bg-red-50/30 transition-all">
+              <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center">
+                <Upload className="w-5 h-5 text-red-400" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-gray-700">
+                  Click to upload preview video
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  MP4, MOV, WebM • Max 2GB
+                </p>
+              </div>
+              <input
+                ref={previewVideoInputRef}
+                type="file"
+                accept="video/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setPreviewVideoFile(file);
+                  setPreviewVideoFileName(file.name);
+                  setPreviewVideoFileSize(file.size);
+                  setPreviewVideoStatus("selected");
+                  uploadQueueRef.current.push({
+                    chapterId: "",
+                    lessonId: "",
+                    file,
+                    type: "previewVideo",
+                  });
+                  processUploadQueue();
+                }}
+              />
+            </label>
+          )}
+
+          {previewVideoStatus === "selected" && (
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+              <Video className="w-5 h-5 text-gray-400 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-800 truncate">
+                  {previewVideoFileName}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {(previewVideoFileSize / (1024 * 1024)).toFixed(1)} MB
+                </p>
+              </div>
+              <Loader2 className="w-4 h-4 text-red-500 animate-spin" />
+            </div>
+          )}
+
+          {previewVideoStatus === "uploading" && (
+            <div className="space-y-3 p-4 bg-gray-50 rounded-xl">
+              <div className="flex items-center gap-3">
+                <Video className="w-5 h-5 text-red-500 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-800 truncate">
+                    {previewVideoFileName}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {(previewVideoFileSize / (1024 * 1024)).toFixed(1)} MB
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-red-600">
+                  {previewVideoProgress}%
+                </span>
+              </div>
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-300"
+                  style={{ width: `${previewVideoProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {previewVideoStatus === "uploaded" && (
+            <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+              <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-emerald-800 truncate">
+                  {previewVideoFileName}
+                </p>
+                <p className="text-xs text-emerald-600">
+                  {previewVideoFileSize > 0
+                    ? `${(previewVideoFileSize / (1024 * 1024)).toFixed(1)} MB • `
+                    : ""}
+                  Uploaded
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setPreviewVideoFile(null);
+                  setPreviewVideoFileName("");
+                  setPreviewVideoFileSize(0);
+                  setPreviewVideoStatus("pending");
+                  setPreviewVideoProgress(0);
+                  setPreviewVideoTempPath("");
+                  if (previewVideoInputRef.current)
+                    previewVideoInputRef.current.value = "";
+                }}
+                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {previewVideoStatus === "error" && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-100">
+                <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-red-800">
+                    Upload failed
+                  </p>
+                  <p className="text-xs text-red-600">{previewVideoError}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setPreviewVideoStatus("pending");
+                  setPreviewVideoError("");
+                }}
+                className="text-xs font-semibold text-red-600 hover:text-red-700"
+              >
+                Try again
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Chapters List */}

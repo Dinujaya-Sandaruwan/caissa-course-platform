@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   Rocket,
   EyeOff,
+  Download,
 } from "lucide-react";
 
 interface Lesson {
@@ -45,6 +46,7 @@ interface CourseDetail {
   status: string;
   tags: string[];
   previewVideoUrl?: string;
+  tempPreviewVideoPath?: string;
   reviewNotes?: string;
   createdAt: string;
   coach?: { name?: string; phone?: string };
@@ -388,6 +390,31 @@ export default function ManagerCourseDetailPage() {
           <Globe className="w-4 h-4 text-red-500" />
           Preview Video URL
         </h2>
+
+        {/* Download link for coach-uploaded preview video */}
+        {course.tempPreviewVideoPath && (
+          <div className="flex items-center gap-3 p-4 bg-blue-50/80 rounded-xl border border-blue-100 mb-4">
+            <Video className="w-5 h-5 text-blue-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-blue-900">
+                Coach uploaded a preview video
+              </p>
+              <p className="text-xs text-blue-600 mt-0.5">
+                Download it, upload to Google Drive, then paste the Drive URL
+                below.
+              </p>
+            </div>
+            <a
+              href={course.tempPreviewVideoPath}
+              download
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition-all shrink-0"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download
+            </a>
+          </div>
+        )}
+
         <div className="flex gap-3">
           <input
             type="url"
