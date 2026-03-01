@@ -259,9 +259,18 @@ export default function CoachCoursesPage() {
                   </Link>
                 )}
                 {course.status === "pending_review" && (
-                  <span className="text-xs text-amber-600 font-medium px-3 py-2 bg-amber-50 rounded-xl border border-amber-100">
-                    Awaiting manager review...
-                  </span>
+                  <>
+                    <Link
+                      href={`/coach/courses/${course._id}/edit`}
+                      className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors border border-amber-100"
+                    >
+                      <FileEdit className="w-3.5 h-3.5" />
+                      Edit Course
+                    </Link>
+                    <span className="text-xs text-amber-600 font-medium px-3 py-2 bg-amber-50 rounded-xl border border-amber-100">
+                      Awaiting manager review...
+                    </span>
+                  </>
                 )}
                 {course.status === "published" && (
                   <span className="text-xs text-emerald-600 font-medium px-3 py-2 bg-emerald-50 rounded-xl border border-emerald-100">

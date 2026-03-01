@@ -35,31 +35,149 @@ export async function PATCH(
       );
     }
 
-    if (course.status !== "draft") {
+    if (!["draft", "pending_review", "rejected"].includes(course.status)) {
       return NextResponse.json(
-        { error: "Cannot modify lessons in a non-draft course" },
+        { error: "Cannot modify lessons in this course in its current status" },
         { status: 403 },
       );
     }
 
-    const { title } = await request.json();
+    const {
+      title,
+      description,
+      links,
+      tempVideoPath,
+      tempMaterials,
+      existingMaterials,
+    } = await request.json();
 
-    if (!title || !title.trim()) {
-      return NextResponse.json(
-        { error: "Lesson title is required" },
-        { status: 400 },
-      );
-    }
-
-    const lesson = await Lesson.findOneAndUpdate(
-      { _id: lessonId, chapterId, courseId },
-      { $set: { title: title.trim() } },
-      { new: true },
-    );
+    const lesson = await Lesson.findOne({ _id: lessonId, chapterId, courseId });
 
     if (!lesson) {
       return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
     }
+
+    if (title !== undefined) {
+      if (!title.trim()) {
+        return NextResponse.json(
+          { error: "Lesson title cannot be empty" },
+          { status: 400 },
+        );
+      }
+      lesson.title = title.trim();
+    }
+
+    if (description !== undefined) {
+      lesson.description = description.trim();
+    }
+
+    if (links !== undefined) {
+      lesson.links = Array.isArray(links)
+        ? links.map((l: string) => l.trim()).filter(Boolean)
+        : [];
+    }
+
+    const uploadDir = process.env.UPLOAD_DIR || "public/uploads";
+
+    if (tempVideoPath && typeof tempVideoPath === "string") {
+      try {
+        const tempFileName = tempVideoPath.split("/").pop();
+        if (tempFileName) {
+          const tempFilePath = path.join(
+            process.cwd(),
+            uploadDir,
+            "temp",
+            tempFileName,
+          );
+          const courseUploadPath = path.join(
+            process.cwd(),
+            uploadDir,
+            "courses",
+            courseId,
+          );
+          await fs.mkdir(courseUploadPath, { recursive: true });
+
+          const finalFileName = `${lesson._id}-${tempFileName}`;
+          const finalFilePath = path.join(courseUploadPath, finalFileName);
+
+          await fs.rename(tempFilePath, finalFilePath);
+
+          // If there was an old video, delete it
+          if (lesson.tempVideoPath) {
+            try {
+              const oldPath = path.join(
+                process.cwd(),
+                "public",
+                lesson.tempVideoPath,
+              );
+              await fs.unlink(oldPath);
+            } catch (e) {
+              console.warn("Could not delete old video file:", e);
+            }
+          }
+
+          const relativeUrl = `/api/files/courses/${courseId}/${finalFileName}`;
+          lesson.tempVideoPath = relativeUrl;
+          lesson.videoStatus = "uploaded";
+        }
+      } catch (moveError) {
+        console.error("Error moving temp video:", moveError);
+      }
+    }
+
+    // Handle materials combining existing ones and processing new ones
+    if (existingMaterials !== undefined || tempMaterials !== undefined) {
+      const finalMaterials = Array.isArray(existingMaterials)
+        ? [...existingMaterials]
+        : lesson.materials || [];
+
+      if (Array.isArray(tempMaterials) && tempMaterials.length > 0) {
+        for (const material of tempMaterials) {
+          if (material.tempPath && typeof material.tempPath === "string") {
+            try {
+              const tempFileName = material.tempPath.split("/").pop();
+              if (tempFileName) {
+                const tempFilePath = path.join(
+                  process.cwd(),
+                  uploadDir,
+                  "temp",
+                  tempFileName,
+                );
+                const courseUploadPath = path.join(
+                  process.cwd(),
+                  uploadDir,
+                  "courses",
+                  courseId,
+                );
+                await fs.mkdir(courseUploadPath, { recursive: true });
+
+                const id = crypto.randomUUID();
+                const ext = tempFileName.split(".").pop();
+                const finalFileName = `${lesson._id}-mat-${id}.${ext}`;
+                const finalFilePath = path.join(
+                  courseUploadPath,
+                  finalFileName,
+                );
+
+                await fs.rename(tempFilePath, finalFilePath);
+
+                finalMaterials.push({
+                  title: material.title || "Untitled Material",
+                  url: `/api/files/courses/${courseId}/${finalFileName}`,
+                });
+              }
+            } catch (err) {
+              console.error("Error moving temp material:", err);
+            }
+          }
+        }
+      }
+      // Note: We don't actively perform cleanup of removed existing materials from the VPS quite yet
+      // to avoid complicating the logic, but the DB references will be properly dropped.
+      lesson.materials = finalMaterials;
+    }
+
+    await lesson.save();
 
     return NextResponse.json(lesson);
   } catch (error) {
@@ -100,9 +218,9 @@ export async function DELETE(
       );
     }
 
-    if (course.status !== "draft") {
+    if (!["draft", "pending_review", "rejected"].includes(course.status)) {
       return NextResponse.json(
-        { error: "Cannot delete lessons in a non-draft course" },
+        { error: "Cannot delete lessons in this course in its current status" },
         { status: 403 },
       );
     }

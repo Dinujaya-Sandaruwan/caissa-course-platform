@@ -31,9 +31,9 @@ export async function POST(
       );
     }
 
-    if (course.status !== "draft") {
+    if (!["draft", "pending_review", "rejected"].includes(course.status)) {
       return NextResponse.json(
-        { error: "Cannot add chapters to a non-draft course" },
+        { error: "Cannot add chapters to this course in its current status" },
         { status: 403 },
       );
     }

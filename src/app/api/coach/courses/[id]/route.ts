@@ -6,6 +6,10 @@ import Tag from "@/models/Tag";
 import Chapter from "@/models/Chapter";
 import Lesson from "@/models/Lesson";
 import { stripHtml, validateOptionalString } from "@/lib/validation";
+import fs from "fs/promises";
+import path from "path";
+import crypto from "crypto";
+import sharp from "sharp";
 
 export async function GET(
   request: NextRequest,
@@ -81,15 +85,23 @@ export async function PATCH(
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    if (course.status !== "draft") {
+    if (!["draft", "pending_review", "rejected"].includes(course.status)) {
       return NextResponse.json(
-        { error: "Only draft courses can be updated directly" },
+        { error: "Only draft, pending, or rejected courses can be updated" },
         { status: 403 },
       );
     }
 
     const body = await request.json();
-    const { title, description, price, level, tags, thumbnailUrl } = body;
+    const {
+      title,
+      description,
+      price,
+      level,
+      tags,
+      thumbnailUrl,
+      tempThumbnailPath,
+    } = body;
 
     if (title !== undefined) course.title = stripHtml(String(title));
     if (description !== undefined)
@@ -147,6 +159,64 @@ export async function PATCH(
     if (thumbnailUrl !== undefined)
       course.thumbnailUrl = validateOptionalString(thumbnailUrl) || "";
 
+    if (tempThumbnailPath && typeof tempThumbnailPath === "string") {
+      const UPLOAD_DIR = process.env.UPLOAD_DIR || "public/uploads";
+      const tempFileName = tempThumbnailPath.split("/").pop();
+      if (!tempFileName) {
+        return NextResponse.json(
+          { error: "Invalid thumbnail path." },
+          { status: 400 },
+        );
+      }
+      const fullTempThumbnailPath = path.join(
+        process.cwd(),
+        UPLOAD_DIR,
+        "temp",
+        tempFileName,
+      );
+
+      try {
+        await fs.access(fullTempThumbnailPath);
+
+        const courseDir = path.join(
+          process.cwd(),
+          UPLOAD_DIR,
+          "courses",
+          course._id.toString(),
+        );
+        await fs.mkdir(courseDir, { recursive: true });
+
+        const ext = path.extname(tempThumbnailPath);
+        const originalFileName = `thumbnail-original-${crypto.randomBytes(4).toString("hex")}${ext}`;
+        const fullOriginalPath = path.join(courseDir, originalFileName);
+
+        await fs.rename(fullTempThumbnailPath, fullOriginalPath);
+
+        const basePath = UPLOAD_DIR.startsWith("public/")
+          ? `/${UPLOAD_DIR.slice(7)}`
+          : `/${UPLOAD_DIR}`;
+        const thumbnailOriginalUrl = `${basePath}/courses/${course._id.toString()}/${originalFileName}`;
+
+        const compressedFileName = `thumbnail-${crypto.randomBytes(4).toString("hex")}.webp`;
+        const fullCompressedPath = path.join(courseDir, compressedFileName);
+
+        await sharp(fullOriginalPath)
+          .resize(1280, 720, {
+            fit: "inside",
+            withoutEnlargement: true,
+          })
+          .webp({ quality: 80, effort: 6 })
+          .toFile(fullCompressedPath);
+
+        const newThumbnailUrl = `${basePath}/courses/${course._id.toString()}/${compressedFileName}`;
+
+        course.thumbnailUrl = newThumbnailUrl;
+        course.thumbnailOriginalUrl = thumbnailOriginalUrl;
+      } catch (err) {
+        console.error("Error processing updated thumbnail:", err);
+      }
+    }
+
     await course.save();
 
     return NextResponse.json(course);
@@ -181,9 +251,9 @@ export async function DELETE(
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    if (course.status !== "draft") {
+    if (!["draft", "pending_review", "rejected"].includes(course.status)) {
       return NextResponse.json(
-        { error: "Only draft courses can be deleted" },
+        { error: "Only draft, pending, or rejected courses can be deleted" },
         { status: 403 },
       );
     }

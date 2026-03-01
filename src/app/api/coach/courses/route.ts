@@ -103,7 +103,19 @@ export async function POST(request: NextRequest) {
 
     // Process Thumbnail File
     const UPLOAD_DIR = process.env.UPLOAD_DIR || "public/uploads";
-    const fullTempThumbnailPath = path.join(process.cwd(), tempThumbnailPath);
+    const tempFileName = tempThumbnailPath.split("/").pop();
+    if (!tempFileName) {
+      return NextResponse.json(
+        { error: "Invalid thumbnail path." },
+        { status: 400 },
+      );
+    }
+    const fullTempThumbnailPath = path.join(
+      process.cwd(),
+      UPLOAD_DIR,
+      "temp",
+      tempFileName,
+    );
 
     try {
       await fs.access(fullTempThumbnailPath);
@@ -129,7 +141,12 @@ export async function POST(request: NextRequest) {
     const originalFileName = `thumbnail-original-${crypto.randomBytes(4).toString("hex")}${ext}`;
     const fullOriginalPath = path.join(courseDir, originalFileName);
     await fs.rename(fullTempThumbnailPath, fullOriginalPath);
-    const thumbnailOriginalUrl = `/${UPLOAD_DIR}/courses/${tempCourseId.toString()}/${originalFileName}`;
+
+    // Format frontend URL to omit 'public/'
+    const basePath = UPLOAD_DIR.startsWith("public/")
+      ? `/${UPLOAD_DIR.slice(7)}`
+      : `/${UPLOAD_DIR}`;
+    const thumbnailOriginalUrl = `${basePath}/courses/${tempCourseId.toString()}/${originalFileName}`;
 
     // Compress using Sharp to WebP
     const compressedFileName = `thumbnail-${crypto.randomBytes(4).toString("hex")}.webp`;
@@ -143,7 +160,7 @@ export async function POST(request: NextRequest) {
       .webp({ quality: 80, effort: 6 }) // high quality, max effort compression
       .toFile(fullCompressedPath);
 
-    const thumbnailUrl = `/${UPLOAD_DIR}/courses/${tempCourseId.toString()}/${compressedFileName}`;
+    const thumbnailUrl = `${basePath}/courses/${tempCourseId.toString()}/${compressedFileName}`;
 
     // Create a new draft course
     const newCourse = await Course.create({

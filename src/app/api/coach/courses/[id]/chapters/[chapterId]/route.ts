@@ -32,9 +32,11 @@ export async function PATCH(
       );
     }
 
-    if (course.status !== "draft") {
+    if (!["draft", "pending_review", "rejected"].includes(course.status)) {
       return NextResponse.json(
-        { error: "Cannot modify chapters in a non-draft course" },
+        {
+          error: "Cannot modify chapters in this course in its current status",
+        },
         { status: 403 },
       );
     }
@@ -95,9 +97,11 @@ export async function DELETE(
       );
     }
 
-    if (course.status !== "draft") {
+    if (!["draft", "pending_review", "rejected"].includes(course.status)) {
       return NextResponse.json(
-        { error: "Cannot delete chapters in a non-draft course" },
+        {
+          error: "Cannot delete chapters in this course in its current status",
+        },
         { status: 403 },
       );
     }
