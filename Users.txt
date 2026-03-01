@@ -2,3 +2,8 @@
 Manager
 Username: admin
 Password: CaissaAdmin2026!
+
+Manager
+Username: erandi
+Password: erandi.2003
+Phone: 0764588852
