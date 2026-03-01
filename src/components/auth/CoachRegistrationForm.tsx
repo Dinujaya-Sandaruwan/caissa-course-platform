@@ -468,7 +468,7 @@ export default function CoachRegistrationForm({
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-red-600 hover:bg-red-500 disabled:bg-red-200 disabled:text-red-400 disabled:shadow-none disabled:cursor-not-allowed text-white text-lg font-extrabold rounded-2xl transition-all duration-300 shadow-[0_8px_20px_rgba(220,38,38,0.25)] hover:shadow-[0_12px_25px_rgba(220,38,38,0.35)] hover:-translate-y-1"
+            className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-red-600 hover:bg-red-500 disabled:bg-red-200 disabled:text-red-400 disabled:shadow-none disabled:cursor-not-allowed cursor-pointer text-white text-lg font-extrabold rounded-2xl transition-all duration-300 shadow-[0_8px_20px_rgba(220,38,38,0.25)] hover:shadow-[0_12px_25px_rgba(220,38,38,0.35)] hover:-translate-y-1"
           >
             {loading ? (
               <>
