@@ -21,10 +21,7 @@ export async function GET() {
     const pendingCoaches = await CoachProfile.find({
       verificationStatus: "pending",
     })
-      .populate(
-        "userId",
-        "name whatsappNumber email profilePhoto profilePhotoThumbnail",
-      )
+      .populate("userId", "name whatsappNumber email profilePhotoThumbnail")
       .sort({ createdAt: 1 }); // Oldest first
 
     return NextResponse.json(pendingCoaches);

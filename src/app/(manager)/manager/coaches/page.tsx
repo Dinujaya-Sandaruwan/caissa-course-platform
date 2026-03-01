@@ -10,7 +10,6 @@ interface PendingCoach {
     name: string;
     whatsappNumber: string;
     email?: string;
-    profilePhoto?: string;
     profilePhotoThumbnail?: string;
   };
   dateOfBirth: string | Date;
@@ -36,6 +35,7 @@ export default function CoachesPage() {
 
   // Image preview modal state
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const fetchPendingCoaches = async () => {
     setLoading(true);
@@ -136,21 +136,32 @@ export default function CoachesPage() {
               <div className="border-b border-gray-100 px-8 py-6 flex flex-col sm:flex-row sm:items-center justify-between bg-slate-50/50 gap-4">
                 <div className="flex items-center gap-5">
                   <div
-                    className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 font-extrabold text-2xl shadow-sm overflow-hidden group-hover:shadow-md transition-all cursor-pointer"
-                    onClick={() => {
-                      if (coach.userId.profilePhoto) {
-                        setPreviewImage(coach.userId.profilePhoto);
+                    className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 font-extrabold text-2xl shadow-sm overflow-hidden group-hover:shadow-md transition-all cursor-pointer relative"
+                    onClick={async () => {
+                      if (!coach.userId.profilePhotoThumbnail) return; // if no thumbnail, there's no photo
+                      setPreviewImage("loading"); // trigger modal open to show loader
+                      setPreviewLoading(true);
+                      try {
+                        const res = await fetch(
+                          `/api/manager/coaches/${coach._id}/photo`,
+                        );
+                        if (!res.ok) throw new Error("Failed to fetch photo");
+                        const data = await res.json();
+                        setPreviewImage(
+                          data.url || coach.userId.profilePhotoThumbnail,
+                        );
+                      } catch (err) {
+                        console.error(err);
+                        setPreviewImage(coach.userId.profilePhotoThumbnail); // fallback
+                      } finally {
+                        setPreviewLoading(false);
                       }
                     }}
                   >
-                    {coach.userId.profilePhotoThumbnail ||
-                    coach.userId.profilePhoto ? (
+                    {coach.userId.profilePhotoThumbnail ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={
-                          coach.userId.profilePhotoThumbnail ||
-                          coach.userId.profilePhoto
-                        }
+                        src={coach.userId.profilePhotoThumbnail}
                         alt={coach.userId.name}
                         className="w-full h-full object-cover"
                       />
@@ -420,23 +431,31 @@ export default function CoachesPage() {
       {previewImage && (
         <div
           className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-[fade-in_0.2s_ease-out]"
-          onClick={() => setPreviewImage(null)}
+          onClick={() => {
+            if (!previewLoading) setPreviewImage(null);
+          }}
         >
           <div className="relative max-w-4xl w-full max-h-[90vh] flex items-center justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={previewImage}
-              alt="Profile Preview"
-              className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <button
-              onClick={() => setPreviewImage(null)}
-              className="absolute -top-4 -right-4 w-10 h-10 flex items-center justify-center bg-white text-gray-900 rounded-full shadow-lg hover:bg-gray-100 transition-colors"
-              aria-label="Close preview"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {previewLoading ? (
+              <div className="animate-spin w-12 h-12 border-4 border-white/20 border-t-white rounded-full shadow-2xl" />
+            ) : (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={previewImage}
+                  alt="Profile Preview"
+                  className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <button
+                  onClick={() => setPreviewImage(null)}
+                  className="absolute -top-4 -right-4 w-10 h-10 flex items-center justify-center bg-white text-gray-900 rounded-full shadow-lg hover:bg-gray-100 transition-colors z-10"
+                  aria-label="Close preview"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
