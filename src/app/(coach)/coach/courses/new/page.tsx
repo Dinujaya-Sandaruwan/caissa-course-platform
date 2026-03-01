@@ -27,6 +27,10 @@ import {
   FilePlus,
   Image as ImageIcon,
   File as FileIcon,
+  Sprout,
+  Swords,
+  Crown,
+  LucideIcon,
 } from "lucide-react";
 
 type CourseLevel = "beginner" | "intermediate" | "advanced";
@@ -1039,25 +1043,25 @@ export default function CreateCoursePage() {
     value: CourseLevel;
     label: string;
     description: string;
-    icon: string;
+    icon: LucideIcon;
   }[] = [
     {
       value: "beginner",
       label: "Beginner",
       description: "For new players learning the fundamentals",
-      icon: "🌱",
+      icon: Sprout,
     },
     {
       value: "intermediate",
       label: "Intermediate",
       description: "For club-level players looking to improve",
-      icon: "⚔️",
+      icon: Swords,
     },
     {
       value: "advanced",
       label: "Advanced",
       description: "For strong players pursuing mastery",
-      icon: "👑",
+      icon: Crown,
     },
   ];
 
@@ -1091,8 +1095,9 @@ export default function CreateCoursePage() {
             <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
               Review &amp; Submit
             </h1>
-            <p className="text-gray-500 mt-2 text-lg font-medium">
-              Review your course details before submitting for review.
+            <p className="text-gray-500 mt-2 text-lg font-medium max-w-2xl">
+              Double-check your course details below. You can always come back
+              and edit these before finally publishing.
             </p>
           </div>
         </div>
@@ -1160,8 +1165,15 @@ export default function CreateCoursePage() {
                 Level
               </p>
               <p className="text-base font-semibold text-gray-900 capitalize">
-                {levels.find((l) => l.value === metadata.level)?.icon}{" "}
-                {metadata.level}
+                <span className="capitalize flex items-center gap-1">
+                  {(() => {
+                    const LIcon =
+                      levels.find((l) => l.value === metadata.level)?.icon ||
+                      Sprout;
+                    return <LIcon className="w-4 h-4" />;
+                  })()}
+                  {metadata.level}
+                </span>
               </p>
             </div>
             <div>
@@ -2268,7 +2280,9 @@ export default function CreateCoursePage() {
                         : "border-gray-200 bg-gray-50/50 hover:border-gray-300"
                     }`}
                   >
-                    <span className="text-lg">{lvl.icon}</span>
+                    <div className="w-6 flex justify-center">
+                      <lvl.icon className="w-5 h-5 text-gray-500 group-hover:text-gray-700" />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p
                         className={`text-sm font-bold ${
