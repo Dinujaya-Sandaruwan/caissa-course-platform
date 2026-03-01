@@ -97,6 +97,86 @@ export default function CreateCoursePage() {
   const [submitStatus, setSubmitStatus] = useState("");
   const [submitError, setSubmitError] = useState("");
 
+  type DeleteItemContext =
+    | { type: "chapter"; chapterId: string; title: string }
+    | { type: "lesson"; chapterId: string; lessonId: string; title: string }
+    | { type: "link"; chapterId: string; lessonId: string; index: number }
+    | {
+        type: "material";
+        chapterId: string;
+        lessonId: string;
+        materialId: string;
+        title: string;
+      }
+    | null;
+
+  const [itemToDelete, setItemToDelete] = useState<DeleteItemContext>(null);
+
+  const confirmDelete = () => {
+    if (!itemToDelete) return;
+
+    if (itemToDelete.type === "chapter") {
+      setChapters((prev) =>
+        prev.filter((ch) => ch.id !== itemToDelete.chapterId),
+      );
+    } else if (itemToDelete.type === "lesson") {
+      setChapters((prev) =>
+        prev.map((ch) =>
+          ch.id === itemToDelete.chapterId
+            ? {
+                ...ch,
+                lessons: ch.lessons.filter(
+                  (l) => l.id !== itemToDelete.lessonId,
+                ),
+              }
+            : ch,
+        ),
+      );
+    } else if (itemToDelete.type === "link") {
+      setChapters((prev) =>
+        prev.map((ch) =>
+          ch.id === itemToDelete.chapterId
+            ? {
+                ...ch,
+                lessons: ch.lessons.map((l) =>
+                  l.id === itemToDelete.lessonId
+                    ? {
+                        ...l,
+                        links: l.links.filter(
+                          (_, i) => i !== itemToDelete.index,
+                        ),
+                      }
+                    : l,
+                ),
+              }
+            : ch,
+        ),
+      );
+    } else if (itemToDelete.type === "material") {
+      setChapters((prev) =>
+        prev.map((ch) =>
+          ch.id === itemToDelete.chapterId
+            ? {
+                ...ch,
+                lessons: ch.lessons.map((l) =>
+                  l.id === itemToDelete.lessonId
+                    ? {
+                        ...l,
+                        materials: l.materials.filter(
+                          (m) => m.id !== itemToDelete.materialId,
+                        ),
+                      }
+                    : l,
+                ),
+              }
+            : ch,
+        ),
+      );
+    }
+
+    setItemToDelete(null);
+  };
+
   // ─── Tag Management ────────────────────────────────────
   const [tagSuggestions, setTagSuggestions] = useState<
     { name: string; usageCount: number }[]
@@ -273,7 +353,12 @@ export default function CreateCoursePage() {
   };
 
   const removeChapter = (chapterId: string) => {
-    setChapters((prev) => prev.filter((ch) => ch.id !== chapterId));
+    const ch = chapters.find((c) => c.id === chapterId);
+    setItemToDelete({
+      type: "chapter",
+      chapterId,
+      title: ch?.title || "Untitled Chapter",
+    });
   };
 
   const toggleChapter = (chapterId: string) => {
@@ -335,13 +420,14 @@ export default function CreateCoursePage() {
   };
 
   const removeLesson = (chapterId: string, lessonId: string) => {
-    setChapters((prev) =>
-      prev.map((ch) =>
-        ch.id === chapterId
-          ? { ...ch, lessons: ch.lessons.filter((l) => l.id !== lessonId) }
-          : ch,
-      ),
-    );
+    const ch = chapters.find((c) => c.id === chapterId);
+    const l = ch?.lessons.find((ls) => ls.id === lessonId);
+    setItemToDelete({
+      type: "lesson",
+      chapterId,
+      lessonId,
+      title: l?.title || "Untitled Lesson",
+    });
   };
 
   // ─── Upload Queue ──────────────────────────────────────
@@ -677,20 +763,7 @@ export default function CreateCoursePage() {
     lessonId: string,
     index: number,
   ) => {
-    setChapters((prev) =>
-      prev.map((ch) =>
-        ch.id === chapterId
-          ? {
-              ...ch,
-              lessons: ch.lessons.map((l) =>
-                l.id === lessonId
-                  ? { ...l, links: l.links.filter((_, i) => i !== index) }
-                  : l,
-              ),
-            }
-          : ch,
-      ),
-    );
+    setItemToDelete({ type: "link", chapterId, lessonId, index });
   };
 
   const removeLessonMaterial = (
@@ -1405,7 +1478,7 @@ export default function CreateCoursePage() {
                                 onClick={() =>
                                   removeLesson(chapter.id, lesson.id)
                                 }
-                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 ml-2"
+                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all ml-2"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -2013,6 +2086,56 @@ export default function CreateCoursePage() {
           </button>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {itemToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-[fade-in_0.2s_ease-out]">
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-[fade-in-up_0.3s_ease-out]">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mb-6">
+                <AlertTriangle className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Delete{" "}
+                {itemToDelete.type === "chapter"
+                  ? "Chapter"
+                  : itemToDelete.type === "lesson"
+                    ? "Lesson"
+                    : itemToDelete.type === "link"
+                      ? "Link"
+                      : "Material"}
+                ?
+              </h3>
+              <p className="text-gray-500 text-sm mb-8">
+                Are you sure you want to delete{" "}
+                <span className="font-semibold text-gray-700">
+                  {itemToDelete.type === "link"
+                    ? "this URL"
+                    : itemToDelete.title}
+                </span>
+                ? This action cannot be undone.
+              </p>
+
+              <div className="flex w-full gap-3">
+                <button
+                  type="button"
+                  onClick={() => setItemToDelete(null)}
+                  className="flex-1 px-4 py-3 text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-3 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-[0_4px_12px_rgba(220,38,38,0.3)] hover:shadow-[0_6px_16px_rgba(220,38,38,0.4)] transition-all cursor-pointer"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
