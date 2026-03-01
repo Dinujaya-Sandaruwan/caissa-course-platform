@@ -25,6 +25,7 @@ interface Course {
   level: string;
   enrollmentCount: number;
   createdAt: string;
+  thumbnailUrl?: string;
   reviewNotes?: string;
 }
 
@@ -165,16 +166,45 @@ export default function CoachCoursesPage() {
           return (
             <div
               key={course._id}
-              className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_12px_40px_rgba(0,0,0,0.07)] transition-all duration-200 group"
+              className="bg-white rounded-3xl flex flex-col overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] transition-all duration-300 group"
             >
-              {/* Top Row: Title + Status */}
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-bold text-gray-900 truncate group-hover:text-red-600 transition-colors">
+              {/* Thumbnail Banner */}
+              <div className="relative w-full aspect-[16/9] bg-gray-50 border-b border-gray-100 overflow-hidden shrink-0">
+                {course.thumbnailUrl ? (
+                  <img
+                    src={course.thumbnailUrl.replace(
+                      /^\/?(\.\/)?public\//,
+                      "/",
+                    )}
+                    alt={course.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                    <BookOpen className="w-10 h-10 mb-2 opacity-50" />
+                    <span className="text-sm font-medium">No Image</span>
+                  </div>
+                )}
+                {/* Status Badge overlay */}
+                <div className="absolute top-3 right-3">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full border shadow-sm backdrop-blur-md bg-white/95 ${status.color} ${status.border}`}
+                  >
+                    <StatusIcon className="w-3.5 h-3.5" />
+                    {status.label}
+                  </span>
+                </div>
+              </div>
+
+              {/* Card Content body */}
+              <div className="p-5 sm:p-6 flex flex-col flex-1">
+                {/* Title & Metadata */}
+                <div className="mb-4">
+                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2 mb-1.5 leading-tight">
                     {course.title}
                   </h3>
-                  <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
-                    <span>
+                  <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+                    <span className="capitalize flex items-center gap-1">
                       {levelEmoji[course.level] || "📚"} {course.level}
                     </span>
                     <span className="text-gray-300">·</span>
@@ -185,98 +215,85 @@ export default function CoachCoursesPage() {
                         year: "numeric",
                       })}
                     </span>
-                  </p>
+                  </div>
                 </div>
-                <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full border ${status.color} ${status.bg} ${status.border} shrink-0`}
-                >
-                  <StatusIcon className="w-3.5 h-3.5" />
-                  {status.label}
-                </span>
-              </div>
 
-              {/* Stats Row */}
-              <div className="flex items-center gap-4 mb-5">
-                <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                  <Users className="w-4 h-4 text-gray-400" />
-                  <span className="font-semibold text-gray-700">
-                    {course.enrollmentCount || 0}
-                  </span>
-                  <span>students</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                  <span className="font-bold text-gray-700">
+                {/* Stats */}
+                <div className="flex items-center justify-between mb-5 pb-5 border-b border-gray-100">
+                  <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                    <Users className="w-4 h-4 text-gray-400" />
+                    <span className="font-bold text-gray-800">
+                      {course.enrollmentCount || 0}
+                    </span>{" "}
+                    students
+                  </div>
+                  <div className="font-extrabold text-gray-900">
                     Rs. {course.price?.toLocaleString()}
-                  </span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Rejected Feedback */}
-              {course.status === "rejected" && course.reviewNotes && (
-                <div className="mb-4">
-                  <button
-                    onClick={() =>
-                      setExpandedFeedback(
-                        expandedFeedback === course._id ? null : course._id,
-                      )
-                    }
-                    className="flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-700 transition-colors"
-                  >
-                    <AlertTriangle className="w-4 h-4" />
-                    View Feedback
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform ${
-                        expandedFeedback === course._id ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-                  {expandedFeedback === course._id && (
-                    <div className="mt-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 leading-relaxed">
-                      {course.reviewNotes}
+                {/* Feedback Dropdown (Rejected) */}
+                {course.status === "rejected" && course.reviewNotes && (
+                  <div className="mb-5 bg-red-50/70 rounded-2xl border border-red-100 overflow-hidden">
+                    <button
+                      onClick={() =>
+                        setExpandedFeedback(
+                          expandedFeedback === course._id ? null : course._id,
+                        )
+                      }
+                      className="w-full flex items-center justify-between px-4 py-3 text-sm font-bold text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
+                    >
+                      <span className="flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4" />
+                        Manager Feedback
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${
+                          expandedFeedback === course._id ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                    {expandedFeedback === course._id && (
+                      <div className="px-4 pb-4 pt-1 text-sm text-red-800 leading-relaxed border-t border-red-100/50">
+                        {course.reviewNotes}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Footer Actions */}
+                <div className="mt-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  {/* Primary Edit Button for Editable states */}
+                  {["draft", "pending_review", "rejected"].includes(
+                    course.status,
+                  ) && (
+                    <Link
+                      href={`/coach/courses/${course._id}/edit`}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-[0_4px_14px_0_rgba(220,38,38,0.39)] hover:shadow-[0_6px_20px_rgba(220,38,38,0.23)] hover:-translate-y-0.5 transition-all"
+                    >
+                      <FileEdit className="w-4 h-4" />
+                      {course.status === "rejected"
+                        ? "Revise & Resubmit"
+                        : "Edit Course"}
+                    </Link>
+                  )}
+
+                  {/* Supplemental Status Badge for Pending */}
+                  {course.status === "pending_review" && (
+                    <div className="flex-none sm:flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-bold text-amber-700 bg-amber-50 rounded-xl border border-amber-200">
+                      <Clock className="w-3.5 h-3.5" />
+                      Awaiting Review
+                    </div>
+                  )}
+
+                  {/* Action for Published Courses */}
+                  {course.status === "published" && (
+                    <div className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-emerald-700 bg-emerald-50 rounded-xl border border-emerald-200">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                      Live and Accepting Students
                     </div>
                   )}
                 </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
-                {course.status === "draft" && (
-                  <Link
-                    href={`/coach/courses/${course._id}/edit`}
-                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-red-100"
-                  >
-                    <FileEdit className="w-3.5 h-3.5" />
-                    Edit Course
-                  </Link>
-                )}
-                {course.status === "rejected" && (
-                  <Link
-                    href={`/coach/courses/${course._id}/edit`}
-                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-red-100"
-                  >
-                    <FileEdit className="w-3.5 h-3.5" />
-                    Revise & Resubmit
-                  </Link>
-                )}
-                {course.status === "pending_review" && (
-                  <>
-                    <Link
-                      href={`/coach/courses/${course._id}/edit`}
-                      className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors border border-amber-100"
-                    >
-                      <FileEdit className="w-3.5 h-3.5" />
-                      Edit Course
-                    </Link>
-                    <span className="text-xs text-amber-600 font-medium px-3 py-2 bg-amber-50 rounded-xl border border-amber-100">
-                      Awaiting manager review...
-                    </span>
-                  </>
-                )}
-                {course.status === "published" && (
-                  <span className="text-xs text-emerald-600 font-medium px-3 py-2 bg-emerald-50 rounded-xl border border-emerald-100">
-                    Live and accepting students
-                  </span>
-                )}
               </div>
             </div>
           );

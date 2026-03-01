@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch all courses belonging to this coach
     const courses = await Course.find({ coach: user.userId })
-      .select("title status price level enrollmentCount createdAt")
+      .select("title status price level enrollmentCount createdAt thumbnailUrl")
       .sort({ createdAt: -1 })
       .lean();
 
