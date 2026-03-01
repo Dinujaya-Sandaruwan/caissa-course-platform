@@ -23,6 +23,10 @@ import {
   Upload,
   Send,
   AlertTriangle,
+  Link as LinkIcon,
+  FilePlus,
+  Image as ImageIcon,
+  File as FileIcon,
 } from "lucide-react";
 
 type CourseLevel = "beginner" | "intermediate" | "advanced";
@@ -35,9 +39,24 @@ interface CourseMetadata {
   tags: string[];
 }
 
+export interface LessonMaterial {
+  id: string;
+  file: File | null;
+  fileName: string;
+  fileSize: number;
+  title: string;
+  status: "pending" | "selected" | "uploading" | "uploaded" | "error";
+  progress: number;
+  tempPath: string;
+  error: string;
+}
+
 interface LessonDraft {
   id: string;
   title: string;
+  description: string;
+  links: string[];
+  materials: LessonMaterial[];
   videoFile: File | null;
   videoFileName: string;
   videoFileSize: number;
@@ -276,6 +295,9 @@ export default function CreateCoursePage() {
                 {
                   id: generateId(),
                   title: "",
+                  description: "",
+                  links: [],
+                  materials: [],
                   videoFile: null,
                   videoFileName: "",
                   videoFileSize: 0,
@@ -323,9 +345,15 @@ export default function CreateCoursePage() {
   };
 
   // ─── Upload Queue ──────────────────────────────────────
-  const uploadQueueRef = useRef<
-    { chapterId: string; lessonId: string; file: File }[]
-  >([]);
+  type QueueItem = {
+    chapterId: string;
+    lessonId: string;
+    file: File;
+    type: "video" | "material";
+    materialId?: string;
+  };
+
+  const uploadQueueRef = useRef<QueueItem[]>([]);
   const isUploadingRef = useRef(false);
 
   const updateLessonUploadState = (
@@ -342,6 +370,27 @@ export default function CreateCoursePage() {
     );
   };
 
+  const updateMaterialUploadState = (
+    lessonId: string,
+    materialId: string,
+    updates: Partial<LessonMaterial>,
+  ) => {
+    setChapters((prev) =>
+      prev.map((ch) => ({
+        ...ch,
+        lessons: ch.lessons.map((l) => {
+          if (l.id !== lessonId) return l;
+          return {
+            ...l,
+            materials: l.materials.map((m) =>
+              m.id === materialId ? { ...m, ...updates } : m,
+            ),
+          };
+        }),
+      })),
+    );
+  };
+
   const processUploadQueue = async () => {
     if (isUploadingRef.current || uploadQueueRef.current.length === 0) return;
     isUploadingRef.current = true;
@@ -349,25 +398,39 @@ export default function CreateCoursePage() {
     while (uploadQueueRef.current.length > 0) {
       const item = uploadQueueRef.current[0];
 
-      updateLessonUploadState(item.lessonId, {
-        videoStatus: "uploading",
-        uploadProgress: 0,
-        uploadError: "",
-      });
+      if (item.type === "video") {
+        updateLessonUploadState(item.lessonId, {
+          videoStatus: "uploading",
+          uploadProgress: 0,
+          uploadError: "",
+        });
+      } else if (item.type === "material" && item.materialId) {
+        updateMaterialUploadState(item.lessonId, item.materialId, {
+          status: "uploading",
+          progress: 0,
+          error: "",
+        });
+      }
 
       try {
         const result = await new Promise<{ tempPath: string }>(
           (resolve, reject) => {
             const xhr = new XMLHttpRequest();
             const formData = new FormData();
-            formData.append("video", item.file);
+            formData.append("video", item.file); // temp API just expects 'video' field currently
 
             xhr.upload.addEventListener("progress", (e) => {
               if (e.lengthComputable) {
                 const percent = Math.round((e.loaded / e.total) * 100);
-                updateLessonUploadState(item.lessonId, {
-                  uploadProgress: percent,
-                });
+                if (item.type === "video") {
+                  updateLessonUploadState(item.lessonId, {
+                    uploadProgress: percent,
+                  });
+                } else if (item.type === "material" && item.materialId) {
+                  updateMaterialUploadState(item.lessonId, item.materialId, {
+                    progress: percent,
+                  });
+                }
               }
             });
 
@@ -398,17 +461,35 @@ export default function CreateCoursePage() {
           },
         );
 
-        updateLessonUploadState(item.lessonId, {
-          videoStatus: "uploaded",
-          uploadProgress: 100,
-          tempVideoPath: result.tempPath,
-        });
+        if (item.type === "video") {
+          updateLessonUploadState(item.lessonId, {
+            videoStatus: "uploaded",
+            uploadProgress: 100,
+            tempVideoPath: result.tempPath,
+          });
+        } else if (item.type === "material" && item.materialId) {
+          updateMaterialUploadState(item.lessonId, item.materialId, {
+            status: "uploaded",
+            progress: 100,
+            tempPath: result.tempPath,
+          });
+        }
       } catch (error) {
-        updateLessonUploadState(item.lessonId, {
-          videoStatus: "error",
-          uploadProgress: 0,
-          uploadError: error instanceof Error ? error.message : "Upload failed",
-        });
+        const errorMsg =
+          error instanceof Error ? error.message : "Upload failed";
+        if (item.type === "video") {
+          updateLessonUploadState(item.lessonId, {
+            videoStatus: "error",
+            uploadProgress: 0,
+            uploadError: errorMsg,
+          });
+        } else if (item.type === "material" && item.materialId) {
+          updateMaterialUploadState(item.lessonId, item.materialId, {
+            status: "error",
+            progress: 0,
+            error: errorMsg,
+          });
+        }
       }
 
       uploadQueueRef.current.shift();
@@ -444,7 +525,55 @@ export default function CreateCoursePage() {
     );
 
     // Add to upload queue and start processing
-    uploadQueueRef.current.push({ chapterId, lessonId, file });
+    uploadQueueRef.current.push({ chapterId, lessonId, file, type: "video" });
+    processUploadQueue();
+  };
+
+  const handleMaterialSelect = (
+    chapterId: string,
+    lessonId: string,
+    file: File,
+  ) => {
+    const materialId = generateId();
+    setChapters((prev) =>
+      prev.map((ch) =>
+        ch.id === chapterId
+          ? {
+              ...ch,
+              lessons: ch.lessons.map((l) =>
+                l.id === lessonId
+                  ? {
+                      ...l,
+                      materials: [
+                        ...l.materials,
+                        {
+                          id: materialId,
+                          file: file,
+                          fileName: file.name,
+                          fileSize: file.size,
+                          title: file.name,
+                          status: "selected",
+                          progress: 0,
+                          tempPath: "",
+                          error: "",
+                        },
+                      ],
+                    }
+                  : l,
+              ),
+            }
+          : ch,
+      ),
+    );
+
+    // Add to upload queue and start processing
+    uploadQueueRef.current.push({
+      chapterId,
+      lessonId,
+      file,
+      type: "material",
+      materialId,
+    });
     processUploadQueue();
   };
 
@@ -456,9 +585,136 @@ export default function CreateCoursePage() {
         chapterId,
         lessonId,
         file: lesson.videoFile,
+        type: "video",
       });
       processUploadQueue();
     }
+  };
+
+  const retryMaterialUpload = (
+    chapterId: string,
+    lessonId: string,
+    materialId: string,
+  ) => {
+    const chapter = chapters.find((ch) => ch.id === chapterId);
+    const lesson = chapter?.lessons.find((l) => l.id === lessonId);
+    const material = lesson?.materials.find((m) => m.id === materialId);
+    if (material?.file) {
+      uploadQueueRef.current.push({
+        chapterId,
+        lessonId,
+        file: material.file,
+        type: "material",
+        materialId,
+      });
+      processUploadQueue();
+    }
+  };
+
+  const updateLessonDescription = (
+    chapterId: string,
+    lessonId: string,
+    description: string,
+  ) => {
+    setChapters((prev) =>
+      prev.map((ch) =>
+        ch.id === chapterId
+          ? {
+              ...ch,
+              lessons: ch.lessons.map((l) =>
+                l.id === lessonId ? { ...l, description } : l,
+              ),
+            }
+          : ch,
+      ),
+    );
+  };
+
+  const addLessonLink = (chapterId: string, lessonId: string) => {
+    setChapters((prev) =>
+      prev.map((ch) =>
+        ch.id === chapterId
+          ? {
+              ...ch,
+              lessons: ch.lessons.map((l) =>
+                l.id === lessonId ? { ...l, links: [...l.links, ""] } : l,
+              ),
+            }
+          : ch,
+      ),
+    );
+  };
+
+  const updateLessonLink = (
+    chapterId: string,
+    lessonId: string,
+    index: number,
+    value: string,
+  ) => {
+    setChapters((prev) =>
+      prev.map((ch) =>
+        ch.id === chapterId
+          ? {
+              ...ch,
+              lessons: ch.lessons.map((l) =>
+                l.id === lessonId
+                  ? {
+                      ...l,
+                      links: l.links.map((link, i) =>
+                        i === index ? value : link,
+                      ),
+                    }
+                  : l,
+              ),
+            }
+          : ch,
+      ),
+    );
+  };
+
+  const removeLessonLink = (
+    chapterId: string,
+    lessonId: string,
+    index: number,
+  ) => {
+    setChapters((prev) =>
+      prev.map((ch) =>
+        ch.id === chapterId
+          ? {
+              ...ch,
+              lessons: ch.lessons.map((l) =>
+                l.id === lessonId
+                  ? { ...l, links: l.links.filter((_, i) => i !== index) }
+                  : l,
+              ),
+            }
+          : ch,
+      ),
+    );
+  };
+
+  const removeLessonMaterial = (
+    chapterId: string,
+    lessonId: string,
+    materialId: string,
+  ) => {
+    setChapters((prev) =>
+      prev.map((ch) =>
+        ch.id === chapterId
+          ? {
+              ...ch,
+              lessons: ch.lessons.map((l) =>
+                l.id === lessonId
+                  ? {
+                      ...l,
+                      materials: l.materials.filter((m) => m.id !== materialId),
+                    }
+                  : l,
+              ),
+            }
+          : ch,
+      ),
+    );
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -568,7 +824,15 @@ export default function CreateCoursePage() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 title: lesson.title.trim(),
+                description: lesson.description.trim(),
+                links: lesson.links.filter((link) => link.trim() !== ""),
                 tempVideoPath: lesson.tempVideoPath || undefined,
+                tempMaterials: lesson.materials
+                  .filter((m) => m.tempPath)
+                  .map((m) => ({
+                    title: m.title.trim() || m.fileName,
+                    tempPath: m.tempPath,
+                  })),
               }),
             },
           );
@@ -1062,97 +1326,289 @@ export default function CreateCoursePage() {
                         key={lesson.id}
                         className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-gray-100 shadow-sm group"
                       >
-                        <span className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 shrink-0">
-                          {lIdx + 1}
-                        </span>
-                        <input
-                          type="text"
-                          value={lesson.title}
-                          onChange={(e) =>
-                            updateLessonTitle(
-                              chapter.id,
-                              lesson.id,
-                              e.target.value,
-                            )
-                          }
-                          placeholder="Lesson title..."
-                          className="flex-1 text-sm font-medium text-gray-800 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
-                        />
-
-                        {/* Video Status */}
-                        <div className="flex items-center gap-2 shrink-0">
-                          {lesson.videoStatus === "pending" && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                fileInputRefs.current[lesson.id]?.click()
+                        <div className="flex flex-col gap-3 w-full p-1.5 pt-0">
+                          {/* Top Row: Title & Basic Actions */}
+                          <div className="flex items-center gap-3 w-full">
+                            <span className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 shrink-0">
+                              {lIdx + 1}
+                            </span>
+                            <input
+                              type="text"
+                              value={lesson.title}
+                              onChange={(e) =>
+                                updateLessonTitle(
+                                  chapter.id,
+                                  lesson.id,
+                                  e.target.value,
+                                )
                               }
-                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-500 bg-gray-100 hover:bg-red-50 hover:text-red-600 rounded-lg transition-all cursor-pointer"
-                            >
-                              <Video className="w-3.5 h-3.5" />
-                              Add Video
-                            </button>
-                          )}
-                          {lesson.videoStatus === "selected" && (
-                            <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg animate-pulse">
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              Waiting...
-                            </span>
-                          )}
-                          {lesson.videoStatus === "uploading" && (
-                            <div className="flex items-center gap-2">
-                              <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-300 ease-out"
-                                  style={{ width: `${lesson.uploadProgress}%` }}
-                                />
-                              </div>
-                              <span className="text-xs font-bold text-red-600 min-w-[3rem] text-right">
-                                {lesson.uploadProgress}%
-                              </span>
-                            </div>
-                          )}
-                          {lesson.videoStatus === "uploaded" && (
-                            <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-lg">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              Uploaded
-                            </span>
-                          )}
-                          {lesson.videoStatus === "error" && (
-                            <div className="flex items-center gap-2">
-                              <span
-                                className="text-xs font-semibold text-red-500 max-w-[150px] truncate"
-                                title={lesson.uploadError || "Upload failed"}
-                              >
-                                {lesson.uploadError || "Failed"}
-                              </span>
+                              placeholder="Lesson title..."
+                              className="flex-1 text-sm font-medium text-gray-800 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
+                            />
+
+                            <div className="flex items-center gap-2 shrink-0">
                               <button
                                 type="button"
                                 onClick={() =>
-                                  retryUpload(chapter.id, lesson.id)
+                                  fileInputRefs.current[lesson.id]?.click()
                                 }
-                                className="text-xs font-bold text-red-600 underline hover:text-red-700 cursor-pointer"
+                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                                  lesson.videoStatus === "pending"
+                                    ? "text-gray-500 bg-gray-100 hover:bg-red-50 hover:text-red-600"
+                                    : "text-red-600 bg-red-50 hover:bg-red-100"
+                                }`}
                               >
-                                Retry
+                                <Video className="w-3.5 h-3.5" />
+                                {lesson.videoStatus === "pending"
+                                  ? "Add Video"
+                                  : "Change Video"}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  addLessonLink(chapter.id, lesson.id)
+                                }
+                                className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                title="Add Reading Link"
+                              >
+                                <LinkIcon className="w-4 h-4" />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const input = document.createElement("input");
+                                  input.type = "file";
+                                  input.accept =
+                                    "application/pdf,image/jpeg,image/png";
+                                  input.onchange = (e) => {
+                                    const file = (e.target as HTMLInputElement)
+                                      .files?.[0];
+                                    if (file)
+                                      handleMaterialSelect(
+                                        chapter.id,
+                                        lesson.id,
+                                        file,
+                                      );
+                                  };
+                                  input.click();
+                                }}
+                                className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
+                                title="Add File (PDF/Image)"
+                              >
+                                <FilePlus className="w-4 h-4" />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  removeLesson(chapter.id, lesson.id)
+                                }
+                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 ml-2"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
+                          </div>
+
+                          {/* Video Status Row (If active) */}
+                          {lesson.videoStatus !== "pending" && (
+                            <div className="flex items-center gap-3 pl-9">
+                              <div className="flex items-center gap-2 shrink-0">
+                                {lesson.videoStatus === "selected" && (
+                                  <span className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg animate-pulse">
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    Waiting...
+                                  </span>
+                                )}
+                                {lesson.videoStatus === "uploading" && (
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                      <div
+                                        className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-300 ease-out"
+                                        style={{
+                                          width: `${lesson.uploadProgress}%`,
+                                        }}
+                                      />
+                                    </div>
+                                    <span className="text-xs font-bold text-red-600 min-w-[3rem] text-right">
+                                      {lesson.uploadProgress}%
+                                    </span>
+                                  </div>
+                                )}
+                                {lesson.videoStatus === "uploaded" && (
+                                  <span className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-lg">
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                    Video Uploaded
+                                  </span>
+                                )}
+                                {lesson.videoStatus === "error" && (
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      className="text-xs font-semibold text-red-500 max-w-[150px] truncate"
+                                      title={
+                                        lesson.uploadError || "Upload failed"
+                                      }
+                                    >
+                                      {lesson.uploadError || "Failed"}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        retryUpload(chapter.id, lesson.id)
+                                      }
+                                      className="text-xs font-bold text-red-600 underline hover:text-red-700 cursor-pointer"
+                                    >
+                                      Retry
+                                    </button>
+                                  </div>
+                                )}
+                                {lesson.videoFileName && (
+                                  <span
+                                    className="text-[10px] text-gray-400 font-medium max-w-[150px] sm:max-w-xs truncate"
+                                    title={lesson.videoFileName}
+                                  >
+                                    {lesson.videoFileName} (
+                                    {formatFileSize(lesson.videoFileSize)})
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           )}
-                          {lesson.videoFileName &&
-                            lesson.videoStatus !== "pending" && (
-                              <span
-                                className="text-[10px] text-gray-400 font-medium max-w-[120px] truncate"
-                                title={lesson.videoFileName}
-                              >
-                                {lesson.videoFileName} (
-                                {formatFileSize(lesson.videoFileSize)})
-                              </span>
+
+                          {/* Expansion Area: Description */}
+                          <div className="pl-9 pr-2 space-y-3 mt-1">
+                            <textarea
+                              value={lesson.description}
+                              onChange={(e) =>
+                                updateLessonDescription(
+                                  chapter.id,
+                                  lesson.id,
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Write a text description or notes for this lesson (optional)..."
+                              rows={2}
+                              className="w-full text-sm text-gray-700 placeholder-gray-400 bg-gray-50 border border-gray-100 focus:border-red-300 focus:ring-4 focus:ring-red-50 rounded-xl px-4 py-2 resize-y transition-all"
+                            />
+
+                            {/* Links List */}
+                            {lesson.links.length > 0 && (
+                              <div className="space-y-2">
+                                {lesson.links.map((link, linkIdx) => (
+                                  <div
+                                    key={linkIdx}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <LinkIcon className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                                    <input
+                                      type="url"
+                                      value={link}
+                                      onChange={(e) =>
+                                        updateLessonLink(
+                                          chapter.id,
+                                          lesson.id,
+                                          linkIdx,
+                                          e.target.value,
+                                        )
+                                      }
+                                      placeholder="https://example.com/reading-material"
+                                      className="flex-1 text-xs text-blue-600 placeholder-gray-400 bg-transparent border-b border-gray-200 focus:border-blue-400 focus:outline-none px-1 py-1"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        removeLessonLink(
+                                          chapter.id,
+                                          lesson.id,
+                                          linkIdx,
+                                        )
+                                      }
+                                      className="text-gray-400 hover:text-red-500 p-1"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
                             )}
+
+                            {/* Materials List */}
+                            {lesson.materials.length > 0 && (
+                              <div className="space-y-2">
+                                {lesson.materials.map((mat) => (
+                                  <div
+                                    key={mat.id}
+                                    className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2 border border-gray-100"
+                                  >
+                                    <FileIcon className="w-4 h-4 text-purple-400 shrink-0" />
+                                    <div className="flex-1 flex items-center justify-between min-w-0">
+                                      <span className="text-xs font-medium text-gray-700 truncate pr-4">
+                                        {mat.fileName} (
+                                        {formatFileSize(mat.fileSize)})
+                                      </span>
+
+                                      <div className="flex items-center gap-2 shrink-0">
+                                        {mat.status === "selected" && (
+                                          <span className="text-[10px] font-bold text-gray-400">
+                                            Waiting...
+                                          </span>
+                                        )}
+                                        {mat.status === "uploading" && (
+                                          <span className="text-[10px] font-bold text-purple-600">
+                                            {mat.progress}%
+                                          </span>
+                                        )}
+                                        {mat.status === "uploaded" && (
+                                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                        )}
+                                        {mat.status === "error" && (
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-bold text-red-500 truncate max-w-[80px]">
+                                              {mat.error}
+                                            </span>
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                retryMaterialUpload(
+                                                  chapter.id,
+                                                  lesson.id,
+                                                  mat.id,
+                                                )
+                                              }
+                                              className="text-[10px] text-red-600 underline"
+                                            >
+                                              Retry
+                                            </button>
+                                          </div>
+                                        )}
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            removeLessonMaterial(
+                                              chapter.id,
+                                              lesson.id,
+                                              mat.id,
+                                            )
+                                          }
+                                          className="text-gray-400 hover:text-red-500 ml-2"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
 
-                        {/* Hidden file input */}
+                        {/* Hidden file input for video */}
                         <input
                           ref={(el) => {
-                            fileInputRefs.current[lesson.id] = el;
+                            if (el) fileInputRefs.current[lesson.id] = el;
                           }}
                           type="file"
                           accept="video/*"
@@ -1164,14 +1620,6 @@ export default function CreateCoursePage() {
                             }
                           }}
                         />
-
-                        <button
-                          type="button"
-                          onClick={() => removeLesson(chapter.id, lesson.id)}
-                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
                       </div>
                     ))}
 

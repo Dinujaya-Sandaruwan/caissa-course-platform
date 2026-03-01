@@ -37,9 +37,21 @@ export async function POST(request: NextRequest) {
     const { fileTypeFromBuffer } = await import("file-type");
     const mimeInfo = await fileTypeFromBuffer(buffer);
 
-    if (!mimeInfo || !mimeInfo.mime.startsWith("video/")) {
+    const allowedMimePrefixes = ["video/", "image/"];
+    const allowedExactMimes = ["application/pdf"];
+
+    if (
+      !mimeInfo ||
+      (!allowedMimePrefixes.some((prefix) =>
+        mimeInfo.mime.startsWith(prefix),
+      ) &&
+        !allowedExactMimes.includes(mimeInfo.mime))
+    ) {
       return NextResponse.json(
-        { error: "Invalid file type. Only video files are allowed." },
+        {
+          error:
+            "Invalid file type. Only videos, images, and PDFs are allowed.",
+        },
         { status: 415 },
       );
     }

@@ -54,7 +54,8 @@ export async function POST(
       );
     }
 
-    const { title, tempVideoPath } = await request.json();
+    const { title, description, links, tempVideoPath, tempMaterials } =
+      await request.json();
 
     if (!title || !title.trim()) {
       return NextResponse.json(
@@ -71,17 +72,22 @@ export async function POST(
       chapterId,
       courseId,
       title: title.trim(),
+      description: description?.trim() || "",
+      links: Array.isArray(links)
+        ? links.map((l: string) => l.trim()).filter(Boolean)
+        : [],
       order,
       videoStatus: tempVideoPath ? "uploaded" : "pending",
+      materials: [],
     });
+
+    const uploadDir = process.env.UPLOAD_DIR || "public/uploads";
 
     // If a temp video was pre-uploaded, move it to the course directory
     if (tempVideoPath && typeof tempVideoPath === "string") {
       try {
-        // Extract filename from temp path like "/api/files/temp/uuid.mp4"
         const tempFileName = tempVideoPath.split("/").pop();
         if (tempFileName) {
-          const uploadDir = process.env.UPLOAD_DIR || "public/uploads";
           const tempFilePath = path.join(
             process.cwd(),
             uploadDir,
@@ -104,13 +110,56 @@ export async function POST(
           const relativeUrl = `/api/files/courses/${courseId}/${finalFileName}`;
           newLesson.tempVideoPath = relativeUrl;
           newLesson.videoStatus = "uploaded";
-          await newLesson.save();
         }
       } catch (moveError) {
         console.error("Error moving temp video:", moveError);
-        // Video move failed but lesson was still created — non-critical
       }
     }
+
+    // If temp materials (PDFs/Images) were pre-uploaded, move them
+    if (Array.isArray(tempMaterials) && tempMaterials.length > 0) {
+      const finalMaterials = [];
+      for (const material of tempMaterials) {
+        if (material.tempPath && typeof material.tempPath === "string") {
+          try {
+            const tempFileName = material.tempPath.split("/").pop();
+            if (tempFileName) {
+              const tempFilePath = path.join(
+                process.cwd(),
+                uploadDir,
+                "temp",
+                tempFileName,
+              );
+              const courseUploadPath = path.join(
+                process.cwd(),
+                uploadDir,
+                "courses",
+                courseId,
+              );
+              await mkdir(courseUploadPath, { recursive: true });
+
+              // Create unique name for material
+              const id = crypto.randomUUID();
+              const ext = tempFileName.split(".").pop();
+              const finalFileName = `${newLesson._id}-mat-${id}.${ext}`;
+              const finalFilePath = path.join(courseUploadPath, finalFileName);
+
+              await rename(tempFilePath, finalFilePath);
+
+              finalMaterials.push({
+                title: material.title || "Untitled Material",
+                url: `/api/files/courses/${courseId}/${finalFileName}`,
+              });
+            }
+          } catch (err) {
+            console.error("Error moving temp material:", err);
+          }
+        }
+      }
+      newLesson.materials = finalMaterials;
+    }
+
+    await newLesson.save();
 
     return NextResponse.json(newLesson, { status: 201 });
   } catch (error) {

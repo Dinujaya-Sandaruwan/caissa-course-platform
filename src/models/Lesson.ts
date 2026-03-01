@@ -6,6 +6,9 @@ export interface ILesson extends Document {
   title: string;
   order: number;
   duration?: number;
+  description?: string;
+  links?: string[];
+  materials?: { title: string; url: string }[];
   tempVideoPath?: string;
   videoUrl?: string;
   videoStatus: "pending" | "uploaded" | "ready";
@@ -39,6 +42,22 @@ const LessonSchema = new Schema<ILesson>(
     duration: {
       type: Number,
     },
+    description: {
+      type: String,
+      trim: true,
+    },
+    links: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    materials: [
+      {
+        title: { type: String, required: true },
+        url: { type: String, required: true },
+      },
+    ],
     tempVideoPath: {
       type: String,
     },
