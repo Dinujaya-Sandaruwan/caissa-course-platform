@@ -58,3 +58,87 @@ export async function GET(
     );
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id: courseId } = await params;
+    const session = await getSessionUser();
+
+    if (!session || session.role !== "manager") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+
+    if (course.status !== "trashed") {
+      return NextResponse.json(
+        { error: "Only trashed courses can be permanently deleted" },
+        { status: 403 },
+      );
+    }
+
+    // Permanently delete chapters, lessons, and the course
+    await Promise.all([
+      Lesson.deleteMany({ courseId: course._id }),
+      Chapter.deleteMany({ courseId: course._id }),
+    ]);
+    await course.deleteOne();
+
+    return NextResponse.json({ message: "Course permanently deleted" });
+  } catch (error) {
+    console.error("Error permanently deleting course:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id: courseId } = await params;
+    const session = await getSessionUser();
+
+    if (!session || session.role !== "manager") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+
+    if (course.status !== "trashed") {
+      return NextResponse.json(
+        { error: "Only trashed courses can be reactivated" },
+        { status: 403 },
+      );
+    }
+
+    // Reactivate: set back to draft
+    course.status = "draft";
+    course.trashedAt = undefined;
+    await course.save();
+
+    return NextResponse.json({ message: "Course reactivated as draft" });
+  } catch (error) {
+    console.error("Error reactivating course:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}

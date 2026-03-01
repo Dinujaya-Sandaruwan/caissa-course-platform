@@ -251,25 +251,21 @@ export async function DELETE(
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    if (!["draft", "pending_review", "rejected"].includes(course.status)) {
+    if (course.status === "trashed") {
       return NextResponse.json(
-        { error: "Only draft, pending, or rejected courses can be deleted" },
-        { status: 403 },
+        { error: "Course is already trashed" },
+        { status: 400 },
       );
     }
 
-    // Delete associated chapters and lessons first
-    await Promise.all([
-      Lesson.deleteMany({ courseId: course._id }),
-      Chapter.deleteMany({ courseId: course._id }),
-    ]);
+    // Soft delete: mark as trashed instead of permanently removing
+    course.status = "trashed";
+    course.trashedAt = new Date();
+    await course.save();
 
-    // Finally delete the course
-    await course.deleteOne();
-
-    return NextResponse.json({ message: "Course deleted successfully" });
+    return NextResponse.json({ message: "Course moved to trash" });
   } catch (error) {
-    console.error("Error deleting course:", error);
+    console.error("Error trashing course:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

@@ -26,7 +26,10 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     // Fetch all courses belonging to this coach
-    const courses = await Course.find({ coach: user.userId })
+    const courses = await Course.find({
+      coach: user.userId,
+      status: { $ne: "trashed" },
+    })
       .select("title status price level enrollmentCount createdAt thumbnailUrl")
       .sort({ createdAt: -1 })
       .lean();

@@ -10,6 +10,8 @@ import {
   Loader2,
   BookOpen,
   X,
+  Trash2,
+  RotateCcw,
 } from "lucide-react";
 
 interface PendingCourse {
@@ -21,6 +23,15 @@ interface PendingCourse {
   coach?: { name?: string; phone?: string };
 }
 
+interface TrashedCourse {
+  _id: string;
+  title: string;
+  price: number;
+  level: string;
+  trashedAt: string;
+  coach?: { name?: string; phone?: string };
+}
+
 const levelEmoji: Record<string, string> = {
   beginner: "🌱",
   intermediate: "⚔️",
@@ -29,6 +40,7 @@ const levelEmoji: Record<string, string> = {
 
 export default function ManagerCoursesPage() {
   const [courses, setCourses] = useState<PendingCourse[]>([]);
+  const [trashedCourses, setTrashedCourses] = useState<TrashedCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -41,8 +53,17 @@ export default function ManagerCoursesPage() {
   const [modalNotes, setModalNotes] = useState("");
   const [modalCourseName, setModalCourseName] = useState("");
 
+  // Trash action state
+  const [trashModalOpen, setTrashModalOpen] = useState(false);
+  const [trashAction, setTrashAction] = useState<"delete" | "reactivate">(
+    "delete",
+  );
+  const [trashTargetId, setTrashTargetId] = useState("");
+  const [trashTargetTitle, setTrashTargetTitle] = useState("");
+
   useEffect(() => {
     fetchCourses();
+    fetchTrashedCourses();
   }, []);
 
   async function fetchCourses() {
@@ -56,6 +77,18 @@ export default function ManagerCoursesPage() {
       console.error("Failed to fetch pending courses:", error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchTrashedCourses() {
+    try {
+      const res = await fetch("/api/manager/courses/trashed");
+      if (res.ok) {
+        const data = await res.json();
+        setTrashedCourses(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch trashed courses:", error);
     }
   }
 
@@ -93,6 +126,47 @@ export default function ManagerCoursesPage() {
     setModalAction(action);
     setModalNotes("");
     setModalOpen(true);
+  }
+
+  function openTrashModal(
+    courseId: string,
+    courseTitle: string,
+    action: "delete" | "reactivate",
+  ) {
+    setTrashTargetId(courseId);
+    setTrashTargetTitle(courseTitle);
+    setTrashAction(action);
+    setTrashModalOpen(true);
+  }
+
+  async function handleTrashAction() {
+    setActionLoading(trashTargetId);
+    try {
+      if (trashAction === "delete") {
+        const res = await fetch(`/api/manager/courses/${trashTargetId}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          setTrashedCourses((prev) =>
+            prev.filter((c) => c._id !== trashTargetId),
+          );
+        }
+      } else {
+        const res = await fetch(`/api/manager/courses/${trashTargetId}`, {
+          method: "PATCH",
+        });
+        if (res.ok) {
+          setTrashedCourses((prev) =>
+            prev.filter((c) => c._id !== trashTargetId),
+          );
+        }
+      }
+      setTrashModalOpen(false);
+    } catch (error) {
+      console.error("Trash action failed:", error);
+    } finally {
+      setActionLoading(null);
+    }
   }
 
   if (loading) {
@@ -298,6 +372,139 @@ export default function ManagerCoursesPage() {
                   <Loader2 className="w-4 h-4 animate-spin" />
                 )}
                 {modalAction === "rejected" ? "Reject Course" : "Hold Course"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Trashed Courses Section */}
+      {trashedCourses.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center">
+              <Trash2 className="w-4 h-4 text-gray-500" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">Trashed Courses</h2>
+            <span className="text-xs font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-full">
+              {trashedCourses.length}
+            </span>
+          </div>
+
+          <div className="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5 overflow-hidden">
+            <div className="hidden md:grid md:grid-cols-[1fr_150px_100px_120px_220px] gap-4 px-8 py-4 bg-gray-50/80 border-b border-gray-100">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                Course
+              </span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                Coach
+              </span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                Price
+              </span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                Trashed
+              </span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider text-right">
+                Actions
+              </span>
+            </div>
+
+            <div className="divide-y divide-gray-100">
+              {trashedCourses.map((course) => (
+                <div
+                  key={course._id}
+                  className="grid grid-cols-1 md:grid-cols-[1fr_150px_100px_120px_220px] gap-3 md:gap-4 px-8 py-5 items-center hover:bg-gray-50/50 transition-colors"
+                >
+                  <span className="text-sm font-bold text-gray-900">
+                    {course.title}
+                  </span>
+                  <span className="text-sm text-gray-600 font-medium">
+                    {course.coach?.name || "Unknown"}
+                  </span>
+                  <span className="text-sm font-bold text-gray-700">
+                    Rs. {course.price?.toLocaleString()}
+                  </span>
+                  <span className="text-xs text-gray-500 font-medium">
+                    {course.trashedAt
+                      ? new Date(course.trashedAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                      : "—"}
+                  </span>
+                  <div className="flex items-center gap-2 md:justify-end">
+                    <button
+                      onClick={() =>
+                        openTrashModal(course._id, course.title, "reactivate")
+                      }
+                      disabled={actionLoading === course._id}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors disabled:opacity-50"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      Reactivate
+                    </button>
+                    <button
+                      onClick={() =>
+                        openTrashModal(course._id, course.title, "delete")
+                      }
+                      disabled={actionLoading === course._id}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors disabled:opacity-50"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Delete Forever
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Trash Action Modal */}
+      {trashModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-[fade-in-up_0.2s_ease-out]">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900">
+                {trashAction === "delete"
+                  ? "Permanently Delete?"
+                  : "Reactivate Course?"}
+              </h3>
+              <button
+                onClick={() => setTrashModalOpen(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mb-6">
+              {trashAction === "delete"
+                ? `This will permanently delete "${trashTargetTitle}" and all its chapters, lessons, and materials. This action cannot be undone.`
+                : `"${trashTargetTitle}" will be restored as a draft course and returned to the coach.`}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setTrashModalOpen(false)}
+                className="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleTrashAction}
+                disabled={actionLoading === trashTargetId}
+                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white rounded-xl transition-all disabled:opacity-50 ${
+                  trashAction === "delete"
+                    ? "bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20"
+                    : "bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20"
+                }`}
+              >
+                {actionLoading === trashTargetId && (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                )}
+                {trashAction === "delete" ? "Delete Forever" : "Reactivate"}
               </button>
             </div>
           </div>

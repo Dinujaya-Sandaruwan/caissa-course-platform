@@ -17,6 +17,8 @@ import {
   Sprout,
   Swords,
   Crown,
+  Trash2,
+  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -89,6 +91,11 @@ export default function CoachCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedFeedback, setExpandedFeedback] = useState<string | null>(null);
+  const [trashTarget, setTrashTarget] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [trashing, setTrashing] = useState(false);
 
   useEffect(() => {
     async function fetchCourses() {
@@ -106,6 +113,24 @@ export default function CoachCoursesPage() {
     }
     fetchCourses();
   }, []);
+
+  async function handleTrash() {
+    if (!trashTarget) return;
+    setTrashing(true);
+    try {
+      const res = await fetch(`/api/coach/courses/${trashTarget.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setCourses((prev) => prev.filter((c) => c._id !== trashTarget.id));
+        setTrashTarget(null);
+      }
+    } catch (error) {
+      console.error("Failed to trash course:", error);
+    } finally {
+      setTrashing(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -313,12 +338,70 @@ export default function CoachCoursesPage() {
                       Approved! Awaiting Manager Publication...
                     </div>
                   )}
+
+                  {/* Trash Button */}
+                  <button
+                    onClick={() =>
+                      setTrashTarget({
+                        id: course._id,
+                        title: course.title,
+                      })
+                    }
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-bold text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl border border-gray-100 hover:border-red-200 transition-all"
+                    title="Move to Trash"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Trash
+                  </button>
                 </div>
               </div>
             </div>
           );
         })}
       </div>
+
+      {/* Trash Confirmation Modal */}
+      {trashTarget && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-[fade-in-up_0.2s_ease-out]">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">
+                Move to Trash?
+              </h3>
+              <button
+                onClick={() => setTrashTarget(null)}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mb-6">
+              <strong className="text-gray-700">
+                &ldquo;{trashTarget.title}&rdquo;
+              </strong>{" "}
+              will be moved to trash. Students will no longer be able to access
+              this course. A manager can permanently delete or reactivate it
+              later.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setTrashTarget(null)}
+                className="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleTrash}
+                disabled={trashing}
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-600/20 transition-all disabled:opacity-50"
+              >
+                {trashing && <Loader2 className="w-4 h-4 animate-spin" />}
+                Move to Trash
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

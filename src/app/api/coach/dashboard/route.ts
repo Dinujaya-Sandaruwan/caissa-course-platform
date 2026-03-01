@@ -16,7 +16,10 @@ export async function GET() {
     await connectDB();
 
     // Get all coach's courses
-    const courses = await Course.find({ coach: session.userId })
+    const courses = await Course.find({
+      coach: session.userId,
+      status: { $ne: "trashed" },
+    })
       .select("_id title status enrollmentCount")
       .lean();
 

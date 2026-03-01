@@ -16,7 +16,9 @@ export interface ICourse extends Document {
     | "approved"
     | "rejected"
     | "published"
-    | "unpublished";
+    | "unpublished"
+    | "trashed";
+  trashedAt?: Date;
   reviewNotes?: string;
   reviewedBy?: Types.ObjectId;
   reviewedAt?: Date;
@@ -74,9 +76,13 @@ const CourseSchema = new Schema<ICourse>(
         "rejected",
         "published",
         "unpublished",
+        "trashed",
       ],
       default: "draft",
       index: true,
+    },
+    trashedAt: {
+      type: Date,
     },
     reviewNotes: {
       type: String,
