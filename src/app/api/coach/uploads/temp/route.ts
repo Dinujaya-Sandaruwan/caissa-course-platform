@@ -70,6 +70,11 @@ export async function POST(request: NextRequest) {
 
     const tempPath = `/api/files/temp/${fileName}`;
 
+    // Fire-and-forget lazy cleanup of abandoned temp files
+    import("@/lib/cleanupTempFiles").then(({ cleanupTempFiles }) => {
+      cleanupTempFiles().catch(console.error);
+    });
+
     return NextResponse.json({
       message: "Video uploaded successfully",
       tempPath,
