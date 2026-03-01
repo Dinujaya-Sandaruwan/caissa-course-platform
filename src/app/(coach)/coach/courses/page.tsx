@@ -27,6 +27,7 @@ interface Course {
   title: string;
   status: string;
   price: number;
+  discountedPrice?: number;
   level: string;
   enrollmentCount: number;
   createdAt: string;

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getAuthUser } from "@/lib/auth";
-import connectDB from "@/lib/mongodb";
+import { getSessionUser } from "@/lib/auth";
+import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
 
 // PATCH — Manager sets discounted price
@@ -9,7 +9,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await getAuthUser();
+    const user = await getSessionUser();
     if (!user || user.role !== "manager") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -78,7 +78,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await getAuthUser();
+    const user = await getSessionUser();
     if (!user || user.role !== "manager") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

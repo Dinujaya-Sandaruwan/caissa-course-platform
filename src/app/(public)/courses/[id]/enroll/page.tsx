@@ -20,6 +20,7 @@ interface CourseBasic {
   _id: string;
   title: string;
   price: number;
+  discountedPrice?: number;
   level: string;
 }
 
@@ -215,8 +216,19 @@ export default function EnrollPage() {
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
                       Amount
                     </p>
-                    <p className="text-2xl font-extrabold text-red-600">
-                      Rs. {course.price?.toLocaleString()}
+                    <p className="text-2xl font-extrabold text-red-600 flex flex-col items-end">
+                      {course.discountedPrice ? (
+                        <>
+                          <span className="text-gray-400 line-through text-sm font-semibold mb-1">
+                            Rs. {course.price?.toLocaleString()}
+                          </span>
+                          <span>
+                            Rs. {course.discountedPrice.toLocaleString()}
+                          </span>
+                        </>
+                      ) : (
+                        <span>Rs. {course.price?.toLocaleString()}</span>
+                      )}
                     </p>
                   </div>
                 </div>

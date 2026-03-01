@@ -37,6 +37,7 @@ interface CourseDetail {
   title: string;
   description: string;
   price: number;
+  discountedPrice?: number;
   level: string;
   tags: string[];
   thumbnailUrl?: string;
@@ -306,8 +307,19 @@ export default function PublicCourseDetailPage() {
                 {/* Price + Enroll CTA */}
                 <div className="p-6 space-y-4">
                   <div className="text-center">
-                    <span className="text-3xl font-extrabold text-gray-900">
-                      Rs. {course.price?.toLocaleString()}
+                    <span className="text-3xl font-extrabold text-gray-900 flex flex-col items-center">
+                      {course.discountedPrice ? (
+                        <>
+                          <span className="text-gray-400 line-through text-lg font-semibold mb-1">
+                            Rs. {course.price?.toLocaleString()}
+                          </span>
+                          <span className="text-red-600">
+                            Rs. {course.discountedPrice?.toLocaleString()}
+                          </span>
+                        </>
+                      ) : (
+                        <>Rs. {course.price?.toLocaleString()}</>
+                      )}
                     </span>
                   </div>
 

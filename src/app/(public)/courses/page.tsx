@@ -14,6 +14,7 @@ interface PublicCourse {
   title: string;
   thumbnailUrl?: string;
   price: number;
+  discountedPrice?: number;
   level: string;
   enrollmentCount: number;
   tags: string[];
@@ -206,8 +207,20 @@ function CoursesContent() {
                           )}
 
                           <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                            <span className="text-lg font-extrabold text-gray-900">
-                              Rs. {course.price?.toLocaleString()}
+                            <span className="text-lg font-extrabold text-gray-900 flex shrink-0 min-w-0">
+                              {course.discountedPrice ? (
+                                <span className="flex items-center gap-2 truncate">
+                                  <span className="text-gray-400 line-through text-xs font-semibold">
+                                    Rs. {course.price?.toLocaleString()}
+                                  </span>
+                                  <span className="text-red-600">
+                                    Rs.{" "}
+                                    {course.discountedPrice?.toLocaleString()}
+                                  </span>
+                                </span>
+                              ) : (
+                                <>Rs. {course.price?.toLocaleString()}</>
+                              )}
                             </span>
                             <span className="flex items-center gap-1 text-xs text-gray-400 font-medium">
                               <Users className="w-3.5 h-3.5" />
