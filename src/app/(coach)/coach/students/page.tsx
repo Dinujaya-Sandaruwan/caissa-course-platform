@@ -103,18 +103,19 @@ export default function CoachStudentsPage() {
   return (
     <div className="space-y-10 relative z-10">
       {/* Page Header */}
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <Users className="w-5 h-5 text-white" />
-          </div>
+      <div className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5 relative overflow-hidden">
+        <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-blue-500 to-blue-300 rounded-r-full" />
+        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+          <Users className="w-5 h-5 text-blue-500" />
         </div>
-        <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
-          My Students
-        </h1>
-        <p className="text-gray-500 mt-2 text-lg font-medium">
-          View enrolled students across your courses.
-        </p>
+        <div>
+          <h1 className="text-2xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight leading-tight">
+            My Students
+          </h1>
+          <p className="text-gray-400 text-sm font-medium mt-0.5">
+            View enrolled students across your courses
+          </p>
+        </div>
       </div>
 
       {/* No Published Courses */}
