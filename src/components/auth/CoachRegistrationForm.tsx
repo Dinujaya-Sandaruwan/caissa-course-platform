@@ -66,6 +66,7 @@ export default function CoachRegistrationForm({
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvError, setCvError] = useState("");
   const [draggingCv, setDraggingCv] = useState(false);
+  const [ratingError, setRatingError] = useState("");
 
   // Crop modal state
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -171,6 +172,18 @@ export default function CoachRegistrationForm({
     }
   };
 
+  const handleRatingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    updateField("fideRating", value);
+    if (value && !isNaN(Number(value)) && Number(value) < 1400) {
+      setRatingError(
+        "We only accept coaches with a FIDE rating of 1400 or above.",
+      );
+    } else {
+      setRatingError("");
+    }
+  };
+
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setError("");
@@ -198,6 +211,10 @@ export default function CoachRegistrationForm({
     }
     if (!form.fideRating || isNaN(Number(form.fideRating))) {
       setError("A valid FIDE Rating is required");
+      return;
+    }
+    if (Number(form.fideRating) < 1400) {
+      setError("We only accept coaches with a FIDE rating of 1400 or above.");
       return;
     }
     if (!form.email.trim()) {
@@ -387,10 +404,15 @@ export default function CoachRegistrationForm({
             <input
               type="number"
               value={form.fideRating}
-              onChange={(e) => updateField("fideRating", e.target.value)}
+              onChange={handleRatingChange}
               placeholder="e.g. 2200"
-              className={inputClasses}
+              className={`${inputClasses} ${ratingError ? "border-red-300 focus:border-red-500 focus:ring-red-500/20" : ""}`}
             />
+            {ratingError && (
+              <p className="text-red-600 text-xs font-semibold mt-1.5 animate-[fade-in-up_0.2s_ease-out]">
+                {ratingError}
+              </p>
+            )}
           </div>
         </div>
 
