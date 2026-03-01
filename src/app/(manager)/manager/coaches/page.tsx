@@ -34,6 +34,9 @@ export default function CoachesPage() {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectNotes, setRejectNotes] = useState("");
 
+  // Image preview modal state
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
   const fetchPendingCoaches = async () => {
     setLoading(true);
     try {
@@ -132,7 +135,14 @@ export default function CoachesPage() {
               {/* Header area */}
               <div className="border-b border-gray-100 px-8 py-6 flex flex-col sm:flex-row sm:items-center justify-between bg-slate-50/50 gap-4">
                 <div className="flex items-center gap-5">
-                  <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 font-extrabold text-2xl shadow-sm overflow-hidden group-hover:shadow-md transition-all">
+                  <div
+                    className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 font-extrabold text-2xl shadow-sm overflow-hidden group-hover:shadow-md transition-all cursor-pointer"
+                    onClick={() => {
+                      if (coach.userId.profilePhoto) {
+                        setPreviewImage(coach.userId.profilePhoto);
+                      }
+                    }}
+                  >
                     {coach.userId.profilePhotoThumbnail ||
                     coach.userId.profilePhoto ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -402,6 +412,31 @@ export default function CoachesPage() {
                   : "Confirm Rejection"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-[fade-in_0.2s_ease-out]"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative max-w-4xl w-full max-h-[90vh] flex items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewImage}
+              alt="Profile Preview"
+              className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute -top-4 -right-4 w-10 h-10 flex items-center justify-center bg-white text-gray-900 rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+              aria-label="Close preview"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </div>
       )}
