@@ -22,6 +22,8 @@ import {
   DollarSign,
   Percent,
   Trash2,
+  Mail,
+  Phone,
 } from "lucide-react";
 
 interface Lesson {
@@ -55,7 +57,7 @@ interface CourseDetail {
   discountedPrice?: number;
   reviewNotes?: string;
   createdAt: string;
-  coach?: { name?: string; phone?: string };
+  coach?: { name?: string; whatsappNumber?: string; email?: string };
   chapters: Chapter[];
 }
 
@@ -437,9 +439,16 @@ export default function ManagerCourseDetailPage() {
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
                 Coach Contact
               </p>
-              <p className="text-sm text-gray-700">
-                {course.coach?.phone || "N/A"}
-              </p>
+              <div className="text-sm text-gray-700 flex flex-col gap-1">
+                <span className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-gray-400" />
+                  {course.coach?.email || "N/A"}
+                </span>
+                <span className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-gray-400" />
+                  {course.coach?.whatsappNumber || "N/A"}
+                </span>
+              </div>
             </div>
           </div>
         </div>
