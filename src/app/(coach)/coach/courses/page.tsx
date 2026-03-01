@@ -14,6 +14,9 @@ import {
   Sparkles,
   Loader2,
   AlertTriangle,
+  Sprout,
+  Swords,
+  Crown,
   type LucideIcon,
 } from "lucide-react";
 
@@ -76,10 +79,10 @@ const statusConfig: Record<
   },
 };
 
-const levelEmoji: Record<string, string> = {
-  beginner: "🌱",
-  intermediate: "⚔️",
-  advanced: "👑",
+const levelIcon: Record<string, LucideIcon> = {
+  beginner: Sprout,
+  intermediate: Swords,
+  advanced: Crown,
 };
 
 export default function CoachCoursesPage() {
@@ -165,7 +168,7 @@ export default function CoachCoursesPage() {
       )}
 
       {/* Course Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {courses.map((course) => {
           const status = statusConfig[course.status] || statusConfig.draft;
           const StatusIcon: LucideIcon = status.icon;
@@ -212,8 +215,12 @@ export default function CoachCoursesPage() {
                     {course.title}
                   </h3>
                   <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                    <span className="capitalize flex items-center gap-1">
-                      {levelEmoji[course.level] || "📚"} {course.level}
+                    <span className="capitalize flex items-center gap-1.5">
+                      {(() => {
+                        const Icon = levelIcon[course.level] || BookOpen;
+                        return <Icon className="w-4 h-4 text-gray-400" />;
+                      })()}
+                      {course.level}
                     </span>
                     <span className="text-gray-300">·</span>
                     <span>
