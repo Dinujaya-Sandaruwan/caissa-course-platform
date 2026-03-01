@@ -7,17 +7,17 @@ import ImageCropModal from "@/components/ui/ImageCropModal";
 
 interface CoachRegistrationData {
   name: string;
-  email?: string;
+  email: string;
   dateOfBirth: string;
   fideId: string;
   fideRating: number;
   profilePicture?: File | null;
   profilePictureThumbnail?: File | null;
-  address?: string;
-  bio?: string;
-  specializations?: string[];
-  coachAchievements?: string[];
-  playerAchievements?: string[];
+  address: string;
+  bio: string;
+  specializations: string[];
+  coachAchievements: string[];
+  playerAchievements: string[];
 }
 
 interface CoachRegistrationFormProps {
@@ -172,38 +172,56 @@ export default function CoachRegistrationForm({
       setError("A valid FIDE Rating is required");
       return;
     }
+    if (!form.email.trim()) {
+      setError("Email address is required");
+      return;
+    }
+    if (!form.address.trim()) {
+      setError("City / Location is required");
+      return;
+    }
+    if (!form.bio.trim()) {
+      setError("Short Bio is required");
+      return;
+    }
+    if (!form.specializations.trim()) {
+      setError("Specializations are required");
+      return;
+    }
+    if (!form.coachAchievements.trim()) {
+      setError("Top achievements as a coach are required");
+      return;
+    }
+    if (!form.playerAchievements.trim()) {
+      setError("Top achievements as a player are required");
+      return;
+    }
 
     setLoading(true);
     try {
       const data: CoachRegistrationData = {
         name: form.name.trim(),
+        email: form.email.trim(),
         dateOfBirth: form.dateOfBirth,
         fideId: form.fideId.trim(),
         fideRating: Number(form.fideRating),
         profilePicture: profilePic,
         profilePictureThumbnail: profilePicThumbnail,
-      };
-      if (form.email?.trim()) data.email = form.email.trim();
-      if (form.address?.trim()) data.address = form.address.trim();
-      if (form.bio?.trim()) data.bio = form.bio.trim();
-      if (form.specializations?.trim()) {
-        data.specializations = form.specializations
+        address: form.address.trim(),
+        bio: form.bio.trim(),
+        specializations: form.specializations
           .split(",")
           .map((s) => s.trim())
-          .filter(Boolean);
-      }
-      if (form.coachAchievements?.trim()) {
-        data.coachAchievements = form.coachAchievements
+          .filter(Boolean),
+        coachAchievements: form.coachAchievements
           .split("\n")
           .map((s) => s.trim())
-          .filter(Boolean);
-      }
-      if (form.playerAchievements?.trim()) {
-        data.playerAchievements = form.playerAchievements
+          .filter(Boolean),
+        playerAchievements: form.playerAchievements
           .split("\n")
           .map((s) => s.trim())
-          .filter(Boolean);
-      }
+          .filter(Boolean),
+      };
       await onSubmit(data);
     } catch (err: unknown) {
       const message =
@@ -347,21 +365,23 @@ export default function CoachRegistrationForm({
           </div>
         </div>
 
-        {/* Optional Fields Divider */}
+        {/* Additional Fields Divider */}
         <div className="relative py-4">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-100" />
           </div>
           <div className="relative flex justify-center text-xs">
             <span className="px-4 bg-white text-gray-400 font-bold uppercase tracking-wider">
-              Optional Information
+              Additional Information
             </span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label className={labelClasses}>Email Address</label>
+            <label className={labelClasses}>
+              Email Address <span className="text-red-500">*</span>
+            </label>
             <input
               type="email"
               value={form.email}
@@ -371,7 +391,9 @@ export default function CoachRegistrationForm({
             />
           </div>
           <div>
-            <label className={labelClasses}>City / Location</label>
+            <label className={labelClasses}>
+              City / Location <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               value={form.address}
@@ -382,7 +404,9 @@ export default function CoachRegistrationForm({
           </div>
 
           <div className="sm:col-span-2">
-            <label className={labelClasses}>Short Bio</label>
+            <label className={labelClasses}>
+              Short Bio <span className="text-red-500">*</span>
+            </label>
             <textarea
               value={form.bio}
               onChange={(e) => updateField("bio", e.target.value)}
@@ -393,7 +417,9 @@ export default function CoachRegistrationForm({
           </div>
 
           <div className="sm:col-span-2">
-            <label className={labelClasses}>Specializations</label>
+            <label className={labelClasses}>
+              Specializations <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               value={form.specializations}
@@ -404,7 +430,9 @@ export default function CoachRegistrationForm({
           </div>
 
           <div>
-            <label className={labelClasses}>Top Achievements as Coach</label>
+            <label className={labelClasses}>
+              Top Achievements as Coach <span className="text-red-500">*</span>
+            </label>
             <textarea
               value={form.coachAchievements}
               onChange={(e) => updateField("coachAchievements", e.target.value)}
@@ -415,7 +443,9 @@ export default function CoachRegistrationForm({
           </div>
 
           <div>
-            <label className={labelClasses}>Top Achievements as Player</label>
+            <label className={labelClasses}>
+              Top Achievements as Player <span className="text-red-500">*</span>
+            </label>
             <textarea
               value={form.playerAchievements}
               onChange={(e) =>
