@@ -18,8 +18,12 @@ export default function CoachNavLinks() {
     <>
       {links.map((link) => {
         const Icon = link.icon;
-        const isActive =
-          pathname === link.href || pathname.startsWith(`${link.href}/`);
+        const isMyCourses = link.href === "/coach/courses";
+        const isActive = isMyCourses
+          ? pathname === link.href ||
+            (pathname.startsWith(`${link.href}/`) &&
+              !pathname.startsWith("/coach/courses/new"))
+          : pathname === link.href || pathname.startsWith(`${link.href}/`);
 
         return (
           <Link
