@@ -1902,110 +1902,178 @@ export default function CreateCoursePage() {
 
       {/* Form Card */}
       <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100">
-        <div className="space-y-8">
-          {/* Title */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
-              <BookOpen className="w-4 h-4 text-red-500" />
-              Course Title
-            </label>
-            <input
-              type="text"
-              value={metadata.title}
-              onChange={(e) => {
-                setMetadata({ ...metadata, title: e.target.value });
-                if (errors.title) setErrors({ ...errors, title: "" });
-              }}
-              placeholder="e.g., Mastering the Sicilian Defense"
-              className={`w-full px-5 py-4 rounded-2xl border-2 text-gray-900 placeholder-gray-400 text-base font-medium transition-all duration-200 focus:outline-none ${
-                errors.title
-                  ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-                  : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
-              }`}
-            />
-            {errors.title && (
-              <p className="mt-2 text-sm text-red-500 font-medium flex items-center gap-1.5">
-                <span className="w-1 h-1 rounded-full bg-red-500" />
-                {errors.title}
-              </p>
-            )}
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
-              <FileText className="w-4 h-4 text-red-500" />
-              Description
-            </label>
-            <textarea
-              value={metadata.description}
-              onChange={(e) => {
-                setMetadata({ ...metadata, description: e.target.value });
-                if (errors.description)
-                  setErrors({ ...errors, description: "" });
-              }}
-              placeholder="Describe what students will learn, the structure of the course, and any prerequisites..."
-              rows={5}
-              className={`w-full px-5 py-4 rounded-2xl border-2 text-gray-900 placeholder-gray-400 text-base font-medium transition-all duration-200 focus:outline-none resize-none ${
-                errors.description
-                  ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-                  : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
-              }`}
-            />
-            <div className="flex justify-between mt-2">
-              {errors.description ? (
-                <p className="text-sm text-red-500 font-medium flex items-center gap-1.5">
-                  <span className="w-1 h-1 rounded-full bg-red-500" />
-                  {errors.description}
-                </p>
-              ) : (
-                <span />
-              )}
-              <span className="text-xs text-gray-400 font-medium">
-                {metadata.description.length} characters
-              </span>
-            </div>
-          </div>
-
-          {/* Price + Level Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* Price */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+          {/* Main Content Column */}
+          <div className="lg:col-span-8 space-y-8">
+            {/* Title */}
             <div>
               <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
-                <DollarSign className="w-4 h-4 text-red-500" />
-                Price (LKR)
+                <BookOpen className="w-4 h-4 text-red-500" />
+                Course Title
               </label>
-              <div className="relative">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-base">
-                  Rs.
-                </span>
-                <input
-                  type="number"
-                  min="0"
-                  step="100"
-                  value={metadata.price}
-                  onChange={(e) => {
-                    setMetadata({ ...metadata, price: e.target.value });
-                    if (errors.price) setErrors({ ...errors, price: "" });
-                  }}
-                  placeholder="2500"
-                  className={`w-full pl-14 pr-5 py-4 rounded-2xl border-2 text-gray-900 placeholder-gray-400 text-base font-medium transition-all duration-200 focus:outline-none ${
-                    errors.price
-                      ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-                      : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
-                  }`}
-                />
-              </div>
-              {errors.price && (
+              <input
+                type="text"
+                value={metadata.title}
+                onChange={(e) => {
+                  setMetadata({ ...metadata, title: e.target.value });
+                  if (errors.title) setErrors({ ...errors, title: "" });
+                }}
+                placeholder="e.g., Mastering the Sicilian Defense"
+                className={`w-full px-5 py-4 rounded-2xl border-2 text-gray-900 placeholder-gray-400 text-base font-medium transition-all duration-200 focus:outline-none ${
+                  errors.title
+                    ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                    : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+                }`}
+              />
+              {errors.title && (
                 <p className="mt-2 text-sm text-red-500 font-medium flex items-center gap-1.5">
                   <span className="w-1 h-1 rounded-full bg-red-500" />
-                  {errors.price}
+                  {errors.title}
                 </p>
               )}
             </div>
 
+            {/* Description */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
+                <FileText className="w-4 h-4 text-red-500" />
+                Description
+              </label>
+              <textarea
+                value={metadata.description}
+                onChange={(e) => {
+                  setMetadata({ ...metadata, description: e.target.value });
+                  if (errors.description)
+                    setErrors({ ...errors, description: "" });
+                }}
+                placeholder="Describe what students will learn, the structure of the course, and any prerequisites..."
+                rows={7}
+                className={`w-full px-5 py-4 rounded-2xl border-2 text-gray-900 placeholder-gray-400 text-base font-medium transition-all duration-200 focus:outline-none resize-none ${
+                  errors.description
+                    ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                    : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+                }`}
+              />
+              <div className="flex justify-between mt-2">
+                {errors.description ? (
+                  <p className="text-sm text-red-500 font-medium flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-red-500" />
+                    {errors.description}
+                  </p>
+                ) : (
+                  <span />
+                )}
+                <span className="text-xs text-gray-400 font-medium">
+                  {metadata.description.length} characters
+                </span>
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                  <Tag className="w-5 h-5 text-red-500" />
+                </div>
+                <div>
+                  <label className="text-base font-bold text-gray-900 flex items-center gap-2">
+                    Course Tags
+                    <span className="text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider bg-red-100 text-red-700">
+                      Required
+                    </span>
+                  </label>
+                  <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+                    Adding accurate tags helps us suggest your course to new
+                    students! Think about what topics, openings, or skills your
+                    course covers. Add at least one tag.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-4 ml-14">
+                {metadata.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-red-50 text-red-600 text-sm font-semibold border border-red-100 group hover:bg-red-100 transition-colors"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="text-red-400 hover:text-red-600 transition-colors cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="relative">
+                <input
+                  ref={tagInputRef}
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleAddTag}
+                  onFocus={() => {
+                    if (tagSuggestions.length > 0) setShowSuggestions(true);
+                  }}
+                  placeholder="e.g., opening, defense, strategy..."
+                  className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 text-base font-medium transition-all duration-200 focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+                />
+                {/* Autocomplete Dropdown */}
+                {showSuggestions && tagSuggestions.length > 0 && (
+                  <div
+                    ref={suggestionsRef}
+                    className="absolute z-20 top-full mt-2 w-full bg-white rounded-2xl border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden"
+                  >
+                    {tagSuggestions.map((suggestion, idx) => (
+                      <button
+                        key={suggestion.name}
+                        type="button"
+                        onClick={() => addTag(suggestion.name)}
+                        className={`w-full flex items-center justify-between px-5 py-3 text-left text-sm font-medium transition-colors cursor-pointer ${
+                          idx === selectedSuggestionIndex
+                            ? "bg-red-50 text-red-700"
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <Tag className="w-3.5 h-3.5 text-gray-400" />
+                          {suggestion.name}
+                        </span>
+                        <span className="text-xs text-gray-400 font-semibold">
+                          {suggestion.usageCount} course
+                          {suggestion.usageCount !== 1 ? "s" : ""}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {tagInput.trim() &&
+                tagSuggestions.length === 0 &&
+                tagInput.trim().length >= 2 && (
+                  <p className="text-xs text-gray-400 mt-2 font-medium">
+                    Press Enter to add &ldquo;{tagInput.trim()}&rdquo; as a new
+                    tag
+                  </p>
+                )}
+              <div className="mt-3">
+                {errors.tags ? (
+                  <p className="text-sm font-semibold text-red-500 animate-[fade-in-up_0.2s_ease-out]">
+                    {errors.tags}
+                  </p>
+                ) : (
+                  <div />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar Column */}
+          <div className="lg:col-span-4 space-y-8">
             {/* Thumbnail Upload Dropzone */}
-            <div className="col-span-1 border-t border-gray-100 pt-8 mt-8">
+            <div>
               <label className="flex items-center gap-2 text-base font-bold text-gray-700 mb-2">
                 <ImageIcon className="w-5 h-5 text-red-500" />
                 Course Thumbnail
@@ -2013,12 +2081,11 @@ export default function CreateCoursePage() {
               <p className="text-sm text-gray-500 mb-4 font-medium">
                 Ideal size:{" "}
                 <strong className="text-gray-700">1280x720px (16:9)</strong>.
-                Max size: <strong className="text-gray-700">4MB</strong>.
-                Formats: JPG, PNG, WEBP.
+                Max: 4MB.
               </p>
 
               <div
-                className={`relative group rounded-3xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center min-h-[220px] cursor-pointer overflow-hidden ${
+                className={`relative group rounded-3xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center min-h-[200px] cursor-pointer overflow-hidden ${
                   errors.thumbnailFile
                     ? "border-red-400 bg-red-50/30 hover:bg-red-50/60"
                     : metadata.thumbnailUploadStatus === "success"
@@ -2046,15 +2113,15 @@ export default function CreateCoursePage() {
                       className="w-full h-full object-cover opacity-90 transition-opacity group-hover:opacity-40"
                     />
                     <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg">
-                      <CheckCircle2 className="w-10 h-10 text-white mb-2" />
+                      <CheckCircle2 className="w-8 h-8 text-white mb-2" />
                       <span className="text-white font-bold text-sm bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">
-                        Click to replace
+                        Replace
                       </span>
                     </div>
                   </div>
                 ) : metadata.thumbnailUploadStatus === "uploading" ? (
-                  <div className="flex flex-col items-center gap-4 w-full px-10">
-                    <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
+                  <div className="flex flex-col items-center gap-4 w-full px-6">
+                    <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
                     <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-300 ease-out"
@@ -2064,28 +2131,60 @@ export default function CreateCoursePage() {
                       />
                     </div>
                     <span className="text-sm font-bold text-gray-700">
-                      Uploading {metadata.thumbnailUploadProgress}%
+                      {metadata.thumbnailUploadProgress}%
                     </span>
                   </div>
                 ) : (
                   <>
-                    <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-translate-y-1 transition-all">
-                      <Upload className="w-6 h-6 text-red-500" />
+                    <div className="w-12 h-12 rounded-xl bg-white shadow-sm border border-gray-100 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:-translate-y-1 transition-all">
+                      <Upload className="w-5 h-5 text-red-500" />
                     </div>
-                    <span className="text-base font-bold text-gray-700">
-                      Click to browse files
-                    </span>
-                    <span className="text-sm text-gray-400 font-medium mt-1 group-hover:text-red-500 transition-colors">
-                      or drag and drop here
+                    <span className="text-sm font-bold text-gray-700">
+                      Click to upload
                     </span>
                   </>
                 )}
               </div>
 
               {errors.thumbnailFile && (
-                <p className="mt-3 text-sm text-red-500 font-medium flex items-center gap-1.5 animate-[fade-in-up_0.2s_ease-out]">
+                <p className="mt-2 text-sm text-red-500 font-medium flex items-center gap-1.5 animate-[fade-in-up_0.2s_ease-out]">
                   <span className="w-1 h-1 rounded-full bg-red-500 shrink-0" />
                   {errors.thumbnailFile}
+                </p>
+              )}
+            </div>
+
+            {/* Price */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
+                <DollarSign className="w-4 h-4 text-red-500" />
+                Price (LKR)
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-base">
+                  Rs.
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  value={metadata.price}
+                  onChange={(e) => {
+                    setMetadata({ ...metadata, price: e.target.value });
+                    if (errors.price) setErrors({ ...errors, price: "" });
+                  }}
+                  placeholder="2500"
+                  className={`w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 text-gray-900 placeholder-gray-400 text-base font-medium transition-all duration-200 focus:outline-none ${
+                    errors.price
+                      ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                      : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+                  }`}
+                />
+              </div>
+              {errors.price && (
+                <p className="mt-2 text-sm text-red-500 font-medium flex items-center gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-red-500" />
+                  {errors.price}
                 </p>
               )}
             </div>
@@ -2121,124 +2220,21 @@ export default function CreateCoursePage() {
                       >
                         {lvl.label}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {lvl.description}
-                      </p>
                     </div>
                     <div
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
                         metadata.level === lvl.value
                           ? "border-red-500 bg-red-500"
                           : "border-gray-300"
                       }`}
                     >
                       {metadata.level === lvl.value && (
-                        <div className="w-2 h-2 rounded-full bg-white" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
                       )}
                     </div>
                   </button>
                 ))}
               </div>
-            </div>
-          </div>
-
-          {/* Tags */}
-          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-            <div className="flex items-start gap-4 mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-                <Tag className="w-5 h-5 text-red-500" />
-              </div>
-              <div>
-                <label className="text-base font-bold text-gray-900 flex items-center gap-2">
-                  Course Tags
-                  <span className="text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider bg-red-100 text-red-700">
-                    Required
-                  </span>
-                </label>
-                <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-                  Adding accurate tags helps us suggest your course to new
-                  students! Think about what topics, openings, or skills your
-                  course covers. Add at least one tag (up to 10).
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2 mb-4 ml-14">
-              {metadata.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-red-50 text-red-600 text-sm font-semibold border border-red-100 group hover:bg-red-100 transition-colors"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTag(tag)}
-                    className="text-red-400 hover:text-red-600 transition-colors cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="relative">
-              <input
-                ref={tagInputRef}
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleAddTag}
-                onFocus={() => {
-                  if (tagSuggestions.length > 0) setShowSuggestions(true);
-                }}
-                placeholder="e.g., opening, defense, strategy..."
-                className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 text-base font-medium transition-all duration-200 focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
-              />
-              {/* Autocomplete Dropdown */}
-              {showSuggestions && tagSuggestions.length > 0 && (
-                <div
-                  ref={suggestionsRef}
-                  className="absolute z-20 top-full mt-2 w-full bg-white rounded-2xl border border-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden"
-                >
-                  {tagSuggestions.map((suggestion, idx) => (
-                    <button
-                      key={suggestion.name}
-                      type="button"
-                      onClick={() => addTag(suggestion.name)}
-                      className={`w-full flex items-center justify-between px-5 py-3 text-left text-sm font-medium transition-colors cursor-pointer ${
-                        idx === selectedSuggestionIndex
-                          ? "bg-red-50 text-red-700"
-                          : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <Tag className="w-3.5 h-3.5 text-gray-400" />
-                        {suggestion.name}
-                      </span>
-                      <span className="text-xs text-gray-400 font-semibold">
-                        {suggestion.usageCount} course
-                        {suggestion.usageCount !== 1 ? "s" : ""}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            {tagInput.trim() &&
-              tagSuggestions.length === 0 &&
-              tagInput.trim().length >= 2 && (
-                <p className="text-xs text-gray-400 mt-2 font-medium">
-                  Press Enter to add &ldquo;{tagInput.trim()}&rdquo; as a new
-                  tag
-                </p>
-              )}
-            <div className="mt-3">
-              {errors.tags ? (
-                <p className="text-sm font-semibold text-red-500 animate-[fade-in-up_0.2s_ease-out]">
-                  {errors.tags}
-                </p>
-              ) : (
-                <div />
-              )}
             </div>
           </div>
         </div>
