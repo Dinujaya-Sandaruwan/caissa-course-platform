@@ -22,7 +22,7 @@ export async function GET() {
       verificationStatus: "pending",
     })
       .populate("userId", "name whatsappNumber email profilePhotoThumbnail")
-      .sort({ createdAt: 1 }); // Oldest first
+      .sort({ createdAt: -1 }); // Newest first
 
     return NextResponse.json(pendingCoaches);
   } catch (error) {

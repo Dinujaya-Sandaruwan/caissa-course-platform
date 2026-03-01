@@ -123,7 +123,7 @@ export default function CoachesPage() {
           </div>
           <button
             onClick={fetchPendingCoaches}
-            className="group flex items-center gap-2.5 px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-full transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 ring-1 ring-black/5 hover:-translate-y-0.5"
+            className="group flex items-center gap-2.5 px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-full transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 ring-1 ring-black/5 hover:-translate-y-0.5 cursor-pointer"
           >
             <RefreshCw className="w-5 h-5 transition-transform group-hover:rotate-180" />
             Refresh
