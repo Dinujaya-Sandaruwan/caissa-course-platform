@@ -102,6 +102,9 @@ export async function PATCH(
       thumbnailUrl,
       tempThumbnailPath,
       tempPreviewVideoPath,
+      allowDiscounts,
+      maxDiscountPercent,
+      discountedPrice,
     } = body;
 
     if (title !== undefined) course.title = stripHtml(String(title));
@@ -256,6 +259,51 @@ export async function PATCH(
         } catch (err) {
           console.error("Error processing preview video:", err);
         }
+      }
+    }
+
+    // Handle discount fields
+    if (allowDiscounts !== undefined) {
+      course.allowDiscounts = !!allowDiscounts;
+      if (!allowDiscounts) {
+        // Discounts disabled — clear discount fields
+        course.maxDiscountPercent = 0;
+        course.discountedPrice = undefined;
+      }
+    }
+    if (maxDiscountPercent !== undefined && course.allowDiscounts) {
+      course.maxDiscountPercent = Math.min(
+        Math.max(Number(maxDiscountPercent) || 0, 1),
+        100,
+      );
+    }
+    if (discountedPrice !== undefined && course.allowDiscounts) {
+      if (
+        discountedPrice === null ||
+        discountedPrice === "" ||
+        Number(discountedPrice) <= 0
+      ) {
+        course.discountedPrice = undefined;
+      } else {
+        const dp = Number(discountedPrice);
+        const currentPrice = course.price;
+        const maxPercent = course.maxDiscountPercent || 0;
+        const minAllowed = currentPrice * (1 - maxPercent / 100);
+        if (dp < minAllowed) {
+          return NextResponse.json(
+            {
+              error: `Discounted price cannot be lower than Rs. ${Math.ceil(minAllowed)} (${maxPercent}% max discount)`,
+            },
+            { status: 400 },
+          );
+        }
+        if (dp >= currentPrice) {
+          return NextResponse.json(
+            { error: "Discounted price must be less than the regular price" },
+            { status: 400 },
+          );
+        }
+        course.discountedPrice = dp;
       }
     }
 

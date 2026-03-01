@@ -30,7 +30,9 @@ export async function GET(request: NextRequest) {
       coach: user.userId,
       status: { $ne: "trashed" },
     })
-      .select("title status price level enrollmentCount createdAt thumbnailUrl")
+      .select(
+        "title status price discountedPrice allowDiscounts level enrollmentCount createdAt thumbnailUrl",
+      )
       .sort({ createdAt: -1 })
       .lean();
 
@@ -63,7 +65,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, description, price, level, tags, tempThumbnailPath } = body;
+    const {
+      title,
+      description,
+      price,
+      level,
+      tags,
+      tempThumbnailPath,
+      allowDiscounts,
+      maxDiscountPercent,
+      discountedPrice,
+    } = body;
 
     // Validate required fields
     const titleResult = validateRequiredString(title, "Title");
@@ -177,6 +189,15 @@ export async function POST(request: NextRequest) {
       thumbnailUrl,
       thumbnailOriginalUrl,
       status: "draft",
+      allowDiscounts: !!allowDiscounts,
+      maxDiscountPercent: allowDiscounts
+        ? Math.min(Math.max(Number(maxDiscountPercent) || 0, 1), 100)
+        : 0,
+      ...(allowDiscounts &&
+      discountedPrice != null &&
+      Number(discountedPrice) > 0
+        ? { discountedPrice: Number(discountedPrice) }
+        : {}),
     });
 
     // Register tags in the global Tag collection for autocomplete

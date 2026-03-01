@@ -9,6 +9,9 @@ export interface ICourse extends Document {
   thumbnailOriginalUrl?: string;
   previewVideoUrl?: string;
   tempPreviewVideoPath?: string;
+  allowDiscounts: boolean;
+  maxDiscountPercent: number;
+  discountedPrice?: number;
   level: "beginner" | "intermediate" | "advanced";
   tags: string[];
   status:
@@ -61,6 +64,19 @@ const CourseSchema = new Schema<ICourse>(
     },
     tempPreviewVideoPath: {
       type: String,
+    },
+    allowDiscounts: {
+      type: Boolean,
+      default: false,
+    },
+    maxDiscountPercent: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    discountedPrice: {
+      type: Number,
     },
     level: {
       type: String,

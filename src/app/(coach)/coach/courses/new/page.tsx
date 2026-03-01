@@ -45,6 +45,9 @@ interface CourseMetadata {
   tempThumbnailPath: string | null;
   thumbnailUploadStatus: "idle" | "uploading" | "success" | "error";
   thumbnailUploadProgress: number;
+  allowDiscounts: boolean;
+  maxDiscountPercent: string;
+  discountedPrice: string;
 }
 
 export interface LessonMaterial {
@@ -98,6 +101,9 @@ export default function CreateCoursePage() {
     tempThumbnailPath: null,
     thumbnailUploadStatus: "idle",
     thumbnailUploadProgress: 0,
+    allowDiscounts: false,
+    maxDiscountPercent: "",
+    discountedPrice: "",
   });
   const [tagInput, setTagInput] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -965,6 +971,14 @@ export default function CreateCoursePage() {
           level: metadata.level,
           tags: metadata.tags,
           tempThumbnailPath: metadata.tempThumbnailPath,
+          allowDiscounts: metadata.allowDiscounts,
+          maxDiscountPercent: metadata.allowDiscounts
+            ? Number(metadata.maxDiscountPercent)
+            : 0,
+          discountedPrice:
+            metadata.allowDiscounts && metadata.discountedPrice
+              ? Number(metadata.discountedPrice)
+              : undefined,
         }),
       });
 
@@ -2429,6 +2443,108 @@ export default function CreateCoursePage() {
                   <span className="w-1 h-1 rounded-full bg-red-500" />
                   {errors.price}
                 </p>
+              )}
+            </div>
+
+            {/* Discount Section */}
+            <div className="bg-gray-50/80 rounded-2xl p-5 border border-gray-100">
+              <div className="flex items-center justify-between mb-1">
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                  <DollarSign className="w-4 h-4 text-red-500" />
+                  Allow Discounts
+                </label>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMetadata({
+                      ...metadata,
+                      allowDiscounts: !metadata.allowDiscounts,
+                      ...(!metadata.allowDiscounts
+                        ? {}
+                        : { maxDiscountPercent: "", discountedPrice: "" }),
+                    })
+                  }
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+                    metadata.allowDiscounts ? "bg-red-500" : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                      metadata.allowDiscounts
+                        ? "translate-x-5"
+                        : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">
+                Enabling discounts lets the academy promote your course with
+                special pricing, helping attract more enrollments.
+              </p>
+
+              {metadata.allowDiscounts && (
+                <div className="space-y-4 pt-3 border-t border-gray-200">
+                  {/* Max Discount % */}
+                  <div>
+                    <label className="text-xs font-bold text-gray-600 mb-1.5 block">
+                      Maximum Discount Percentage
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={metadata.maxDiscountPercent}
+                        onChange={(e) =>
+                          setMetadata({
+                            ...metadata,
+                            maxDiscountPercent: e.target.value,
+                          })
+                        }
+                        placeholder="e.g. 30"
+                        className="w-full pr-10 pl-4 py-3 rounded-xl border-2 border-gray-200 bg-white text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">
+                        %
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Discounted Price */}
+                  <div>
+                    <label className="text-xs font-bold text-gray-600 mb-1.5 block">
+                      Discounted Price (optional)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">
+                        Rs.
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="100"
+                        value={metadata.discountedPrice}
+                        onChange={(e) =>
+                          setMetadata({
+                            ...metadata,
+                            discountedPrice: e.target.value,
+                          })
+                        }
+                        placeholder="Leave empty to set later"
+                        className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-200 bg-white text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                      />
+                    </div>
+                    {metadata.price && metadata.maxDiscountPercent && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        Min allowed: Rs.{" "}
+                        {Math.ceil(
+                          Number(metadata.price) *
+                            (1 - Number(metadata.maxDiscountPercent) / 100),
+                        ).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
 

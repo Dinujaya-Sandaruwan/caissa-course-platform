@@ -266,7 +266,18 @@ export default function CoachCoursesPage() {
                     students
                   </div>
                   <div className="font-extrabold text-gray-900">
-                    Rs. {course.price?.toLocaleString()}
+                    {course.discountedPrice ? (
+                      <span className="flex items-center gap-2">
+                        <span className="text-gray-400 line-through text-sm font-semibold">
+                          Rs. {course.price?.toLocaleString()}
+                        </span>
+                        <span className="text-red-600">
+                          Rs. {course.discountedPrice?.toLocaleString()}
+                        </span>
+                      </span>
+                    ) : (
+                      <>Rs. {course.price?.toLocaleString()}</>
+                    )}
                   </div>
                 </div>
 

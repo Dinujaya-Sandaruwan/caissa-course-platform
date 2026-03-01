@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     const courses = await Course.find(query)
       .populate("coach", "name")
       .select(
-        "title thumbnailUrl previewVideoUrl price level enrollmentCount tags createdAt coach",
+        "title thumbnailUrl previewVideoUrl price discountedPrice level enrollmentCount tags createdAt coach",
       )
       .sort(sortObj)
       .limit(limit + 1)
