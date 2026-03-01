@@ -4,12 +4,17 @@ import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
 import Tag from "@/models/Tag";
 import CoachProfile from "@/models/CoachProfile";
+import mongoose from "mongoose";
 import {
   validateRequiredString,
   validateNumber,
   validateEnum,
   stripHtml,
 } from "@/lib/validation";
+import fs from "fs/promises";
+import path from "path";
+import crypto from "crypto";
+import sharp from "sharp";
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, description, price, level, tags } = body;
+    const { title, description, price, level, tags, tempThumbnailPath } = body;
 
     // Validate required fields
     const titleResult = validateRequiredString(title, "Title");
@@ -89,14 +94,68 @@ export async function POST(request: NextRequest) {
           .map((t: string) => stripHtml(t))
       : [];
 
+    if (!tempThumbnailPath || typeof tempThumbnailPath !== "string") {
+      return NextResponse.json(
+        { error: "Course thumbnail is required." },
+        { status: 400 },
+      );
+    }
+
+    // Process Thumbnail File
+    const UPLOAD_DIR = process.env.UPLOAD_DIR || "public/uploads";
+    const fullTempThumbnailPath = path.join(process.cwd(), tempThumbnailPath);
+
+    try {
+      await fs.access(fullTempThumbnailPath);
+    } catch {
+      return NextResponse.json(
+        { error: "Thumbnail file not found in temporary storage." },
+        { status: 400 },
+      );
+    }
+
+    // We haven't created the course yet, but we need an ID for the directory structure to be consistent
+    const tempCourseId = new mongoose.Types.ObjectId();
+    const courseDir = path.join(
+      process.cwd(),
+      UPLOAD_DIR,
+      "courses",
+      tempCourseId.toString(),
+    );
+    await fs.mkdir(courseDir, { recursive: true });
+
+    // Move the original image
+    const ext = path.extname(tempThumbnailPath);
+    const originalFileName = `thumbnail-original-${crypto.randomBytes(4).toString("hex")}${ext}`;
+    const fullOriginalPath = path.join(courseDir, originalFileName);
+    await fs.rename(fullTempThumbnailPath, fullOriginalPath);
+    const thumbnailOriginalUrl = `/${UPLOAD_DIR}/courses/${tempCourseId.toString()}/${originalFileName}`;
+
+    // Compress using Sharp to WebP
+    const compressedFileName = `thumbnail-${crypto.randomBytes(4).toString("hex")}.webp`;
+    const fullCompressedPath = path.join(courseDir, compressedFileName);
+
+    await sharp(fullOriginalPath)
+      .resize(1280, 720, {
+        fit: "inside", // Ensures the whole image fits within 1280x720 without cropping
+        withoutEnlargement: true,
+      })
+      .webp({ quality: 80, effort: 6 }) // high quality, max effort compression
+      .toFile(fullCompressedPath);
+
+    const thumbnailUrl = `/${UPLOAD_DIR}/courses/${tempCourseId.toString()}/${compressedFileName}`;
+
     // Create a new draft course
     const newCourse = await Course.create({
+      _id: tempCourseId,
       coach: user.userId,
       title: titleResult.value,
       description: descResult.value,
       price: priceResult.value,
       level: levelResult.value,
       tags: safeTags,
+      thumbnailUrl,
+      thumbnailOriginalUrl,
       status: "draft",
     });
 

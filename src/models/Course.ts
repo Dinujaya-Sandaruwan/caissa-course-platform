@@ -6,6 +6,7 @@ export interface ICourse extends Document {
   description: string;
   price: number;
   thumbnailUrl?: string;
+  thumbnailOriginalUrl?: string;
   previewVideoUrl?: string;
   level: "beginner" | "intermediate" | "advanced";
   tags: string[];
@@ -47,6 +48,9 @@ const CourseSchema = new Schema<ICourse>(
       required: true,
     },
     thumbnailUrl: {
+      type: String,
+    },
+    thumbnailOriginalUrl: {
       type: String,
     },
     previewVideoUrl: {

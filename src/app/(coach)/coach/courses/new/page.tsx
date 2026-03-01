@@ -37,6 +37,10 @@ interface CourseMetadata {
   price: string;
   level: CourseLevel;
   tags: string[];
+  thumbnailFile: File | null;
+  tempThumbnailPath: string | null;
+  thumbnailUploadStatus: "idle" | "uploading" | "success" | "error";
+  thumbnailUploadProgress: number;
 }
 
 export interface LessonMaterial {
@@ -86,6 +90,10 @@ export default function CreateCoursePage() {
     price: "",
     level: "beginner",
     tags: [],
+    thumbnailFile: null,
+    tempThumbnailPath: null,
+    thumbnailUploadStatus: "idle",
+    thumbnailUploadProgress: 0,
   });
   const [tagInput, setTagInput] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -322,6 +330,10 @@ export default function CreateCoursePage() {
       newErrors.tags = "Please add at least one tag";
     }
 
+    if (!metadata.tempThumbnailPath) {
+      newErrors.thumbnailFile = "A course thumbnail is required";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -330,6 +342,75 @@ export default function CreateCoursePage() {
     if (validateStep1()) {
       setStep(2);
     }
+  };
+
+  // ─── Thumbnail Management ──────────────────────────────
+  const handleThumbnailSelect = (file: File) => {
+    // Basic validation
+    if (file.size > 4 * 1024 * 1024) {
+      setTimeout(
+        () => alert("Warning: Thumbnail exceeds 4MB. It might fail to upload."),
+        100,
+      );
+    }
+
+    setMetadata((prev) => ({
+      ...prev,
+      thumbnailFile: file,
+      thumbnailUploadStatus: "uploading",
+      thumbnailUploadProgress: 0,
+      tempThumbnailPath: null,
+    }));
+
+    if (errors.thumbnailFile)
+      setErrors((prev) => ({ ...prev, thumbnailFile: "" }));
+
+    // Auto-upload using XMLHttpRequest to get progress
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+    formData.append("video", file); // We use the exact same endpoint
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const percentComplete = Math.round((e.loaded / e.total) * 100);
+        setMetadata((prev) => ({
+          ...prev,
+          thumbnailUploadProgress: percentComplete,
+        }));
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const res = JSON.parse(xhr.responseText);
+          setMetadata((prev) => ({
+            ...prev,
+            tempThumbnailPath: res.tempPath,
+            thumbnailUploadStatus: "success",
+            thumbnailUploadProgress: 100,
+          }));
+        } catch (error) {
+          setMetadata((prev) => ({ ...prev, thumbnailUploadStatus: "error" }));
+        }
+      } else {
+        setMetadata((prev) => ({ ...prev, thumbnailUploadStatus: "error" }));
+        try {
+          const errBody = JSON.parse(xhr.responseText);
+          alert(`Thumbnail upload failed: ${errBody.error || "Unknown error"}`);
+        } catch (err) {
+          alert("Thumbnail upload failed.");
+        }
+      }
+    };
+
+    xhr.onerror = () => {
+      setMetadata((prev) => ({ ...prev, thumbnailUploadStatus: "error" }));
+      alert("Network error during thumbnail upload.");
+    };
+
+    xhr.open("POST", "/api/coach/uploads/temp");
+    xhr.send(formData);
   };
 
   // ─── Chapter / Lesson Management ─────────────────────
@@ -848,6 +929,7 @@ export default function CreateCoursePage() {
           price: Number(metadata.price),
           level: metadata.level,
           tags: metadata.tags,
+          tempThumbnailPath: metadata.tempThumbnailPath,
         }),
       });
 
@@ -1918,6 +2000,92 @@ export default function CreateCoursePage() {
                 <p className="mt-2 text-sm text-red-500 font-medium flex items-center gap-1.5">
                   <span className="w-1 h-1 rounded-full bg-red-500" />
                   {errors.price}
+                </p>
+              )}
+            </div>
+
+            {/* Thumbnail Upload Dropzone */}
+            <div className="col-span-1 border-t border-gray-100 pt-8 mt-8">
+              <label className="flex items-center gap-2 text-base font-bold text-gray-700 mb-2">
+                <ImageIcon className="w-5 h-5 text-red-500" />
+                Course Thumbnail
+              </label>
+              <p className="text-sm text-gray-500 mb-4 font-medium">
+                Ideal size:{" "}
+                <strong className="text-gray-700">1280x720px (16:9)</strong>.
+                Max size: <strong className="text-gray-700">4MB</strong>.
+                Formats: JPG, PNG, WEBP.
+              </p>
+
+              <div
+                className={`relative group rounded-3xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center min-h-[220px] cursor-pointer overflow-hidden ${
+                  errors.thumbnailFile
+                    ? "border-red-400 bg-red-50/30 hover:bg-red-50/60"
+                    : metadata.thumbnailUploadStatus === "success"
+                      ? "border-emerald-400 bg-emerald-50/10 hover:border-emerald-500"
+                      : "border-gray-200 bg-gray-50/30 hover:bg-gray-50 hover:border-red-300"
+                }`}
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.accept = "image/jpeg,image/png,image/webp";
+                  input.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) handleThumbnailSelect(file);
+                  };
+                  input.click();
+                }}
+              >
+                {metadata.thumbnailUploadStatus === "success" &&
+                metadata.thumbnailFile ? (
+                  <div className="absolute inset-0 w-full h-full bg-black/5">
+                    {/* We use an object URL purely for local preview instantly without needing to load the remote URL */}
+                    <img
+                      src={URL.createObjectURL(metadata.thumbnailFile)}
+                      alt="Thumbnail Preview"
+                      className="w-full h-full object-cover opacity-90 transition-opacity group-hover:opacity-40"
+                    />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg">
+                      <CheckCircle2 className="w-10 h-10 text-white mb-2" />
+                      <span className="text-white font-bold text-sm bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">
+                        Click to replace
+                      </span>
+                    </div>
+                  </div>
+                ) : metadata.thumbnailUploadStatus === "uploading" ? (
+                  <div className="flex flex-col items-center gap-4 w-full px-10">
+                    <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
+                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-300 ease-out"
+                        style={{
+                          width: `${metadata.thumbnailUploadProgress}%`,
+                        }}
+                      />
+                    </div>
+                    <span className="text-sm font-bold text-gray-700">
+                      Uploading {metadata.thumbnailUploadProgress}%
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-translate-y-1 transition-all">
+                      <Upload className="w-6 h-6 text-red-500" />
+                    </div>
+                    <span className="text-base font-bold text-gray-700">
+                      Click to browse files
+                    </span>
+                    <span className="text-sm text-gray-400 font-medium mt-1 group-hover:text-red-500 transition-colors">
+                      or drag and drop here
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {errors.thumbnailFile && (
+                <p className="mt-3 text-sm text-red-500 font-medium flex items-center gap-1.5 animate-[fade-in-up_0.2s_ease-out]">
+                  <span className="w-1 h-1 rounded-full bg-red-500 shrink-0" />
+                  {errors.thumbnailFile}
                 </p>
               )}
             </div>
