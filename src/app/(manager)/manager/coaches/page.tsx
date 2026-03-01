@@ -1,7 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, X, ExternalLink, RefreshCw } from "lucide-react";
+import {
+  Check,
+  X,
+  ExternalLink,
+  RefreshCw,
+  Medal,
+  Trophy,
+  Star,
+  Phone,
+  Calendar,
+  Mail,
+  FileText,
+  MapPin,
+  User,
+  Crown,
+} from "lucide-react";
 
 interface PendingCoach {
   _id: string;
@@ -17,6 +32,7 @@ interface PendingCoach {
   fideRating?: number;
   cvUrl?: string;
   bio?: string;
+  address?: string;
   specializations?: string[];
   coachAchievements?: string[];
   playerAchievements?: string[];
@@ -86,20 +102,33 @@ export default function CoachesPage() {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/20">
+              <Crown className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xs font-bold uppercase tracking-widest text-red-500">
+              Coach Review
+            </span>
+          </div>
           <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
-            Pending Coach Applications
+            Pending Applications
           </h1>
           <p className="text-gray-500 mt-2 text-lg">
-            Review and approve new coach registrations.
+            Review credentials and approve new coaches for the platform.
           </p>
         </div>
-        <button
-          onClick={fetchPendingCoaches}
-          className="group flex items-center gap-2.5 px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-full transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 ring-1 ring-black/5 hover:-translate-y-0.5"
-        >
-          <RefreshCw className="w-5 h-5 transition-transform group-hover:rotate-180" />
-          Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="text-sm font-bold text-gray-400 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
+            {coaches.length} pending
+          </div>
+          <button
+            onClick={fetchPendingCoaches}
+            className="group flex items-center gap-2.5 px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-full transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 ring-1 ring-black/5 hover:-translate-y-0.5"
+          >
+            <RefreshCw className="w-5 h-5 transition-transform group-hover:rotate-180" />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -126,20 +155,31 @@ export default function CoachesPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-8">
-          {coaches.map((coach) => (
+        <div className="space-y-10">
+          {coaches.map((coach, index) => (
             <div
               key={coach._id}
-              className="group bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_60px_rgba(220,38,38,0.08)]"
+              className="group relative bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5 overflow-hidden transition-all duration-500 hover:shadow-[0_30px_60px_rgba(220,38,38,0.08)]"
             >
+              {/* Top accent bar */}
+              <div className="h-1 bg-gradient-to-r from-red-500 via-rose-500 to-red-400" />
+
               {/* Header area */}
-              <div className="border-b border-gray-100 px-8 py-6 flex flex-col sm:flex-row sm:items-center justify-between bg-slate-50/50 gap-4">
+              <div className="px-8 py-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-5">
+                  {/* Applicant number badge */}
+                  <div className="hidden sm:flex flex-col items-center gap-1">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300">
+                      #{index + 1}
+                    </span>
+                  </div>
+
+                  {/* Profile picture */}
                   <div
-                    className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 font-extrabold text-2xl shadow-sm overflow-hidden group-hover:shadow-md transition-all cursor-pointer relative"
+                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white font-extrabold text-2xl shadow-lg shadow-red-500/20 overflow-hidden cursor-pointer ring-2 ring-white transition-all hover:scale-105"
                     onClick={async () => {
-                      if (!coach.userId.profilePhotoThumbnail) return; // if no thumbnail, there's no photo
-                      setPreviewImage("loading"); // trigger modal open to show loader
+                      if (!coach.userId.profilePhotoThumbnail) return;
+                      setPreviewImage("loading");
                       setPreviewLoading(true);
                       try {
                         const res = await fetch(
@@ -152,7 +192,7 @@ export default function CoachesPage() {
                         );
                       } catch (err) {
                         console.error(err);
-                        setPreviewImage(coach.userId.profilePhotoThumbnail); // fallback
+                        setPreviewImage(coach.userId.profilePhotoThumbnail);
                       } finally {
                         setPreviewLoading(false);
                       }
@@ -169,194 +209,199 @@ export default function CoachesPage() {
                       coach.userId.name.charAt(0).toUpperCase()
                     )}
                   </div>
+
                   <div>
-                    <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">
+                    <h3 className="text-xl font-extrabold text-gray-900 tracking-tight font-[family-name:var(--font-outfit)]">
                       {coach.userId.name}
                     </h3>
-                    <p className="text-sm font-medium text-gray-500 mt-0.5">
-                      Applied {new Date(coach.createdAt).toLocaleDateString()}
-                    </p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-sm font-medium text-gray-400">
+                        Applied{" "}
+                        {new Date(coach.createdAt).toLocaleDateString(
+                          undefined,
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          },
+                        )}
+                      </span>
+                      {coach.fideRating && (
+                        <span className="text-xs font-extrabold bg-gradient-to-r from-red-500 to-rose-600 text-white px-2.5 py-0.5 rounded-lg shadow-sm">
+                          {coach.fideRating} ELO
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-3 w-full sm:w-auto mt-4 sm:mt-0">
                   <button
                     disabled={verifyingId === coach._id}
                     onClick={() => setRejectingId(coach._id)}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-6 py-3 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all disabled:opacity-50"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all disabled:opacity-50 cursor-pointer"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 h-4" />
                     Reject
                   </button>
                   <button
                     disabled={verifyingId === coach._id}
                     onClick={() => handleVerify(coach._id, "approved")}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-6 py-3 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl transition-all disabled:opacity-50 shadow-[0_8px_20px_rgba(5,150,105,0.25)] hover:shadow-[0_12px_25px_rgba(5,150,105,0.35)] hover:-translate-y-0.5"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 rounded-xl transition-all disabled:opacity-50 shadow-[0_8px_20px_rgba(5,150,105,0.25)] hover:shadow-[0_12px_25px_rgba(5,150,105,0.35)] hover:-translate-y-0.5 cursor-pointer"
                   >
-                    <Check className="w-5 h-5" />
+                    <Check className="w-4 h-4" />
                     Approve
                   </button>
                 </div>
               </div>
 
-              {/* Details grid */}
-              <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                      Personal Details
-                    </h4>
-                    <dl className="space-y-3">
-                      <div className="flex justify-between border-b border-gray-100 pb-2">
-                        <dt className="text-sm text-gray-500">WhatsApp</dt>
-                        <dd className="text-sm font-bold text-gray-900">
-                          +{coach.userId.whatsappNumber}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between border-b border-gray-100 pb-2">
-                        <dt className="text-sm text-gray-500">Date of Birth</dt>
-                        <dd className="text-sm font-bold text-gray-900">
-                          {coach.dateOfBirth
-                            ? new Date(coach.dateOfBirth).toLocaleDateString(
-                                undefined,
-                                {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                },
-                              )
-                            : "N/A"}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between border-b border-gray-100 pb-2">
-                        <dt className="text-sm text-gray-500">Email</dt>
-                        <dd className="text-sm font-medium text-gray-900">
-                          {coach.userId.email || (
-                            <span className="text-gray-400">Not provided</span>
-                          )}
-                        </dd>
-                      </div>
-                      {coach.cvUrl && (
-                        <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                          <dt className="text-sm text-gray-500">CV / Resume</dt>
-                          <dd>
-                            <a
-                              href={coach.cvUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                            >
-                              View CV
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </a>
-                          </dd>
-                        </div>
-                      )}
-                    </dl>
+              {/* Content body */}
+              <div className="px-8 pb-8">
+                {/* Quick info chips */}
+                <div className="flex flex-wrap gap-2.5 mb-8 pb-6 border-b border-gray-100">
+                  <div className="inline-flex items-center gap-2 text-xs font-semibold text-gray-600 bg-gray-50 px-3.5 py-2 rounded-xl border border-gray-100">
+                    <Phone className="w-3.5 h-3.5 text-gray-400" />+
+                    {coach.userId.whatsappNumber}
                   </div>
-
-                  <div>
-                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 mt-6 sm:mt-0">
-                      Chess Credentials
-                    </h4>
-                    <dl className="space-y-3">
-                      <div className="flex justify-between border-b border-gray-100 pb-2">
-                        <dt className="text-sm text-gray-500">FIDE ID</dt>
-                        <dd className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                          {coach.fideId ? (
-                            <>
-                              <a
-                                href={`https://ratings.fide.com/profile/${coach.fideId}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
-                              >
-                                {coach.fideId}
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </a>
-                            </>
-                          ) : (
-                            <span className="text-gray-400">None provided</span>
-                          )}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between border-b border-gray-100 pb-2">
-                        <dt className="text-sm text-gray-500">FIDE Rating</dt>
-                        <dd className="text-sm font-extrabold text-red-600 bg-red-50 px-3 py-0.5 rounded-lg border border-red-100">
-                          {coach.fideRating || (
-                            <span className="text-gray-400 font-medium">
-                              N/A
-                            </span>
-                          )}
-                        </dd>
-                      </div>
-                    </dl>
+                  <div className="inline-flex items-center gap-2 text-xs font-semibold text-gray-600 bg-gray-50 px-3.5 py-2 rounded-xl border border-gray-100">
+                    <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                    {coach.dateOfBirth
+                      ? new Date(coach.dateOfBirth).toLocaleDateString(
+                          undefined,
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          },
+                        )
+                      : "N/A"}
                   </div>
+                  {coach.userId.email && (
+                    <div className="inline-flex items-center gap-2 text-xs font-semibold text-gray-600 bg-gray-50 px-3.5 py-2 rounded-xl border border-gray-100">
+                      <Mail className="w-3.5 h-3.5 text-gray-400" />
+                      {coach.userId.email}
+                    </div>
+                  )}
+                  {coach.address && (
+                    <div className="inline-flex items-center gap-2 text-xs font-semibold text-gray-600 bg-gray-50 px-3.5 py-2 rounded-xl border border-gray-100">
+                      <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                      {coach.address}
+                    </div>
+                  )}
+                  {coach.fideId && (
+                    <a
+                      href={`https://ratings.fide.com/profile/${coach.fideId}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 text-xs font-bold text-red-600 bg-red-50 px-3.5 py-2 rounded-xl border border-red-100 hover:bg-red-100 transition-colors cursor-pointer"
+                    >
+                      <User className="w-3.5 h-3.5" />
+                      FIDE #{coach.fideId}
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                  {coach.cvUrl && (
+                    <a
+                      href={coach.cvUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 text-xs font-bold text-gray-700 bg-gray-50 px-3.5 py-2 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-gray-500" />
+                      View CV
+                      <ExternalLink className="w-3 h-3 text-gray-400" />
+                    </a>
+                  )}
                 </div>
 
-                <div className="mt-8 pt-8 border-t border-gray-100 px-6 pb-6">
-                  {/* Bio block */}
-                  {coach.bio && (
-                    <div className="mb-8">
-                      <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        About the Coach
+                {/* Bio */}
+                {coach.bio && (
+                  <div className="mb-8">
+                    <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                      <span className="font-bold text-gray-900">&ldquo;</span>
+                      {coach.bio}
+                      <span className="font-bold text-gray-900">&rdquo;</span>
+                    </p>
+                  </div>
+                )}
+
+                {/* Specializations + Achievements */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                  {/* Left: Specializations */}
+                  {((coach.specializations?.length ?? 0) > 0 ||
+                    coach.specializations?.[0] !== "") && (
+                    <div className="bg-gradient-to-br from-rose-50 to-red-50/50 p-6 rounded-2xl border border-red-100/60 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-40 h-40 bg-red-200/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+                      <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-red-400 mb-4">
+                        <Star className="w-3.5 h-3.5 text-red-400 fill-red-400" />
+                        Specializations
                       </h4>
-                      <p className="text-sm text-gray-700 leading-relaxed bg-slate-50 p-5 rounded-2xl border border-gray-100 whitespace-pre-wrap">
-                        {coach.bio}
-                      </p>
+                      <div className="flex flex-wrap gap-2 relative z-10">
+                        {coach.specializations?.map(
+                          (spec: string, i: number) =>
+                            spec.trim() && (
+                              <span
+                                key={i}
+                                className="px-3.5 py-1.5 bg-white border border-red-100 text-red-700 text-xs font-bold rounded-lg shadow-sm hover:-translate-y-0.5 transition-transform"
+                              >
+                                {spec}
+                              </span>
+                            ),
+                        )}
+                      </div>
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Specializations */}
-                    {((coach.specializations?.length ?? 0) > 0 ||
-                      coach.specializations?.[0] !== "") && (
-                      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                          Specializations
+                  {/* Right: Achievements Stack */}
+                  <div className="space-y-5">
+                    {/* Coach Achievements */}
+                    {(coach.coachAchievements?.length ?? 0) > 0 && (
+                      <div>
+                        <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
+                          <Medal className="w-3.5 h-3.5 text-red-400" />
+                          Coaching Achievements
                         </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {coach.specializations?.map(
-                            (spec: string, i: number) =>
-                              spec.trim() && (
-                                <span
+                        <div className="space-y-2">
+                          {coach.coachAchievements?.map(
+                            (item: string, i: number) =>
+                              item.trim() && (
+                                <div
                                   key={i}
-                                  className="px-3 py-1 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold rounded-lg"
+                                  className="flex items-start gap-3 text-sm text-gray-700 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100"
                                 >
-                                  {spec}
-                                </span>
+                                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                                  <span className="font-medium leading-relaxed">
+                                    {item}
+                                  </span>
+                                </div>
                               ),
                           )}
                         </div>
                       </div>
                     )}
 
-                    {/* Coach Achievements */}
-                    {(coach.coachAchievements?.length ?? 0) > 0 && (
-                      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                          Coaching Achievements
-                        </h4>
-                        <ul className="text-sm text-gray-700 space-y-2 list-disc pl-4">
-                          {coach.coachAchievements?.map(
-                            (item: string, i: number) =>
-                              item.trim() && <li key={i}>{item}</li>,
-                          )}
-                        </ul>
-                      </div>
-                    )}
-
                     {/* Player Achievements */}
                     {(coach.playerAchievements?.length ?? 0) > 0 && (
-                      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                      <div>
+                        <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
+                          <Trophy className="w-3.5 h-3.5 text-red-400" />
                           Player Achievements
                         </h4>
-                        <ul className="text-sm text-gray-700 space-y-2 list-disc pl-4">
+                        <div className="space-y-2">
                           {coach.playerAchievements?.map(
                             (item: string, i: number) =>
-                              item.trim() && <li key={i}>{item}</li>,
+                              item.trim() && (
+                                <div
+                                  key={i}
+                                  className="flex items-start gap-3 text-sm text-gray-700 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100"
+                                >
+                                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                                  <span className="font-medium leading-relaxed">
+                                    {item}
+                                  </span>
+                                </div>
+                              ),
                           )}
-                        </ul>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -380,7 +425,7 @@ export default function CoachesPage() {
                   setRejectingId(null);
                   setRejectNotes("");
                 }}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 ✕
               </button>
@@ -407,7 +452,7 @@ export default function CoachesPage() {
                   setRejectingId(null);
                   setRejectNotes("");
                 }}
-                className="flex-1 px-4 py-3 text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 rounded-xl transition-colors"
+                className="flex-1 px-4 py-3 text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 rounded-xl transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -416,7 +461,7 @@ export default function CoachesPage() {
                 onClick={() =>
                   handleVerify(rejectingId, "rejected", rejectNotes)
                 }
-                className="flex-1 px-4 py-3 text-sm font-bold bg-red-600 text-white rounded-xl hover:bg-red-500 disabled:opacity-50 shadow-[0_4px_14px_rgba(220,38,38,0.25)] transition-all transform hover:-translate-y-0.5"
+                className="flex-1 px-4 py-3 text-sm font-bold bg-red-600 text-white rounded-xl hover:bg-red-500 disabled:opacity-50 shadow-[0_4px_14px_rgba(220,38,38,0.25)] transition-all transform hover:-translate-y-0.5 cursor-pointer"
               >
                 {verifyingId === rejectingId
                   ? "Processing..."
@@ -449,7 +494,7 @@ export default function CoachesPage() {
                 />
                 <button
                   onClick={() => setPreviewImage(null)}
-                  className="absolute -top-4 -right-4 w-10 h-10 flex items-center justify-center bg-white text-gray-900 rounded-full shadow-lg hover:bg-gray-100 transition-colors z-10"
+                  className="absolute -top-4 -right-4 w-10 h-10 flex items-center justify-center bg-white text-gray-900 rounded-full shadow-lg hover:bg-gray-100 transition-colors z-10 cursor-pointer"
                   aria-label="Close preview"
                 >
                   <X className="w-5 h-5" />
