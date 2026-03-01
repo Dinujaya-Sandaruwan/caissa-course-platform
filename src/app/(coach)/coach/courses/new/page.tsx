@@ -852,23 +852,16 @@ export default function CreateCoursePage() {
     lessonId: string,
     materialId: string,
   ) => {
-    setChapters((prev) =>
-      prev.map((ch) =>
-        ch.id === chapterId
-          ? {
-              ...ch,
-              lessons: ch.lessons.map((l) =>
-                l.id === lessonId
-                  ? {
-                      ...l,
-                      materials: l.materials.filter((m) => m.id !== materialId),
-                    }
-                  : l,
-              ),
-            }
-          : ch,
-      ),
-    );
+    const ch = chapters.find((c) => c.id === chapterId);
+    const l = ch?.lessons.find((ls) => ls.id === lessonId);
+    const mat = l?.materials.find((m) => m.id === materialId);
+    setItemToDelete({
+      type: "material",
+      chapterId,
+      lessonId,
+      materialId,
+      title: mat?.title || mat?.fileName || "Untitled Material",
+    });
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -1292,6 +1285,7 @@ export default function CreateCoursePage() {
         {/* Navigation Actions */}
         <div className="flex justify-between items-center">
           <button
+            type="button"
             onClick={() => setStep(2)}
             disabled={isSubmitting}
             className="group flex items-center gap-2 px-6 py-3.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
@@ -1300,6 +1294,7 @@ export default function CreateCoursePage() {
             Back to Chapters
           </button>
           <button
+            type="button"
             onClick={handleSubmitCourse}
             disabled={isSubmitting}
             className="group flex items-center gap-2.5 px-8 py-4 bg-red-600 text-white text-base font-bold rounded-2xl hover:bg-red-700 shadow-xl shadow-red-600/20 hover:shadow-red-600/30 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
@@ -1817,6 +1812,7 @@ export default function CreateCoursePage() {
         {/* Navigation Actions */}
         <div className="flex justify-between items-center">
           <button
+            type="button"
             onClick={() => setStep(1)}
             className="group flex items-center gap-2 px-6 py-3.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
           >
@@ -1824,6 +1820,7 @@ export default function CreateCoursePage() {
             Back to Course Details
           </button>
           <button
+            type="button"
             onClick={handleGoToStep3}
             className="group flex items-center gap-2.5 px-8 py-4 bg-red-600 text-white text-base font-bold rounded-2xl hover:bg-red-700 shadow-xl shadow-red-600/20 hover:shadow-red-600/30 transition-all duration-200 hover:-translate-y-0.5"
           >
@@ -1831,6 +1828,56 @@ export default function CreateCoursePage() {
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {itemToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-[fade-in_0.2s_ease-out]">
+            <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-[fade-in-up_0.3s_ease-out]">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mb-6">
+                  <AlertTriangle className="w-8 h-8 text-red-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Delete{" "}
+                  {itemToDelete.type === "chapter"
+                    ? "Chapter"
+                    : itemToDelete.type === "lesson"
+                      ? "Lesson"
+                      : itemToDelete.type === "link"
+                        ? "Link"
+                        : "Material"}
+                  ?
+                </h3>
+                <p className="text-gray-500 text-sm mb-8">
+                  Are you sure you want to delete{" "}
+                  <span className="font-semibold text-gray-700">
+                    {itemToDelete.type === "link"
+                      ? "this URL"
+                      : itemToDelete.title}
+                  </span>
+                  ? This action cannot be undone.
+                </p>
+
+                <div className="flex w-full gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setItemToDelete(null)}
+                    className="flex-1 px-4 py-3 text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmDelete}
+                    className="flex-1 px-4 py-3 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-[0_4px_12px_rgba(220,38,38,0.3)] hover:shadow-[0_6px_16px_rgba(220,38,38,0.4)] transition-all cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -2242,6 +2289,7 @@ export default function CreateCoursePage() {
         {/* Action */}
         <div className="mt-10 flex justify-end">
           <button
+            type="button"
             onClick={handleNextStep}
             className="group flex items-center gap-2.5 px-8 py-4 bg-red-600 text-white text-base font-bold rounded-2xl hover:bg-red-700 shadow-xl shadow-red-600/20 hover:shadow-red-600/30 transition-all duration-200 hover:-translate-y-0.5"
           >
@@ -2250,56 +2298,6 @@ export default function CreateCoursePage() {
           </button>
         </div>
       </div>
-
-      {/* Delete Confirmation Modal */}
-      {itemToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-[fade-in_0.2s_ease-out]">
-          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-[fade-in-up_0.3s_ease-out]">
-            <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mb-6">
-                <AlertTriangle className="w-8 h-8 text-red-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                Delete{" "}
-                {itemToDelete.type === "chapter"
-                  ? "Chapter"
-                  : itemToDelete.type === "lesson"
-                    ? "Lesson"
-                    : itemToDelete.type === "link"
-                      ? "Link"
-                      : "Material"}
-                ?
-              </h3>
-              <p className="text-gray-500 text-sm mb-8">
-                Are you sure you want to delete{" "}
-                <span className="font-semibold text-gray-700">
-                  {itemToDelete.type === "link"
-                    ? "this URL"
-                    : itemToDelete.title}
-                </span>
-                ? This action cannot be undone.
-              </p>
-
-              <div className="flex w-full gap-3">
-                <button
-                  type="button"
-                  onClick={() => setItemToDelete(null)}
-                  className="flex-1 px-4 py-3 text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmDelete}
-                  className="flex-1 px-4 py-3 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-[0_4px_12px_rgba(220,38,38,0.3)] hover:shadow-[0_6px_16px_rgba(220,38,38,0.4)] transition-all cursor-pointer"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
