@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Loader2, Camera, UserCircle2, Crown } from "lucide-react";
+import {
+  Loader2,
+  Camera,
+  UserCircle2,
+  Crown,
+  FileUp,
+  FileText,
+  X,
+} from "lucide-react";
 import imageCompression from "browser-image-compression";
 import ImageCropModal from "@/components/ui/ImageCropModal";
 
@@ -13,6 +21,7 @@ interface CoachRegistrationData {
   fideRating: number;
   profilePicture?: File | null;
   profilePictureThumbnail?: File | null;
+  cv?: File | null;
   address: string;
   bio: string;
   specializations: string[];
@@ -47,12 +56,16 @@ export default function CoachRegistrationForm({
     null,
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cvInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [photoError, setPhotoError] = useState("");
-  const [dobError, setDobError] = useState(""); // State for Date of Birth error
+  const [dobError, setDobError] = useState("");
   const [compressing, setCompressing] = useState(false);
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [cvError, setCvError] = useState("");
+  const [draggingCv, setDraggingCv] = useState(false);
 
   // Crop modal state
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -115,6 +128,21 @@ export default function CoachRegistrationForm({
     setCropModalOpen(false);
     setRawImageFile(null);
   }, []);
+
+  const handleCvFile = (file: File | undefined) => {
+    setCvError("");
+    if (!file) return;
+    const isImage = file.type.startsWith("image/");
+    if (file.type !== "application/pdf" && !isImage) {
+      setCvError("Only PDF or image files are allowed.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setCvError("File size must be under 10MB.");
+      return;
+    }
+    setCvFile(file);
+  };
 
   const calculateAge = (dateString: string) => {
     const today = new Date();
@@ -221,6 +249,7 @@ export default function CoachRegistrationForm({
           .split("\n")
           .map((s) => s.trim())
           .filter(Boolean),
+        cv: cvFile,
       };
       await onSubmit(data);
     } catch (err: unknown) {
@@ -375,6 +404,103 @@ export default function CoachRegistrationForm({
               Additional Information
             </span>
           </div>
+        </div>
+
+        {/* CV Upload */}
+        <div className="mb-2">
+          <label className={labelClasses}>Upload CV / Resume</label>
+          <p className="text-xs text-gray-500 mb-3 -mt-1">
+            Profiles with a CV have a{" "}
+            <span className="font-bold text-red-600">
+              higher chance of approval
+            </span>
+            . Upload a PDF or image.
+          </p>
+          <div
+            className={`relative flex items-center gap-4 p-4 bg-slate-50 border border-dashed rounded-xl transition-all cursor-pointer group ${draggingCv ? "border-red-400 bg-red-50/40 scale-[1.01]" : "border-gray-200 hover:border-red-300 hover:bg-red-50/30"}`}
+            onClick={() => cvInputRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDraggingCv(true);
+            }}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDraggingCv(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDraggingCv(false);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDraggingCv(false);
+              handleCvFile(e.dataTransfer.files?.[0]);
+            }}
+          >
+            <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center group-hover:border-red-200 transition-colors">
+              {cvFile ? (
+                <FileText className="w-6 h-6 text-red-500" />
+              ) : (
+                <FileUp className="w-6 h-6 text-gray-400 group-hover:text-red-400 transition-colors" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              {cvFile ? (
+                <>
+                  <p className="text-sm font-bold text-gray-900 truncate">
+                    {cvFile.name}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {(cvFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-bold text-gray-500 group-hover:text-gray-700 transition-colors">
+                    {draggingCv
+                      ? "Drop your file here"
+                      : "Drag & drop or click to upload"}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    PDF or Image, max 10MB
+                  </p>
+                </>
+              )}
+            </div>
+            {cvFile && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCvFile(null);
+                  setCvError("");
+                }}
+                className="p-1.5 rounded-lg hover:bg-red-100 text-gray-400 hover:text-red-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          <input
+            type="file"
+            ref={cvInputRef}
+            accept=".pdf,image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              handleCvFile(file);
+            }}
+          />
+          {cvError && (
+            <p className="text-red-600 text-xs font-semibold mt-1.5 animate-[fade-in-up_0.2s_ease-out]">
+              {cvError}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

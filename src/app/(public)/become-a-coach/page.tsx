@@ -67,17 +67,20 @@ export default function BecomeACoachPage() {
     let body;
     let headers: Record<string, string> = {};
 
-    if (formData.profilePicture) {
+    if (formData.profilePicture || formData.cv) {
       const fb = new FormData();
       Object.keys(formData).forEach((key) => {
         if (key === "profilePicture" || key === "profilePictureThumbnail") {
           if (formData[key]) {
-            // For the thumbnail, provide a fallback name since it's a generated Blob/File
             const filename =
               key === "profilePictureThumbnail"
                 ? "thumbnail.webp"
                 : formData[key].name || "photo.jpg";
             fb.append(key, formData[key], filename);
+          }
+        } else if (key === "cv") {
+          if (formData[key]) {
+            fb.append(key, formData[key], formData[key].name || "cv");
           }
         } else if (Array.isArray(formData[key])) {
           fb.append(key, JSON.stringify(formData[key]));

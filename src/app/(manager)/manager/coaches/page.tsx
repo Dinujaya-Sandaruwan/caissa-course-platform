@@ -16,6 +16,7 @@ interface PendingCoach {
   dateOfBirth: string | Date;
   fideId?: string;
   fideRating?: number;
+  cvUrl?: string;
   bio?: string;
   specializations?: string[];
   coachAchievements?: string[];
@@ -213,6 +214,22 @@ export default function CoachesPage() {
                           )}
                         </dd>
                       </div>
+                      {coach.cvUrl && (
+                        <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                          <dt className="text-sm text-gray-500">CV / Resume</dt>
+                          <dd>
+                            <a
+                              href={coach.cvUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                            >
+                              View CV
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </dd>
+                        </div>
+                      )}
                     </dl>
                   </div>
 

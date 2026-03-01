@@ -27,11 +27,16 @@ export async function POST(request: NextRequest) {
     const body: Record<string, any> = {};
     let profilePhotoUrl: string | undefined = undefined;
     let profilePhotoThumbnailUrl: string | undefined = undefined;
+    let cvFileUrl: string | undefined = undefined;
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData();
       formData.forEach((value, key) => {
-        if (key !== "profilePicture" && key !== "profilePictureThumbnail") {
+        if (
+          key !== "profilePicture" &&
+          key !== "profilePictureThumbnail" &&
+          key !== "cv"
+        ) {
           body[key] = value;
         }
       });
@@ -66,6 +71,7 @@ export async function POST(request: NextRequest) {
       profilePhotoThumbnailUrl = await processFile(
         formData.get("profilePictureThumbnail") as File | null,
       );
+      cvFileUrl = await processFile(formData.get("cv") as File | null);
     } else {
       const jsonBody = await request.json();
       Object.assign(body, jsonBody);
@@ -118,7 +124,7 @@ export async function POST(request: NextRequest) {
         address: body.address,
         fideId: body.fideId,
         fideRating: Number(body.fideRating) || 0,
-        cvUrl: body.cvUrl,
+        cvUrl: cvFileUrl,
         bio: body.bio,
         specializations:
           typeof body.specializations === "string"
