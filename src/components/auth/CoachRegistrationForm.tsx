@@ -51,6 +51,7 @@ export default function CoachRegistrationForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [photoError, setPhotoError] = useState("");
+  const [dobError, setDobError] = useState(""); // State for Date of Birth error
   const [compressing, setCompressing] = useState(false);
 
   // Crop modal state
@@ -115,6 +116,33 @@ export default function CoachRegistrationForm({
     setRawImageFile(null);
   }, []);
 
+  const calculateAge = (dateString: string) => {
+    const today = new Date();
+    const birthDate = new Date(dateString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const handleDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedDate = e.target.value;
+    updateField("dateOfBirth", selectedDate);
+
+    if (selectedDate) {
+      const age = calculateAge(selectedDate);
+      if (age < 18) {
+        setDobError("You must be at least 18 years old to apply.");
+      } else {
+        setDobError("");
+      }
+    } else {
+      setDobError("");
+    }
+  };
+
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setError("");
@@ -130,6 +158,10 @@ export default function CoachRegistrationForm({
     }
     if (!form.dateOfBirth) {
       setError("Date of birth is required");
+      return;
+    }
+    if (calculateAge(form.dateOfBirth) < 18) {
+      setError("You must be at least 18 years old to apply as a coach.");
       return;
     }
     if (!form.fideId.trim()) {
@@ -278,9 +310,15 @@ export default function CoachRegistrationForm({
             <input
               type="date"
               value={form.dateOfBirth}
-              onChange={(e) => updateField("dateOfBirth", e.target.value)}
-              className={inputClasses}
+              onChange={handleDobChange}
+              max={new Date().toISOString().split("T")[0]} // Prevent selecting future dates visually
+              className={`${inputClasses} ${dobError ? "border-red-300 focus:border-red-500 focus:ring-red-500/20" : ""}`}
             />
+            {dobError && (
+              <p className="text-red-600 text-xs font-semibold mt-1.5 animate-[fade-in-up_0.2s_ease-out]">
+                {dobError}
+              </p>
+            )}
           </div>
 
           <div>
