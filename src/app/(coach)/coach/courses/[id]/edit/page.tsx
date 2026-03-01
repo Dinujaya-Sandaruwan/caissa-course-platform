@@ -437,10 +437,16 @@ export default function EditCoursePage() {
   const handleThumbnailSelect = (file: File) => {
     // Basic validation
     if (file.size > 4 * 1024 * 1024) {
-      setTimeout(
-        () => alert("Warning: Thumbnail exceeds 4MB. It might fail to upload."),
-        100,
-      );
+      setErrors((prev) => ({
+        ...prev,
+        thumbnailFile: "Thumbnail exceeds 4MB. Please choose a smaller image.",
+      }));
+      setMetadata((prev) => ({
+        ...prev,
+        thumbnailUploadStatus: "error",
+        thumbnailUploadProgress: 0,
+      }));
+      return;
     }
 
     setMetadata((prev) => ({
@@ -486,9 +492,15 @@ export default function EditCoursePage() {
         setMetadata((prev) => ({ ...prev, thumbnailUploadStatus: "error" }));
         try {
           const errBody = JSON.parse(xhr.responseText);
-          alert(`Thumbnail upload failed: ${errBody.error || "Unknown error"}`);
-        } catch (err) {
-          alert("Thumbnail upload failed.");
+          setErrors((prev) => ({
+            ...prev,
+            thumbnailFile: `Upload failed: ${errBody.error || "Unknown error"}`,
+          }));
+        } catch (e) {
+          setErrors((prev) => ({
+            ...prev,
+            thumbnailFile: "Thumbnail upload failed.",
+          }));
         }
       }
     };
