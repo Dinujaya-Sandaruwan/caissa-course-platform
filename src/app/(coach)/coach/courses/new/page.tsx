@@ -1121,22 +1121,17 @@ export default function CreateCoursePage() {
     return (
       <div className="space-y-8 animate-[fade-in-up_0.4s_ease-out]">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-6 border-b border-gray-100">
+        <div className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5 relative overflow-hidden">
+          <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-red-500 to-red-300 rounded-r-full" />
+          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+            <Send className="w-5 h-5 text-red-500" />
+          </div>
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/20">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xs font-bold text-red-500 tracking-widest uppercase bg-red-50 px-3 py-1 rounded-full">
-                New Course
-              </span>
-            </div>
-            <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
+            <h1 className="text-2xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight leading-tight">
               Review &amp; Submit
             </h1>
-            <p className="text-gray-500 mt-2 text-lg font-medium max-w-2xl">
-              Double-check your course details below. You can always come back
-              and edit these before finally publishing.
+            <p className="text-gray-400 text-sm font-medium mt-0.5">
+              Double-check your course details before submitting for review
             </p>
           </div>
         </div>
@@ -1394,21 +1389,17 @@ export default function CreateCoursePage() {
     return (
       <div className="space-y-8 animate-[fade-in-up_0.4s_ease-out]">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-6 border-b border-gray-100">
+        <div className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5 relative overflow-hidden">
+          <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-red-500 to-red-300 rounded-r-full" />
+          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+            <BookOpen className="w-5 h-5 text-red-500" />
+          </div>
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/20">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xs font-bold text-red-500 tracking-widest uppercase bg-red-50 px-3 py-1 rounded-full">
-                New Course
-              </span>
-            </div>
-            <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
+            <h1 className="text-2xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight leading-tight">
               Chapters &amp; Lessons
             </h1>
-            <p className="text-gray-500 mt-2 text-lg font-medium">
-              Build your course curriculum by adding chapters and lessons.
+            <p className="text-gray-400 text-sm font-medium mt-0.5">
+              Build your course curriculum by adding chapters and lessons
             </p>
           </div>
         </div>
