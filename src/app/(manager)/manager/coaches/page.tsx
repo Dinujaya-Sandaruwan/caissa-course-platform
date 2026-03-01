@@ -49,6 +49,9 @@ export default function CoachesPage() {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectNotes, setRejectNotes] = useState("");
 
+  // Approval modal state
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+
   // Image preview modal state
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -90,6 +93,7 @@ export default function CoachesPage() {
       setCoaches((curr) => curr.filter((c) => c._id !== id));
       setRejectingId(null);
       setRejectNotes("");
+      setApprovingId(null);
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Failed to verify coach");
     } finally {
@@ -245,7 +249,7 @@ export default function CoachesPage() {
                   </button>
                   <button
                     disabled={verifyingId === coach._id}
-                    onClick={() => handleVerify(coach._id, "approved")}
+                    onClick={() => setApprovingId(coach._id)}
                     className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 rounded-xl transition-all disabled:opacity-50 shadow-[0_8px_20px_rgba(5,150,105,0.25)] hover:shadow-[0_12px_25px_rgba(5,150,105,0.35)] hover:-translate-y-0.5 cursor-pointer"
                   >
                     <Check className="w-4 h-4" />
@@ -412,6 +416,52 @@ export default function CoachesPage() {
         </div>
       )}
 
+      {/* Approve Modal */}
+      {approvingId && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.15)] w-full max-w-md overflow-hidden transform transition-all">
+            <div className="px-8 py-6 flex justify-between items-center">
+              <h3 className="text-2xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
+                Approve Coach
+              </h3>
+              <button
+                onClick={() => setApprovingId(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
+                disabled={!!verifyingId}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="px-8 pb-4">
+              <p className="text-gray-600 font-medium">
+                Are you sure you want to approve this application? The coach
+                will be notified and granted access to the platform.
+              </p>
+            </div>
+
+            <div className="px-8 py-6 flex gap-3">
+              <button
+                onClick={() => setApprovingId(null)}
+                className="flex-1 px-4 py-3 text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 rounded-xl transition-colors cursor-pointer"
+                disabled={!!verifyingId}
+              >
+                Cancel
+              </button>
+              <button
+                disabled={!!verifyingId}
+                onClick={() => handleVerify(approvingId, "approved")}
+                className="flex-1 px-4 py-3 text-sm font-bold bg-emerald-600 text-white rounded-xl hover:bg-emerald-500 disabled:opacity-50 shadow-[0_4px_14px_rgba(5,150,105,0.25)] transition-all transform hover:-translate-y-0.5 cursor-pointer"
+              >
+                {verifyingId === approvingId
+                  ? "Processing..."
+                  : "Confirm Approval"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Reject Modal */}
       {rejectingId && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -501,6 +551,19 @@ export default function CoachesPage() {
                 </button>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Full-screen Loading Overlay for processing verify requests */}
+      {verifyingId && (
+        <div className="fixed inset-0 bg-white/60 backdrop-blur-md z-[70] flex flex-col items-center justify-center animate-[fade-in_0.2s_ease-out]">
+          <div className="bg-white p-6 rounded-3xl shadow-2xl flex flex-col items-center border border-gray-100">
+            <div className="animate-spin w-12 h-12 border-4 border-emerald-500 border-t-emerald-100 rounded-full mb-4" />
+            <h3 className="text-lg font-bold text-gray-900">Processing...</h3>
+            <p className="text-sm font-medium text-gray-500 mt-1">
+              Please wait while we update the application.
+            </p>
           </div>
         </div>
       )}
