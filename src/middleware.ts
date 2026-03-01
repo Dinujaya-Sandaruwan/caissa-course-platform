@@ -62,6 +62,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Redirect root role paths to their respective dashboards
+  if (
+    pathname === "/coach" ||
+    pathname === "/manager" ||
+    pathname === "/student"
+  ) {
+    const dashboardUrl = new URL(`${pathname}/dashboard`, request.url);
+    return NextResponse.redirect(dashboardUrl);
+  }
+
   return NextResponse.next();
 }
 

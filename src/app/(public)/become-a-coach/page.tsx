@@ -40,14 +40,14 @@ export default function BecomeACoachPage() {
     } else {
       if (data.role === "coach") {
         if (data.verificationStatus === "approved") {
-          router.push("/coach");
+          router.push("/coach/dashboard");
         } else {
           router.push("/coach-pending");
         }
       } else if (data.role === "manager") {
-        router.push("/manager");
+        router.push("/manager/dashboard");
       } else {
-        router.push("/student");
+        router.push("/student/dashboard"); // Or wherever student goes; login page says /student but let's see. Wait, login pushes to /student.
       }
     }
   };
