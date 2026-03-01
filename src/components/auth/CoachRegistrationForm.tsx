@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Loader2, Camera, UserCircle2, Crown } from "lucide-react";
 import imageCompression from "browser-image-compression";
+import ImageCropModal from "@/components/ui/ImageCropModal";
 
 interface CoachRegistrationData {
   name: string;
@@ -52,7 +53,11 @@ export default function CoachRegistrationForm({
   const [photoError, setPhotoError] = useState("");
   const [compressing, setCompressing] = useState(false);
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Crop modal state
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [rawImageFile, setRawImageFile] = useState<File | null>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     // Reset the input so the same file can be re-selected after an error
     e.target.value = "";
@@ -64,35 +69,51 @@ export default function CoachRegistrationForm({
       return;
     }
 
+    // Open the crop modal instead of compressing directly
+    setRawImageFile(file);
+    setCropModalOpen(true);
+  };
+
+  const handleCropComplete = useCallback(async (croppedBlob: Blob) => {
+    setCropModalOpen(false);
+    setRawImageFile(null);
+
     try {
       setCompressing(true);
+      const croppedFile = new File([croppedBlob], "cropped-photo.webp", {
+        type: "image/webp",
+      });
 
-      // 1. Compress the MAIN image so we never store massive files (max 3MB)
-      const compressedMain = await imageCompression(file, {
+      // 1. Compress the MAIN image (max 3MB)
+      const compressedMain = await imageCompression(croppedFile, {
         maxSizeMB: 3,
-        maxWidthOrHeight: 2048, // Generous max size for "full size" photos
+        maxWidthOrHeight: 2048,
         useWebWorker: true,
         fileType: "image/webp",
       });
       setProfilePic(compressedMain as unknown as File);
 
       // 2. Generate the tiny thumbnail
-      const thumbnail = await imageCompression(file, {
-        maxSizeMB: 0.1, // Target: under 100KB for thumbnail
-        maxWidthOrHeight: 256, // Small square
+      const thumbnail = await imageCompression(croppedFile, {
+        maxSizeMB: 0.1,
+        maxWidthOrHeight: 256,
         useWebWorker: true,
         fileType: "image/webp",
       });
 
       setProfilePicThumbnail(thumbnail as unknown as File);
-      // Show the thumbnail in the preview circle to save memory
       setProfilePicPreview(URL.createObjectURL(thumbnail));
     } catch {
       setPhotoError("Failed to process the image. Please try another file.");
     } finally {
       setCompressing(false);
     }
-  };
+  }, []);
+
+  const handleCropCancel = useCallback(() => {
+    setCropModalOpen(false);
+    setRawImageFile(null);
+  }, []);
 
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -397,6 +418,15 @@ export default function CoachRegistrationForm({
           verification team.
         </p>
       </form>
+
+      {/* Image Crop Modal */}
+      {cropModalOpen && rawImageFile && (
+        <ImageCropModal
+          imageFile={rawImageFile}
+          onCrop={handleCropComplete}
+          onCancel={handleCropCancel}
+        />
+      )}
     </div>
   );
 }
