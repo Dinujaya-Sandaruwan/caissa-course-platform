@@ -4,6 +4,8 @@ import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
 import Chapter from "@/models/Chapter";
 import Lesson from "@/models/Lesson";
+import { rename, mkdir } from "fs/promises";
+import path from "path";
 
 export async function POST(
   request: NextRequest,
@@ -52,7 +54,7 @@ export async function POST(
       );
     }
 
-    const { title } = await request.json();
+    const { title, tempVideoPath } = await request.json();
 
     if (!title || !title.trim()) {
       return NextResponse.json(
@@ -70,8 +72,45 @@ export async function POST(
       courseId,
       title: title.trim(),
       order,
-      videoStatus: "pending", // Default status before upload
+      videoStatus: tempVideoPath ? "uploaded" : "pending",
     });
+
+    // If a temp video was pre-uploaded, move it to the course directory
+    if (tempVideoPath && typeof tempVideoPath === "string") {
+      try {
+        // Extract filename from temp path like "/api/files/temp/uuid.mp4"
+        const tempFileName = tempVideoPath.split("/").pop();
+        if (tempFileName) {
+          const uploadDir = process.env.UPLOAD_DIR || "public/uploads";
+          const tempFilePath = path.join(
+            process.cwd(),
+            uploadDir,
+            "temp",
+            tempFileName,
+          );
+          const courseUploadPath = path.join(
+            process.cwd(),
+            uploadDir,
+            "courses",
+            courseId,
+          );
+          await mkdir(courseUploadPath, { recursive: true });
+
+          const finalFileName = `${newLesson._id}-${tempFileName}`;
+          const finalFilePath = path.join(courseUploadPath, finalFileName);
+
+          await rename(tempFilePath, finalFilePath);
+
+          const relativeUrl = `/api/files/courses/${courseId}/${finalFileName}`;
+          newLesson.tempVideoPath = relativeUrl;
+          newLesson.videoStatus = "uploaded";
+          await newLesson.save();
+        }
+      } catch (moveError) {
+        console.error("Error moving temp video:", moveError);
+        // Video move failed but lesson was still created — non-critical
+      }
+    }
 
     return NextResponse.json(newLesson, { status: 201 });
   } catch (error) {

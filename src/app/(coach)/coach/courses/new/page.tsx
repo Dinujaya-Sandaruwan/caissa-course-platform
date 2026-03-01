@@ -39,8 +39,12 @@ interface LessonDraft {
   id: string;
   title: string;
   videoFile: File | null;
-  videoStatus: "pending" | "selected" | "uploading" | "uploaded";
+  videoFileName: string;
+  videoFileSize: number;
+  videoStatus: "pending" | "selected" | "uploading" | "uploaded" | "error";
   uploadProgress: number;
+  tempVideoPath: string;
+  uploadError: string;
 }
 
 interface ChapterDraft {
@@ -273,8 +277,12 @@ export default function CreateCoursePage() {
                   id: generateId(),
                   title: "",
                   videoFile: null,
+                  videoFileName: "",
+                  videoFileSize: 0,
                   videoStatus: "pending",
                   uploadProgress: 0,
+                  tempVideoPath: "",
+                  uploadError: "",
                 },
               ],
               isExpanded: true,
@@ -314,6 +322,101 @@ export default function CreateCoursePage() {
     );
   };
 
+  // ─── Upload Queue ──────────────────────────────────────
+  const uploadQueueRef = useRef<
+    { chapterId: string; lessonId: string; file: File }[]
+  >([]);
+  const isUploadingRef = useRef(false);
+
+  const updateLessonUploadState = (
+    lessonId: string,
+    updates: Partial<LessonDraft>,
+  ) => {
+    setChapters((prev) =>
+      prev.map((ch) => ({
+        ...ch,
+        lessons: ch.lessons.map((l) =>
+          l.id === lessonId ? { ...l, ...updates } : l,
+        ),
+      })),
+    );
+  };
+
+  const processUploadQueue = async () => {
+    if (isUploadingRef.current || uploadQueueRef.current.length === 0) return;
+    isUploadingRef.current = true;
+
+    while (uploadQueueRef.current.length > 0) {
+      const item = uploadQueueRef.current[0];
+
+      updateLessonUploadState(item.lessonId, {
+        videoStatus: "uploading",
+        uploadProgress: 0,
+        uploadError: "",
+      });
+
+      try {
+        const result = await new Promise<{ tempPath: string }>(
+          (resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append("video", item.file);
+
+            xhr.upload.addEventListener("progress", (e) => {
+              if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                updateLessonUploadState(item.lessonId, {
+                  uploadProgress: percent,
+                });
+              }
+            });
+
+            xhr.addEventListener("load", () => {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                const data = JSON.parse(xhr.responseText);
+                resolve(data);
+              } else {
+                try {
+                  const err = JSON.parse(xhr.responseText);
+                  reject(new Error(err.error || "Upload failed"));
+                } catch {
+                  reject(new Error("Upload failed"));
+                }
+              }
+            });
+
+            xhr.addEventListener("error", () => {
+              reject(new Error("Network error during upload"));
+            });
+
+            xhr.addEventListener("abort", () => {
+              reject(new Error("Upload cancelled"));
+            });
+
+            xhr.open("POST", "/api/coach/uploads/temp");
+            xhr.send(formData);
+          },
+        );
+
+        updateLessonUploadState(item.lessonId, {
+          videoStatus: "uploaded",
+          uploadProgress: 100,
+          tempVideoPath: result.tempPath,
+        });
+      } catch (error) {
+        updateLessonUploadState(item.lessonId, {
+          videoStatus: "error",
+          uploadProgress: 0,
+          uploadError: error instanceof Error ? error.message : "Upload failed",
+        });
+      }
+
+      uploadQueueRef.current.shift();
+    }
+
+    isUploadingRef.current = false;
+  };
+
   const handleVideoSelect = (
     chapterId: string,
     lessonId: string,
@@ -326,13 +429,44 @@ export default function CreateCoursePage() {
               ...ch,
               lessons: ch.lessons.map((l) =>
                 l.id === lessonId
-                  ? { ...l, videoFile: file, videoStatus: "selected" }
+                  ? {
+                      ...l,
+                      videoFile: file,
+                      videoFileName: file.name,
+                      videoFileSize: file.size,
+                      videoStatus: "selected" as const,
+                    }
                   : l,
               ),
             }
           : ch,
       ),
     );
+
+    // Add to upload queue and start processing
+    uploadQueueRef.current.push({ chapterId, lessonId, file });
+    processUploadQueue();
+  };
+
+  const retryUpload = (chapterId: string, lessonId: string) => {
+    const chapter = chapters.find((ch) => ch.id === chapterId);
+    const lesson = chapter?.lessons.find((l) => l.id === lessonId);
+    if (lesson?.videoFile) {
+      uploadQueueRef.current.push({
+        chapterId,
+        lessonId,
+        file: lesson.videoFile,
+      });
+      processUploadQueue();
+    }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
   const validateStep2 = (): boolean => {
@@ -432,7 +566,10 @@ export default function CreateCoursePage() {
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ title: lesson.title.trim() }),
+              body: JSON.stringify({
+                title: lesson.title.trim(),
+                tempVideoPath: lesson.tempVideoPath || undefined,
+              }),
             },
           );
 
@@ -445,28 +582,8 @@ export default function CreateCoursePage() {
 
           const lessonData = await lessonRes.json();
 
-          // 4. Upload video if one was selected
-          if (lesson.videoFile) {
-            setSubmitStatus(`Uploading video for "${lesson.title}"...`);
-
-            const formData = new FormData();
-            formData.append("video", lesson.videoFile);
-
-            const uploadRes = await fetch(
-              `/api/coach/courses/${courseId}/chapters/${chapterId}/lessons/${lessonData._id}/upload`,
-              {
-                method: "POST",
-                body: formData,
-              },
-            );
-
-            if (!uploadRes.ok) {
-              const err = await uploadRes.json();
-              throw new Error(
-                err.error || `Failed to upload video for: ${lesson.title}`,
-              );
-            }
-          }
+          // 4. No longer uploading videos here — they were already uploaded
+          //    to temp storage during Step 2. The lesson API handles moving them.
         }
       }
 
@@ -970,23 +1087,30 @@ export default function CreateCoursePage() {
                               onClick={() =>
                                 fileInputRefs.current[lesson.id]?.click()
                               }
-                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-500 bg-gray-100 hover:bg-red-50 hover:text-red-600 rounded-lg transition-all"
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-500 bg-gray-100 hover:bg-red-50 hover:text-red-600 rounded-lg transition-all cursor-pointer"
                             >
                               <Video className="w-3.5 h-3.5" />
                               Add Video
                             </button>
                           )}
                           {lesson.videoStatus === "selected" && (
-                            <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-lg">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              Video ready
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg animate-pulse">
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              Waiting...
                             </span>
                           )}
                           {lesson.videoStatus === "uploading" && (
-                            <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-600 bg-amber-50 rounded-lg">
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              {lesson.uploadProgress}%
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-300 ease-out"
+                                  style={{ width: `${lesson.uploadProgress}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-bold text-red-600 min-w-[3rem] text-right">
+                                {lesson.uploadProgress}%
+                              </span>
+                            </div>
                           )}
                           {lesson.videoStatus === "uploaded" && (
                             <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-lg">
@@ -994,6 +1118,35 @@ export default function CreateCoursePage() {
                               Uploaded
                             </span>
                           )}
+                          {lesson.videoStatus === "error" && (
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="text-xs font-semibold text-red-500 max-w-[150px] truncate"
+                                title={lesson.uploadError || "Upload failed"}
+                              >
+                                {lesson.uploadError || "Failed"}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  retryUpload(chapter.id, lesson.id)
+                                }
+                                className="text-xs font-bold text-red-600 underline hover:text-red-700 cursor-pointer"
+                              >
+                                Retry
+                              </button>
+                            </div>
+                          )}
+                          {lesson.videoFileName &&
+                            lesson.videoStatus !== "pending" && (
+                              <span
+                                className="text-[10px] text-gray-400 font-medium max-w-[120px] truncate"
+                                title={lesson.videoFileName}
+                              >
+                                {lesson.videoFileName} (
+                                {formatFileSize(lesson.videoFileSize)})
+                              </span>
+                            )}
                         </div>
 
                         {/* Hidden file input */}
