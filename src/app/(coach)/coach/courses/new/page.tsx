@@ -215,6 +215,10 @@ export default function CreateCoursePage() {
       newErrors.price = "Price must be a valid positive number";
     }
 
+    if (metadata.tags.length === 0) {
+      newErrors.tags = "Please add at least one tag";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -1297,15 +1301,27 @@ export default function CreateCoursePage() {
           </div>
 
           {/* Tags */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
-              <Tag className="w-4 h-4 text-red-500" />
-              Tags
-              <span className="text-xs text-gray-400 font-normal ml-1">
-                (press Enter to add, max 10)
-              </span>
-            </label>
-            <div className="flex flex-wrap gap-2 mb-3">
+          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                <Tag className="w-5 h-5 text-red-500" />
+              </div>
+              <div>
+                <label className="text-base font-bold text-gray-900 flex items-center gap-2">
+                  Course Tags
+                  <span className="text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider bg-red-100 text-red-700">
+                    Required
+                  </span>
+                </label>
+                <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+                  Adding accurate tags helps us suggest your course to new
+                  students! Think about what topics, openings, or skills your
+                  course covers. Add at least one tag (up to 10).
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4 ml-14">
               {metadata.tags.map((tag) => (
                 <span
                   key={tag}
@@ -1373,6 +1389,15 @@ export default function CreateCoursePage() {
                   tag
                 </p>
               )}
+            <div className="mt-3">
+              {errors.tags ? (
+                <p className="text-sm font-semibold text-red-500 animate-[fade-in-up_0.2s_ease-out]">
+                  {errors.tags}
+                </p>
+              ) : (
+                <div />
+              )}
+            </div>
           </div>
         </div>
 
