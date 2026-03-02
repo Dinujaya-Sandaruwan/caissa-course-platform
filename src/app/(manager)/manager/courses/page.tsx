@@ -40,8 +40,15 @@ const levelEmoji: Record<string, string> = {
 
 export default function ManagerCoursesPage() {
   const [courses, setCourses] = useState<PendingCourse[]>([]);
+  const [publishedCourses, setPublishedCourses] = useState<PendingCourse[]>([]);
+  const [unpublishedCourses, setUnpublishedCourses] = useState<PendingCourse[]>(
+    [],
+  );
   const [trashedCourses, setTrashedCourses] = useState<TrashedCourse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<
+    "pending" | "published" | "unpublished" | "trashed"
+  >("pending");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Modal state
@@ -63,8 +70,34 @@ export default function ManagerCoursesPage() {
 
   useEffect(() => {
     fetchCourses();
+    fetchPublishedCourses();
+    fetchUnpublishedCourses();
     fetchTrashedCourses();
   }, []);
+
+  async function fetchUnpublishedCourses() {
+    try {
+      const res = await fetch("/api/manager/courses/unpublished");
+      if (res.ok) {
+        const data = await res.json();
+        setUnpublishedCourses(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch unpublished courses:", error);
+    }
+  }
+
+  async function fetchPublishedCourses() {
+    try {
+      const res = await fetch("/api/manager/courses/published");
+      if (res.ok) {
+        const data = await res.json();
+        setPublishedCourses(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch published courses:", error);
+    }
+  }
 
   async function fetchCourses() {
     try {
@@ -102,9 +135,27 @@ export default function ManagerCoursesPage() {
       });
 
       if (res.ok) {
-        // Remove from list on approve/reject, keep on hold
-        if (action === "approved" || action === "rejected") {
+        // Update arrays dynamically based on current tab
+        if (
+          activeTab === "pending" &&
+          (action === "approved" || action === "rejected")
+        ) {
           setCourses((prev) => prev.filter((c) => c._id !== courseId));
+          fetchPublishedCourses();
+        } else if (
+          (activeTab === "published" || activeTab === "unpublished") &&
+          (action === "held" || action === "rejected")
+        ) {
+          if (activeTab === "published") {
+            setPublishedCourses((prev) =>
+              prev.filter((c) => c._id !== courseId),
+            );
+          } else {
+            setUnpublishedCourses((prev) =>
+              prev.filter((c) => c._id !== courseId),
+            );
+          }
+          fetchCourses();
         }
         setModalOpen(false);
         setModalNotes("");
@@ -169,6 +220,15 @@ export default function ManagerCoursesPage() {
     }
   }
 
+  const displayedCourses =
+    activeTab === "pending"
+      ? courses
+      : activeTab === "published"
+        ? publishedCourses
+        : activeTab === "unpublished"
+          ? unpublishedCourses
+          : (trashedCourses as unknown as PendingCourse[]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -194,29 +254,101 @@ export default function ManagerCoursesPage() {
             Review submitted courses and approve, reject, or hold them.
           </p>
         </div>
-        <span className="text-sm font-bold text-gray-400 bg-gray-50 px-4 py-2 rounded-full">
-          {courses.length} pending
-        </span>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex items-center gap-4 border-b border-gray-100 pb-px">
+        <button
+          onClick={() => setActiveTab("pending")}
+          className={`pb-4 px-2 text-sm font-bold border-b-2 transition-colors ${
+            activeTab === "pending"
+              ? "border-red-500 text-red-600"
+              : "border-transparent text-gray-400 hover:text-gray-600"
+          }`}
+        >
+          Pending Review
+          <span
+            className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === "pending" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}
+          >
+            {courses.length}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab("published")}
+          className={`pb-4 px-2 text-sm font-bold border-b-2 transition-colors ${
+            activeTab === "published"
+              ? "border-red-500 text-red-600"
+              : "border-transparent text-gray-400 hover:text-gray-600"
+          }`}
+        >
+          Published
+          <span
+            className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === "published" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}
+          >
+            {publishedCourses.length}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab("unpublished")}
+          className={`pb-4 px-2 text-sm font-bold border-b-2 transition-colors ${
+            activeTab === "unpublished"
+              ? "border-red-500 text-red-600"
+              : "border-transparent text-gray-400 hover:text-gray-600"
+          }`}
+        >
+          Unpublished
+          <span
+            className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === "unpublished" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}
+          >
+            {unpublishedCourses.length}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab("trashed")}
+          className={`pb-4 px-2 text-sm font-bold border-b-2 transition-colors ${
+            activeTab === "trashed"
+              ? "border-red-500 text-red-600"
+              : "border-transparent text-gray-400 hover:text-gray-600"
+          }`}
+        >
+          Trashed
+          <span
+            className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === "trashed" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}
+          >
+            {trashedCourses.length}
+          </span>
+        </button>
       </div>
 
       {/* Empty State */}
-      {courses.length === 0 && (
+      {displayedCourses.length === 0 && (
         <div className="bg-white rounded-[2rem] p-12 shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5 text-center">
           <div className="w-16 h-16 rounded-3xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
             <BookOpen className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-xl font-bold text-gray-900">
-            No courses pending review
+            {activeTab === "pending"
+              ? "No courses pending review"
+              : activeTab === "published"
+                ? "No published courses"
+                : activeTab === "unpublished"
+                  ? "No unpublished courses"
+                  : "No trashed courses"}
           </h3>
           <p className="text-gray-500 mt-2 text-sm max-w-sm mx-auto">
-            All submitted courses have been reviewed. New submissions will
-            appear here.
+            {activeTab === "pending"
+              ? "All submitted courses have been reviewed. New submissions will appear here."
+              : activeTab === "published"
+                ? "There are no approved and published courses yet."
+                : activeTab === "unpublished"
+                  ? "There are no unpublished courses."
+                  : "The trash is empty."}
           </p>
         </div>
       )}
 
       {/* Courses Table */}
-      {courses.length > 0 && (
+      {displayedCourses.length > 0 && (
         <div className="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5 overflow-hidden">
           {/* Table Header */}
           <div className="hidden md:grid md:grid-cols-[1fr_150px_100px_100px_120px_200px] gap-4 px-8 py-4 bg-gray-50/80 border-b border-gray-100">
@@ -233,7 +365,7 @@ export default function ManagerCoursesPage() {
               Price
             </span>
             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-              Submitted
+              {activeTab === "trashed" ? "Trashed" : "Submitted"}
             </span>
             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider text-right">
               Actions
@@ -242,7 +374,7 @@ export default function ManagerCoursesPage() {
 
           {/* Table Rows */}
           <div className="divide-y divide-gray-100">
-            {courses.map((course) => (
+            {displayedCourses.map((course) => (
               <div
                 key={course._id}
                 className="grid grid-cols-1 md:grid-cols-[1fr_150px_100px_100px_120px_200px] gap-3 md:gap-4 px-8 py-5 items-center hover:bg-gray-50/50 transition-colors"
@@ -272,47 +404,88 @@ export default function ManagerCoursesPage() {
                   Rs. {course.price?.toLocaleString()}
                 </span>
 
-                {/* Submitted Date */}
+                {/* Trashed Or Submitted Date */}
                 <span className="text-xs text-gray-500 font-medium">
-                  {new Date(course.createdAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
+                  {activeTab === "trashed"
+                    ? (course as unknown as TrashedCourse).trashedAt
+                      ? new Date(
+                          (course as unknown as TrashedCourse).trashedAt,
+                        ).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                      : "—"
+                    : new Date(course.createdAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
                 </span>
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 md:justify-end">
-                  <button
-                    onClick={() => handleReview(course._id, "approved")}
-                    disabled={actionLoading === course._id}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-colors disabled:opacity-50"
-                  >
-                    {actionLoading === course._id ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <CheckCircle className="w-3 h-3" />
-                    )}
-                    Approve
-                  </button>
-                  <button
-                    onClick={() =>
-                      openModal(course._id, course.title, "rejected")
-                    }
-                    disabled={actionLoading === course._id}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors disabled:opacity-50"
-                  >
-                    <XCircle className="w-3 h-3" />
-                    Reject
-                  </button>
-                  <button
-                    onClick={() => openModal(course._id, course.title, "held")}
-                    disabled={actionLoading === course._id}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors disabled:opacity-50"
-                  >
-                    <PauseCircle className="w-3 h-3" />
-                    Hold
-                  </button>
+                  {activeTab === "pending" && (
+                    <button
+                      onClick={() => handleReview(course._id, "approved")}
+                      disabled={actionLoading === course._id}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-colors disabled:opacity-50"
+                    >
+                      {actionLoading === course._id ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <CheckCircle className="w-3 h-3" />
+                      )}
+                      Approve
+                    </button>
+                  )}
+                  {activeTab === "trashed" ? (
+                    <>
+                      <button
+                        onClick={() =>
+                          openTrashModal(course._id, course.title, "reactivate")
+                        }
+                        disabled={actionLoading === course._id}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors disabled:opacity-50"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        Reactivate
+                      </button>
+                      <button
+                        onClick={() =>
+                          openTrashModal(course._id, course.title, "delete")
+                        }
+                        disabled={actionLoading === course._id}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Delete Forever
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() =>
+                          openModal(course._id, course.title, "rejected")
+                        }
+                        disabled={actionLoading === course._id}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors disabled:opacity-50"
+                      >
+                        <XCircle className="w-3 h-3" />
+                        Reject
+                      </button>
+                      <button
+                        onClick={() =>
+                          openModal(course._id, course.title, "held")
+                        }
+                        disabled={actionLoading === course._id}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors disabled:opacity-50"
+                      >
+                        <PauseCircle className="w-3 h-3" />
+                        Hold
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -373,91 +546,6 @@ export default function ManagerCoursesPage() {
                 )}
                 {modalAction === "rejected" ? "Reject Course" : "Hold Course"}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Trashed Courses Section */}
-      {trashedCourses.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center">
-              <Trash2 className="w-4 h-4 text-gray-500" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900">Trashed Courses</h2>
-            <span className="text-xs font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-full">
-              {trashedCourses.length}
-            </span>
-          </div>
-
-          <div className="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5 overflow-hidden">
-            <div className="hidden md:grid md:grid-cols-[1fr_150px_100px_120px_220px] gap-4 px-8 py-4 bg-gray-50/80 border-b border-gray-100">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                Course
-              </span>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                Coach
-              </span>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                Price
-              </span>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                Trashed
-              </span>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider text-right">
-                Actions
-              </span>
-            </div>
-
-            <div className="divide-y divide-gray-100">
-              {trashedCourses.map((course) => (
-                <div
-                  key={course._id}
-                  className="grid grid-cols-1 md:grid-cols-[1fr_150px_100px_120px_220px] gap-3 md:gap-4 px-8 py-5 items-center hover:bg-gray-50/50 transition-colors"
-                >
-                  <span className="text-sm font-bold text-gray-900">
-                    {course.title}
-                  </span>
-                  <span className="text-sm text-gray-600 font-medium">
-                    {course.coach?.name || "Unknown"}
-                  </span>
-                  <span className="text-sm font-bold text-gray-700">
-                    Rs. {course.price?.toLocaleString()}
-                  </span>
-                  <span className="text-xs text-gray-500 font-medium">
-                    {course.trashedAt
-                      ? new Date(course.trashedAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })
-                      : "—"}
-                  </span>
-                  <div className="flex items-center gap-2 md:justify-end">
-                    <button
-                      onClick={() =>
-                        openTrashModal(course._id, course.title, "reactivate")
-                      }
-                      disabled={actionLoading === course._id}
-                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors disabled:opacity-50"
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                      Reactivate
-                    </button>
-                    <button
-                      onClick={() =>
-                        openTrashModal(course._id, course.title, "delete")
-                      }
-                      disabled={actionLoading === course._id}
-                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors disabled:opacity-50"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      Delete Forever
-                    </button>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </div>

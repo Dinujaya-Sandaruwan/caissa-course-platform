@@ -41,9 +41,14 @@ export async function PATCH(
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    if (course.status !== "pending_review") {
+    if (
+      course.status !== "pending_review" &&
+      course.status !== "approved" &&
+      course.status !== "published" &&
+      course.status !== "unpublished"
+    ) {
       return NextResponse.json(
-        { error: "Course is not pending review" },
+        { error: "Course is not pending review, published, or unpublished" },
         { status: 400 },
       );
     }
