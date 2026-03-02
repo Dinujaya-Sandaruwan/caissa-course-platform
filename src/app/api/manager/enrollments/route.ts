@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     }
 
     const enrollments = await Enrollment.find(query)
-      .populate("studentId", "name whatsappNumber")
+      .populate("studentId", "name whatsappNumber profilePhotoThumbnail")
       .populate("courseId", "title price")
       .sort({ createdAt: -1 })
       .lean();

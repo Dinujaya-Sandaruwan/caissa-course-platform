@@ -15,7 +15,7 @@ export async function GET() {
     const enrollments = await Enrollment.find({
       paymentStatus: { $in: ["pending_review", "on_hold"] },
     })
-      .populate("studentId", "name whatsappNumber")
+      .populate("studentId", "name whatsappNumber profilePhotoThumbnail")
       .populate("courseId", "title price")
       .sort({ createdAt: 1 })
       .lean();

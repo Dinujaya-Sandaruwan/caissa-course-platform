@@ -50,7 +50,12 @@ interface PendingEnrollment {
   amountPaid?: number;
   receiptImageUrl?: string;
   createdAt: string;
-  studentId?: { _id?: string; name?: string; whatsappNumber?: string };
+  studentId?: {
+    _id?: string;
+    name?: string;
+    whatsappNumber?: string;
+    profilePhotoThumbnail?: string;
+  };
   courseId?: { title?: string; price?: number };
   paymentStatus?: "pending_review" | "approved" | "rejected" | "on_hold";
   reviewNotes?: string;
@@ -296,21 +301,33 @@ export default function ManagerEnrollmentsPage() {
             >
               {/* Top Section */}
               <div className="flex justify-between items-start">
-                <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() =>
-                      viewStudentProfile(enrollment.studentId?._id)
-                    }
-                    className="group flex flex-col items-start gap-1 text-left"
-                  >
-                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-rose-600 transition-colors flex items-center gap-2">
-                      {enrollment.studentId?.name || "Unknown"}
-                      <User className="w-4 h-4 text-gray-400 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all -ml-1" />
-                    </h3>
-                  </button>
-                  <span className="text-sm font-medium text-gray-500 font-mono">
-                    {enrollment.studentId?.whatsappNumber || "N/A"}
-                  </span>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl overflow-hidden border border-gray-100 flex-shrink-0 bg-gray-50 flex items-center justify-center">
+                    {enrollment.studentId?.profilePhotoThumbnail ? (
+                      <img
+                        src={enrollment.studentId.profilePhotoThumbnail}
+                        alt={enrollment.studentId.name || "Student"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-gray-300" />
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={() =>
+                        viewStudentProfile(enrollment.studentId?._id)
+                      }
+                      className="group flex flex-col items-start gap-1 text-left"
+                    >
+                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-rose-600 transition-colors flex items-center gap-2">
+                        {enrollment.studentId?.name || "Unknown"}
+                      </h3>
+                    </button>
+                    <span className="text-sm font-medium text-gray-500 font-mono leading-none">
+                      {enrollment.studentId?.whatsappNumber || "N/A"}
+                    </span>
+                  </div>
                 </div>
                 {/* Status Badge */}
                 {enrollment.paymentStatus === "on_hold" && (
