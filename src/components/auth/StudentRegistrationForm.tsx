@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { UserPlus, Loader2 } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
+import { UserPlus, Loader2, Camera, UserCircle2 } from "lucide-react";
+import imageCompression from "browser-image-compression";
+import ImageCropModal from "@/components/ui/ImageCropModal";
 
 interface StudentRegistrationData {
   name: string;
@@ -15,6 +17,8 @@ interface StudentRegistrationData {
   preferredLanguage?: string;
   parentName?: string;
   parentDateOfBirth?: string;
+  profilePicture?: File | null;
+  profilePictureThumbnail?: File | null;
 }
 
 interface StudentRegistrationFormProps {
@@ -40,6 +44,76 @@ export default function StudentRegistrationForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Profile picture state
+  const [profilePic, setProfilePic] = useState<File | null>(null);
+  const [profilePicThumbnail, setProfilePicThumbnail] = useState<File | null>(
+    null,
+  );
+  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(
+    null,
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoError, setPhotoError] = useState("");
+  const [compressing, setCompressing] = useState(false);
+
+  // Crop modal state
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [rawImageFile, setRawImageFile] = useState<File | null>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    setPhotoError("");
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setPhotoError("Only image files are allowed");
+      return;
+    }
+
+    setRawImageFile(file);
+    setCropModalOpen(true);
+  };
+
+  const handleCropComplete = useCallback(async (croppedBlob: Blob) => {
+    setCropModalOpen(false);
+    setRawImageFile(null);
+
+    try {
+      setCompressing(true);
+      const croppedFile = new File([croppedBlob], "cropped-photo.webp", {
+        type: "image/webp",
+      });
+
+      const compressedMain = await imageCompression(croppedFile, {
+        maxSizeMB: 3,
+        maxWidthOrHeight: 2048,
+        useWebWorker: true,
+        fileType: "image/webp",
+      });
+      setProfilePic(compressedMain as unknown as File);
+
+      const thumbnail = await imageCompression(croppedFile, {
+        maxSizeMB: 0.1,
+        maxWidthOrHeight: 256,
+        useWebWorker: true,
+        fileType: "image/webp",
+      });
+
+      setProfilePicThumbnail(thumbnail as unknown as File);
+      setProfilePicPreview(URL.createObjectURL(thumbnail));
+    } catch {
+      setPhotoError("Failed to process the image. Please try another file.");
+    } finally {
+      setCompressing(false);
+    }
+  }, []);
+
+  const handleCropCancel = useCallback(() => {
+    setCropModalOpen(false);
+    setRawImageFile(null);
+  }, []);
+
   const calculateAge = (dateString: string) => {
     if (!dateString) return 999; // Default to assumed adult if no date
     const today = new Date();
@@ -64,6 +138,12 @@ export default function StudentRegistrationForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!profilePic || !profilePicThumbnail) {
+      setError("Profile picture is required");
+      setPhotoError("Please upload a profile picture");
+      return;
+    }
 
     if (!form.name.trim()) {
       setError("Name is required");
@@ -92,6 +172,8 @@ export default function StudentRegistrationForm({
         name: form.name.trim(),
         dateOfBirth: form.dateOfBirth,
         gender: form.gender,
+        profilePicture: profilePic,
+        profilePictureThumbnail: profilePicThumbnail,
       };
       if (form.nickname?.trim()) data.nickname = form.nickname.trim();
       if (form.email?.trim()) data.email = form.email.trim();
@@ -134,6 +216,63 @@ export default function StudentRegistrationForm({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Profile Picture Upload */}
+        <div className="flex flex-col items-center mb-8">
+          <div
+            className="relative w-32 h-32 rounded-full mb-3 cursor-pointer group"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div
+              className={`absolute inset-0 rounded-full border-2 border-dashed ${photoError ? "border-red-400 bg-red-50" : "border-gray-300 bg-slate-50"} overflow-hidden transition-all group-hover:border-red-400 group-hover:bg-red-50 flex items-center justify-center shadow-inner`}
+            >
+              {compressing ? (
+                <div className="flex flex-col items-center gap-1">
+                  <Loader2 className="w-8 h-8 text-red-400 animate-spin" />
+                  <span className="text-[10px] text-red-400 font-bold">
+                    Compressing...
+                  </span>
+                </div>
+              ) : profilePicPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={profilePicPreview}
+                  alt="Profile preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <UserCircle2 className="w-16 h-16 text-gray-400 group-hover:text-red-400 transition-colors" />
+              )}
+            </div>
+
+            <div
+              className={`absolute bottom-0 right-0 p-2 rounded-full border-2 border-white shadow-md transition-colors ${profilePicPreview ? "bg-white text-gray-700 hover:text-red-600" : "bg-red-600 text-white hover:bg-red-700"}`}
+            >
+              <Camera className="w-5 h-5" />
+            </div>
+          </div>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageChange}
+            accept="image/*"
+            className="hidden"
+          />
+          <span className="text-sm font-bold text-gray-700">
+            Profile Photo <span className="text-red-500">*</span>
+          </span>
+          <span className="text-xs text-gray-500 mt-1">
+            Recommend 1:1 ratio, max 5MB
+          </span>
+          {photoError && (
+            <div className="flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
+              <span className="text-xs font-semibold text-red-600">
+                {photoError}
+              </span>
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className="sm:col-span-1">
             <label className={labelClasses}>
@@ -159,7 +298,7 @@ export default function StudentRegistrationForm({
               className={inputClasses}
             />
             <p className="text-xs text-gray-500 mt-1.5 font-medium">
-              This is the name we'll call you around the learning platform.
+              This is the name we&apos;ll call you around the learning platform.
             </p>
           </div>
 
@@ -331,6 +470,15 @@ export default function StudentRegistrationForm({
           )}
         </button>
       </form>
+
+      {/* Image Crop Modal */}
+      {cropModalOpen && rawImageFile && (
+        <ImageCropModal
+          imageFile={rawImageFile}
+          onCrop={handleCropComplete}
+          onCancel={handleCropCancel}
+        />
+      )}
     </div>
   );
 }
