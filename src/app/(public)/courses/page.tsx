@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Navbar from "@/components/landing/Navbar";
+import NavbarClient from "@/components/landing/NavbarClient";
 import Footer from "@/components/landing/Footer";
 import SearchBar from "@/components/ui/SearchBar";
 import CourseFilters from "@/components/ui/CourseFilters";
@@ -260,7 +260,7 @@ function CoursesContent() {
 export default function PublicCoursesPage() {
   return (
     <>
-      <Navbar />
+      <NavbarClient session={null} />
       <Suspense
         fallback={
           <div className="min-h-screen flex items-center justify-center">

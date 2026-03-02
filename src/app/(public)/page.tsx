@@ -1,4 +1,4 @@
-import Navbar from "@/components/landing/Navbar";
+import NavbarClient from "@/components/landing/NavbarClient";
 import HeroSection from "@/components/landing/HeroSection";
 import StatsBar from "@/components/landing/StatsBar";
 import FeaturedCourses from "@/components/landing/FeaturedCourses";
@@ -9,7 +9,7 @@ import Footer from "@/components/landing/Footer";
 export default function LandingPage() {
   return (
     <>
-      <Navbar />
+      <NavbarClient session={null} />
       <main className="min-h-screen">
         <HeroSection />
         <StatsBar />

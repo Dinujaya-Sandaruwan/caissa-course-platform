@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import Navbar from "@/components/landing/Navbar";
+import NavbarClient from "@/components/landing/NavbarClient";
 import Footer from "@/components/landing/Footer";
 import {
   ArrowLeft,
@@ -147,7 +147,7 @@ export default function PublicCourseDetailPage() {
   if (loading) {
     return (
       <>
-        <Navbar />
+        <NavbarClient session={null} />
         <div className="flex items-center justify-center min-h-screen">
           <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
         </div>
@@ -159,7 +159,7 @@ export default function PublicCourseDetailPage() {
   if (!course) {
     return (
       <>
-        <Navbar />
+        <NavbarClient session={null} />
         <div className="text-center py-32 min-h-screen">
           <h2 className="text-2xl font-bold text-gray-900">Course not found</h2>
           <Link
@@ -187,7 +187,7 @@ export default function PublicCourseDetailPage() {
 
   return (
     <>
-      <Navbar />
+      <NavbarClient session={null} />
       <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         {/* Back Link */}
         <div className="max-w-6xl mx-auto px-6 pt-28">

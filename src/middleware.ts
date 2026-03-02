@@ -42,25 +42,45 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith(prefix),
   );
 
-  // Check if it's the enroll page (which allows any valid logged-in user)
   const isEnrollPage =
     pathname.startsWith("/courses/") && pathname.endsWith("/enroll");
 
-  // Public routes — pass through
-  // Public routes — pass through if it's neither role-protected nor the enroll page
-  if (!matchedPrefix && !isEnrollPage) {
+  // Check if it's an auth page (login or apply)
+  const isAuthPage = pathname === "/login" || pathname === "/become-a-coach";
+
+  // Public routes — pass through if it's not restricted
+  if (!matchedPrefix && !isEnrollPage && !isAuthPage) {
     return NextResponse.next();
   }
 
   const session = await getSession(request);
 
-  // No valid session — redirect to login
+  // No valid session
   if (!session) {
+    // If they are just trying to visit login/apply, let them through
+    if (isAuthPage) {
+      return NextResponse.next();
+    }
+
+    // Otherwise, redirect unauthorized access to login
     const loginUrl = new URL("/login", request.url);
     if (isEnrollPage) {
       loginUrl.searchParams.set("callbackUrl", pathname);
     }
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Session exists — if they try to visit login/apply, redirect to dashboard
+  if (isAuthPage) {
+    const dashboardUrl = new URL(
+      session.role === "coach"
+        ? "/coach/dashboard"
+        : session.role === "manager"
+          ? "/manager/dashboard"
+          : "/student/dashboard",
+      request.url,
+    );
+    return NextResponse.redirect(dashboardUrl);
   }
 
   // If it's a role-protected route, check the role
@@ -95,5 +115,7 @@ export const config = {
     "/student/:path*",
     "/api/student/:path*",
     "/courses/:id/enroll",
+    "/login",
+    "/become-a-coach",
   ],
 };
