@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
+import "@/models/User";
 import Chapter from "@/models/Chapter";
 import Lesson from "@/models/Lesson";
 
