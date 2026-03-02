@@ -50,7 +50,7 @@ interface PendingEnrollment {
   amountPaid?: number;
   receiptImageUrl?: string;
   createdAt: string;
-  studentId?: { _id?: string; name?: string; phone?: string };
+  studentId?: { _id?: string; name?: string; whatsappNumber?: string };
   courseId?: { title?: string; price?: number };
   paymentStatus?: "pending_review" | "approved" | "rejected" | "on_hold";
   reviewNotes?: string;
@@ -189,7 +189,7 @@ export default function ManagerEnrollmentsPage() {
     const term = searchTerm.toLowerCase();
     const studentName = e.studentId?.name?.toLowerCase() || "";
     const courseTitle = e.courseId?.title?.toLowerCase() || "";
-    const phone = e.studentId?.phone?.toLowerCase() || "";
+    const phone = e.studentId?.whatsappNumber?.toLowerCase() || "";
     const ref = e.referenceNumber?.toLowerCase() || "";
 
     return (
@@ -309,7 +309,7 @@ export default function ManagerEnrollmentsPage() {
                     </h3>
                   </button>
                   <span className="text-sm font-medium text-gray-500 font-mono">
-                    {enrollment.studentId?.phone || "N/A"}
+                    {enrollment.studentId?.whatsappNumber || "N/A"}
                   </span>
                 </div>
                 {/* Status Badge */}
