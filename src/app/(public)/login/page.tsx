@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, Users, Trophy, ShieldCheck, ArrowLeft } from "lucide-react";
@@ -25,6 +25,17 @@ function LoginContent() {
   const callbackUrl = searchParams.get("callbackUrl");
   const [step, setStep] = useState<Step>("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
+
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.session?.isNewUser) {
+          setStep("register");
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   const handleSendOTP = async (phone: string) => {
     setPhoneNumber(phone);

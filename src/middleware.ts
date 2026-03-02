@@ -72,6 +72,9 @@ export async function middleware(request: NextRequest) {
 
   // Session exists — if they try to visit login/apply, redirect to dashboard
   if (isAuthPage) {
+    if ((session as any).isNewUser) {
+      return NextResponse.next();
+    }
     const dashboardUrl = new URL(
       session.role === "coach"
         ? "/coach/dashboard"
