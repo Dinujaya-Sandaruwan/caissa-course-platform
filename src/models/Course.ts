@@ -27,6 +27,7 @@ export interface ICourse extends Document {
   reviewedBy?: Types.ObjectId;
   reviewedAt?: Date;
   enrollmentCount: number;
+  platformFee: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -117,6 +118,12 @@ const CourseSchema = new Schema<ICourse>(
     enrollmentCount: {
       type: Number,
       default: 0,
+    },
+    platformFee: {
+      type: Number,
+      default: 30,
+      min: 5,
+      max: 100,
     },
   },
   {
