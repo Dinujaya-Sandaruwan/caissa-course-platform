@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { SessionUser } from "@/lib/auth";
 
@@ -11,8 +11,38 @@ export default function NavbarClient({
   session: SessionUser | null;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [currentSession, setCurrentSession] = useState<SessionUser | null>(
+    session,
+  );
+
+  useEffect(() => {
+    // If we didn't get a session from the server prop, fetch it client-side
+    if (!session) {
+      fetch("/api/auth/session")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.session) {
+            setCurrentSession(data.session);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [session]);
 
   const toggleMenu = () => setIsOpen(!isOpen);
+
+  const getDashboardText = (role: string) => {
+    switch (role) {
+      case "student":
+        return "My Courses";
+      case "coach":
+        return "Coach Dashboard";
+      case "manager":
+        return "Manager Dashboard";
+      default:
+        return "My Dashboard";
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm transition-all duration-300">
@@ -54,12 +84,12 @@ export default function NavbarClient({
 
             {/* Action Buttons */}
             <div className="flex items-center space-x-4">
-              {session ? (
+              {currentSession ? (
                 <Link
-                  href={`/${session.role === "manager" ? "manager" : session.role === "coach" ? "coach" : "student"}/dashboard`}
+                  href={`/${currentSession.role}/dashboard`}
                   className="font-sans text-sm font-semibold bg-primary-red hover:bg-accent-red text-white px-5 py-2.5 rounded-full transition-all shadow-md shadow-primary-red/20 hover:shadow-primary-red/40 hover:-translate-y-0.5"
                 >
-                  My Dashboard
+                  {getDashboardText(currentSession.role)}
                 </Link>
               ) : (
                 <>
@@ -114,13 +144,13 @@ export default function NavbarClient({
             </Link>
           ))}
           <div className="pt-4 flex flex-col gap-3 px-3">
-            {session ? (
+            {currentSession ? (
               <Link
-                href={`/${session.role === "manager" ? "manager" : session.role === "coach" ? "coach" : "student"}/dashboard`}
+                href={`/${currentSession.role}/dashboard`}
                 className="block w-full text-center text-base font-semibold bg-primary-red text-white px-4 py-3 rounded-xl hover:bg-accent-red active:scale-[0.98] transition-all"
                 onClick={() => setIsOpen(false)}
               >
-                My Dashboard
+                {getDashboardText(currentSession.role)}
               </Link>
             ) : (
               <>
