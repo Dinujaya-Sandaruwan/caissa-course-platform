@@ -42,24 +42,34 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith(prefix),
   );
 
+  // Check if it's the enroll page (which allows any valid logged-in user)
+  const isEnrollPage =
+    pathname.startsWith("/courses/") && pathname.endsWith("/enroll");
+
   // Public routes — pass through
-  if (!matchedPrefix) {
+  // Public routes — pass through if it's neither role-protected nor the enroll page
+  if (!matchedPrefix && !isEnrollPage) {
     return NextResponse.next();
   }
 
-  const requiredRole = protectedRoutes[matchedPrefix];
   const session = await getSession(request);
 
   // No valid session — redirect to login
   if (!session) {
     const loginUrl = new URL("/login", request.url);
+    if (isEnrollPage) {
+      loginUrl.searchParams.set("callbackUrl", pathname);
+    }
     return NextResponse.redirect(loginUrl);
   }
 
-  // Wrong role — redirect to login
-  if (session.role !== requiredRole) {
-    const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
+  // If it's a role-protected route, check the role
+  if (matchedPrefix) {
+    const requiredRole = protectedRoutes[matchedPrefix];
+    if (session.role !== requiredRole) {
+      const loginUrl = new URL("/login", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
   // Redirect root role paths to their respective dashboards
@@ -84,5 +94,6 @@ export const config = {
     "/api/coach/:path*",
     "/student/:path*",
     "/api/student/:path*",
+    "/courses/:id/enroll",
   ],
 };

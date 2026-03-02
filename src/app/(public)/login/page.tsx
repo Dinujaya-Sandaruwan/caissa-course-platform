@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, Users, Trophy, ShieldCheck, ArrowLeft } from "lucide-react";
 import PhoneEntry from "@/components/auth/PhoneEntry";
@@ -12,7 +12,17 @@ import StudentRegistrationForm from "@/components/auth/StudentRegistrationForm";
 type Step = "phone" | "otp" | "register";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
   const [step, setStep] = useState<Step>("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
 
@@ -40,7 +50,12 @@ export default function LoginPage() {
     if (data.isNewUser) {
       setStep("register");
     } else {
-      if (data.role === "coach" && data.verificationStatus === "pending") {
+      if (callbackUrl && data.role !== "manager") {
+        router.push(callbackUrl);
+      } else if (
+        data.role === "coach" &&
+        data.verificationStatus === "pending"
+      ) {
         router.push("/coach-pending");
       } else if (data.role === "manager") {
         router.push("/manager/dashboard");
@@ -95,7 +110,9 @@ export default function LoginPage() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
 
-    if (data.role === "coach") {
+    if (callbackUrl) {
+      router.push(callbackUrl);
+    } else if (data.role === "coach") {
       router.push("/coach-pending");
     } else {
       router.push("/student");
