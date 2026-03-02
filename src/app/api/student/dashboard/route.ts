@@ -16,9 +16,9 @@ export async function GET() {
 
     await connectDB();
 
-    // Get student name & nickname
+    // Get student name & nickname & photo
     const student = await User.findById(session.userId)
-      .select("name nickname")
+      .select("name nickname profilePhotoThumbnail")
       .lean();
 
     // Get all enrollments
@@ -65,6 +65,7 @@ export async function GET() {
 
     return NextResponse.json({
       studentName: student?.nickname || student?.name || "Student",
+      studentAvatar: student?.profilePhotoThumbnail,
       pending,
       approved: approvedWithProgress,
       rejected,

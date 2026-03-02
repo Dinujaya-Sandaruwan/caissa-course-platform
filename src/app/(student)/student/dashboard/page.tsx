@@ -32,6 +32,7 @@ interface EnrollmentItem {
 
 interface DashboardData {
   studentName: string;
+  studentAvatar?: string;
   pending: EnrollmentItem[];
   approved: EnrollmentItem[];
   rejected: EnrollmentItem[];
@@ -81,15 +82,29 @@ export default function StudentDashboardPage() {
   return (
     <div className="space-y-10">
       {/* Greeting */}
-      <div>
-        <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
-          Welcome back, {data.studentName} 👋
-        </h1>
-        <p className="text-gray-500 mt-2 text-lg font-medium">
-          {data.approved.length > 0
-            ? "Continue where you left off."
-            : "Start your chess journey today."}
-        </p>
+      <div className="flex items-center gap-5 bg-white p-6 sm:p-8 rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 mb-8">
+        {data.studentAvatar ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={data.studentAvatar}
+            alt={data.studentName}
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-red-50 shadow-md"
+          />
+        ) : (
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-100 flex items-center justify-center text-2xl sm:text-3xl font-bold text-red-600 border-4 border-red-50 shadow-md">
+            {data.studentName.substring(0, 2).toUpperCase()}
+          </div>
+        )}
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
+            Welcome back, {data.studentName} 👋
+          </h1>
+          <p className="text-gray-500 mt-2 text-base sm:text-lg font-medium">
+            {data.approved.length > 0
+              ? "Continue where you left off."
+              : "Start your chess journey today."}
+          </p>
+        </div>
       </div>
 
       {/* My Courses — Approved Enrollments */}

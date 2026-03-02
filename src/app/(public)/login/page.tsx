@@ -87,7 +87,7 @@ function LoginContent() {
     if (formData.profilePicture) {
       const fb = new FormData();
       Object.keys(formData).forEach((key) => {
-        if (key === "profilePicture") {
+        if (key === "profilePicture" || key === "profilePictureThumbnail") {
           fb.append(key, formData[key]);
         } else if (Array.isArray(formData[key])) {
           fb.append(key, JSON.stringify(formData[key]));

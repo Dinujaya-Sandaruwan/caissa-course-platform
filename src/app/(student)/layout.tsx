@@ -20,8 +20,12 @@ export default async function StudentLayout({
   }
 
   await connectDB();
-  const dbUser = await User.findById(user.userId).select("name").lean();
-  const userName = dbUser?.name || "Student";
+  const dbUser = await User.findById(user.userId)
+    .select("name nickname profilePhotoThumbnail")
+    .lean();
+  const displayName = dbUser?.nickname || dbUser?.name || "Student";
+  const userInitials = displayName.substring(0, 2).toUpperCase();
+  const avatarUrl = dbUser?.profilePhotoThumbnail;
 
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-red-100 selection:text-red-900">
@@ -50,11 +54,20 @@ export default async function StudentLayout({
             {/* Right: User + Logout */}
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-xs font-bold text-red-600">
-                  {userName.charAt(0).toUpperCase()}
-                </div>
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={avatarUrl}
+                    alt={displayName}
+                    className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-xs font-bold text-red-600">
+                    {userInitials}
+                  </div>
+                )}
                 <span className="text-sm font-semibold text-gray-700">
-                  {userName}
+                  {displayName}
                 </span>
               </div>
               <LogoutButton variant="icon" />
