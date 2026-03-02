@@ -229,40 +229,40 @@ export default function PlatformFeesPage() {
                 key={course._id}
                 className="grid grid-cols-1 md:grid-cols-[1fr_150px_100px_150px_120px] gap-3 md:gap-4 px-8 py-5 items-center hover:bg-gray-50/50 transition-colors"
               >
-                {/* Course Title */}
+                {/* Course Title and Tags */}
                 <div className="flex flex-col items-start gap-1">
-                  <button
-                    onClick={() => viewCourseDetails(course._id)}
-                    className="group flex flex-col items-start text-left"
-                  >
-                    <div className="text-sm font-bold text-gray-900 group-hover:text-red-600 transition-colors">
-                      {course.title}
-                    </div>
-                  </button>
+                  <div className="flex items-center flex-wrap gap-2">
+                    <button
+                      onClick={() => viewCourseDetails(course._id)}
+                      className="group flex flex-col items-start text-left"
+                    >
+                      <div className="text-sm font-bold text-gray-900 group-hover:text-red-600 transition-colors">
+                        {course.title}
+                      </div>
+                    </button>
 
-                  <div className="flex items-center flex-wrap gap-1">
                     {course.status === "published" && (
-                      <span className="inline-flex items-center px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-md border border-emerald-200/50 uppercase tracking-widest">
+                      <span className="inline-flex items-center px-1.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded border border-emerald-200/50 uppercase tracking-widest leading-none">
                         PUBLISHED
                       </span>
                     )}
                     {course.status === "approved" && (
-                      <span className="inline-flex items-center px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-md border border-blue-200/50 uppercase tracking-widest">
+                      <span className="inline-flex items-center px-1.5 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded border border-blue-200/50 uppercase tracking-widest leading-none">
                         APPROVED
                       </span>
                     )}
                     {course.status === "pending_review" && (
-                      <span className="inline-flex items-center px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-bold rounded-md border border-amber-200/50 uppercase tracking-widest">
+                      <span className="inline-flex items-center px-1.5 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-bold rounded border border-amber-200/50 uppercase tracking-widest leading-none">
                         PENDING
                       </span>
                     )}
                     {course.status === "draft" && (
-                      <span className="inline-flex items-center px-2 py-0.5 bg-gray-50 text-gray-700 text-[10px] font-bold rounded-md border border-gray-200/50 uppercase tracking-widest">
+                      <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-50 text-gray-700 text-[10px] font-bold rounded border border-gray-200/50 uppercase tracking-widest leading-none">
                         DRAFT
                       </span>
                     )}
                     {course.status === "rejected" && (
-                      <span className="inline-flex items-center px-2 py-0.5 bg-red-50 text-red-700 text-[10px] font-bold rounded-md border border-red-200/50 uppercase tracking-widest">
+                      <span className="inline-flex items-center px-1.5 py-0.5 bg-red-50 text-red-700 text-[10px] font-bold rounded border border-red-200/50 uppercase tracking-widest leading-none">
                         REJECTED
                       </span>
                     )}
