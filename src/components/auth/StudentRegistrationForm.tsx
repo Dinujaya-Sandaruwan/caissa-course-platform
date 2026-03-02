@@ -35,9 +35,24 @@ export default function StudentRegistrationForm({
     parentName: "",
     parentDateOfBirth: "",
   });
-  const [isUnder13, setIsUnder13] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const calculateAge = (dateString: string) => {
+    if (!dateString) return 999; // Default to assumed adult if no date
+    const today = new Date();
+    const birthDate = new Date(dateString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const isUnder13 = form.dateOfBirth
+    ? calculateAge(form.dateOfBirth) < 13
+    : false;
 
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -180,22 +195,7 @@ export default function StudentRegistrationForm({
             </div>
           </div>
 
-          {/* Under 13 Toggle */}
-          <div className="sm:col-span-2 p-4 bg-gray-50 border border-gray-200 rounded-xl">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isUnder13}
-                onChange={(e) => setIsUnder13(e.target.checked)}
-                className="w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-500 focus:ring-offset-0 accent-red-500"
-              />
-              <span className="text-gray-600 text-sm">
-                I am under 13 years old
-              </span>
-            </label>
-          </div>
-
-          {/* Parent Fields (conditional) */}
+          {/* Parent Fields (conditional base on age) */}
           {isUnder13 && (
             <div className="sm:col-span-2 space-y-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
               <p className="text-amber-700 text-xs font-medium uppercase tracking-wider">
