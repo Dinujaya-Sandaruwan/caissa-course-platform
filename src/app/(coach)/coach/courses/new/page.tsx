@@ -334,6 +334,8 @@ export default function CreateCoursePage() {
       newErrors.title = "Course title is required";
     } else if (metadata.title.trim().length < 5) {
       newErrors.title = "Title must be at least 5 characters";
+    } else if (metadata.title.trim().length > 60) {
+      newErrors.title = "Title cannot exceed 60 characters";
     }
 
     if (!metadata.description.trim()) {
@@ -2164,12 +2166,20 @@ export default function CreateCoursePage() {
           <div className="lg:col-span-8 space-y-8">
             {/* Title */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
-                <BookOpen className="w-4 h-4 text-red-500" />
-                Course Title
-              </label>
+              <div className="flex items-center justify-between mb-2.5">
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                  <BookOpen className="w-4 h-4 text-red-500" />
+                  Course Title
+                </label>
+                <span
+                  className={`text-xs font-semibold ${metadata.title.length > 40 ? "text-red-500" : metadata.title.length === 40 ? "text-orange-500" : "text-gray-400"}`}
+                >
+                  {metadata.title.length}/60 characters
+                </span>
+              </div>
               <input
                 type="text"
+                maxLength={40}
                 value={metadata.title}
                 onChange={(e) => {
                   setMetadata({ ...metadata, title: e.target.value });

@@ -20,11 +20,18 @@ export function isValidObjectId(id: unknown): id is string {
 export function validateRequiredString(
   value: unknown,
   fieldName: string,
+  options: { maxLength?: number } = {},
 ): { value: string } | { error: string } {
   if (!value || typeof value !== "string" || !value.trim()) {
     return { error: `${fieldName} is required` };
   }
-  return { value: stripHtml(value.trim()) };
+  const trimmed = stripHtml(value.trim());
+  if (options.maxLength !== undefined && trimmed.length > options.maxLength) {
+    return {
+      error: `${fieldName} cannot exceed ${options.maxLength} characters`,
+    };
+  }
+  return { value: trimmed };
 }
 
 /**

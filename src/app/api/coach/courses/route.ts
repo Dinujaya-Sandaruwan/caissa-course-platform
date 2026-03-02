@@ -78,7 +78,9 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    const titleResult = validateRequiredString(title, "Title");
+    const titleResult = validateRequiredString(title, "Title", {
+      maxLength: 60,
+    });
     if ("error" in titleResult)
       return NextResponse.json({ error: titleResult.error }, { status: 400 });
 
