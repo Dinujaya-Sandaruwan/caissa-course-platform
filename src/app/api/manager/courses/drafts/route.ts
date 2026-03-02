@@ -12,15 +12,15 @@ export async function GET() {
 
     await connectDB();
 
-    const courses = await Course.find({ status: "published" })
+    const courses = await Course.find({ status: "approved" })
       .populate("coach", "name phone")
-      .select("title price level status createdAt coach")
+      .select("title price level createdAt coach")
       .sort({ createdAt: -1 })
       .lean();
 
     return NextResponse.json(courses);
   } catch (error) {
-    console.error("Error fetching published courses:", error);
+    console.error("Error fetching draft courses:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

@@ -40,6 +40,7 @@ const levelEmoji: Record<string, string> = {
 
 export default function ManagerCoursesPage() {
   const [courses, setCourses] = useState<PendingCourse[]>([]);
+  const [draftCourses, setDraftCourses] = useState<PendingCourse[]>([]);
   const [publishedCourses, setPublishedCourses] = useState<PendingCourse[]>([]);
   const [unpublishedCourses, setUnpublishedCourses] = useState<PendingCourse[]>(
     [],
@@ -47,7 +48,7 @@ export default function ManagerCoursesPage() {
   const [trashedCourses, setTrashedCourses] = useState<TrashedCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "pending" | "published" | "unpublished" | "trashed"
+    "pending" | "drafts" | "published" | "unpublished" | "trashed"
   >("pending");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -70,10 +71,23 @@ export default function ManagerCoursesPage() {
 
   useEffect(() => {
     fetchCourses();
+    fetchDraftCourses();
     fetchPublishedCourses();
     fetchUnpublishedCourses();
     fetchTrashedCourses();
   }, []);
+
+  async function fetchDraftCourses() {
+    try {
+      const res = await fetch("/api/manager/courses/drafts");
+      if (res.ok) {
+        const data = await res.json();
+        setDraftCourses(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch draft courses:", error);
+    }
+  }
 
   async function fetchUnpublishedCourses() {
     try {
@@ -141,18 +155,19 @@ export default function ManagerCoursesPage() {
           (action === "approved" || action === "rejected")
         ) {
           setCourses((prev) => prev.filter((c) => c._id !== courseId));
-          fetchPublishedCourses();
-        } else if (
-          (activeTab === "published" || activeTab === "unpublished") &&
-          (action === "held" || action === "rejected")
-        ) {
-          if (activeTab === "published") {
-            setPublishedCourses((prev) =>
-              prev.filter((c) => c._id !== courseId),
+          fetchDraftCourses();
+        } else if (action === "held" || action === "rejected") {
+          if (activeTab === "drafts") {
+            setDraftCourses((prev) =>
+              prev.filter((c: PendingCourse) => c._id !== courseId),
             );
-          } else {
+          } else if (activeTab === "published") {
+            setPublishedCourses((prev) =>
+              prev.filter((c: PendingCourse) => c._id !== courseId),
+            );
+          } else if (activeTab === "unpublished") {
             setUnpublishedCourses((prev) =>
-              prev.filter((c) => c._id !== courseId),
+              prev.filter((c: PendingCourse) => c._id !== courseId),
             );
           }
           fetchCourses();
@@ -223,11 +238,13 @@ export default function ManagerCoursesPage() {
   const displayedCourses =
     activeTab === "pending"
       ? courses
-      : activeTab === "published"
-        ? publishedCourses
-        : activeTab === "unpublished"
-          ? unpublishedCourses
-          : (trashedCourses as unknown as PendingCourse[]);
+      : activeTab === "drafts"
+        ? draftCourses
+        : activeTab === "published"
+          ? publishedCourses
+          : activeTab === "unpublished"
+            ? unpublishedCourses
+            : (trashedCourses as unknown as PendingCourse[]);
 
   if (loading) {
     return (
@@ -271,6 +288,21 @@ export default function ManagerCoursesPage() {
             className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === "pending" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}
           >
             {courses.length}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab("drafts")}
+          className={`pb-4 px-2 text-sm font-bold border-b-2 transition-colors ${
+            activeTab === "drafts"
+              ? "border-red-500 text-red-600"
+              : "border-transparent text-gray-400 hover:text-gray-600"
+          }`}
+        >
+          Drafts
+          <span
+            className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === "drafts" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}
+          >
+            {draftCourses.length}
           </span>
         </button>
         <button
@@ -329,20 +361,24 @@ export default function ManagerCoursesPage() {
           <h3 className="text-xl font-bold text-gray-900">
             {activeTab === "pending"
               ? "No courses pending review"
-              : activeTab === "published"
-                ? "No published courses"
-                : activeTab === "unpublished"
-                  ? "No unpublished courses"
-                  : "No trashed courses"}
+              : activeTab === "drafts"
+                ? "No draft courses"
+                : activeTab === "published"
+                  ? "No published courses"
+                  : activeTab === "unpublished"
+                    ? "No unpublished courses"
+                    : "No trashed courses"}
           </h3>
           <p className="text-gray-500 mt-2 text-sm max-w-sm mx-auto">
             {activeTab === "pending"
               ? "All submitted courses have been reviewed. New submissions will appear here."
-              : activeTab === "published"
-                ? "There are no approved and published courses yet."
-                : activeTab === "unpublished"
-                  ? "There are no unpublished courses."
-                  : "The trash is empty."}
+              : activeTab === "drafts"
+                ? "There are no approved courses waiting to be published."
+                : activeTab === "published"
+                  ? "There are no published courses yet."
+                  : activeTab === "unpublished"
+                    ? "There are no unpublished courses."
+                    : "The trash is empty."}
           </p>
         </div>
       )}
