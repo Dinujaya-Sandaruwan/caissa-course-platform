@@ -74,6 +74,13 @@ export async function POST(request: NextRequest) {
       whatsappNumber: whatsappNumber.trim(),
     });
 
+    if (user && user.status === "suspended") {
+      return NextResponse.json(
+        { error: "Your account has been suspended. Please contact support." },
+        { status: 403 },
+      );
+    }
+
     // 7. New user — temporary token
     if (!user) {
       const token = await signToken({

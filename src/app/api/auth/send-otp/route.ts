@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import OTPSession from "@/models/OTPSession";
+import User from "@/models/User";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
 
 export async function POST(request: NextRequest) {
@@ -24,6 +25,15 @@ export async function POST(request: NextRequest) {
     const cleanNumber = whatsappNumber.trim();
 
     await connectDB();
+
+    // Check if user is suspended
+    const user = await User.findOne({ whatsappNumber: cleanNumber }).lean();
+    if (user && user.status === "suspended") {
+      return NextResponse.json(
+        { error: "Your account has been suspended. Please contact support." },
+        { status: 403 },
+      );
+    }
 
     // 2. Check lockout — if any session for this number has lockedUntil in the future, block
     const lockedSession = await OTPSession.findOne({
