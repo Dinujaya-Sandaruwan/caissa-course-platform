@@ -310,6 +310,11 @@ export async function PATCH(
       }
     }
 
+    // Auto-reset rejected courses back to pending review when saved
+    if (course.status === "rejected") {
+      course.status = "pending_review";
+    }
+
     await course.save();
 
     return NextResponse.json(course);
