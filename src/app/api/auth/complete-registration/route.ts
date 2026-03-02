@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       Object.assign(body, jsonBody);
     }
 
-    const { name, email, role } = body;
+    const { name, nickname, email, role } = body;
 
     // 2. Validate input
     if (!name || typeof name !== "string" || !name.trim()) {
@@ -109,6 +109,7 @@ export async function POST(request: NextRequest) {
     const user = await User.create({
       whatsappNumber: session.whatsappNumber,
       name: name.trim(),
+      nickname: nickname?.trim() || undefined,
       email: email?.trim() || undefined,
       role,
       profilePhoto: profilePhotoUrl,

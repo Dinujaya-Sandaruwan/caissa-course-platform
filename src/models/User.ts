@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface IUser extends Document {
   whatsappNumber: string;
   name: string;
+  nickname?: string;
   email?: string;
   username?: string;
   password?: string;
@@ -26,6 +27,10 @@ const UserSchema = new Schema<IUser>(
     name: {
       type: String,
       required: true,
+      trim: true,
+    },
+    nickname: {
+      type: String,
       trim: true,
     },
     email: {

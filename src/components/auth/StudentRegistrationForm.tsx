@@ -5,6 +5,7 @@ import { UserPlus, Loader2 } from "lucide-react";
 
 interface StudentRegistrationData {
   name: string;
+  nickname?: string;
   email?: string;
   dateOfBirth: string;
   gender: string;
@@ -25,6 +26,7 @@ export default function StudentRegistrationForm({
 }: StudentRegistrationFormProps) {
   const [form, setForm] = useState<StudentRegistrationData>({
     name: "",
+    nickname: "",
     email: "",
     dateOfBirth: "",
     gender: "",
@@ -91,6 +93,7 @@ export default function StudentRegistrationForm({
         dateOfBirth: form.dateOfBirth,
         gender: form.gender,
       };
+      if (form.nickname?.trim()) data.nickname = form.nickname.trim();
       if (form.email?.trim()) data.email = form.email.trim();
       if (form.fideId?.trim()) data.fideId = form.fideId.trim();
       if (form.skillLevel && form.skillLevel !== "beginner")
@@ -132,18 +135,32 @@ export default function StudentRegistrationForm({
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-1">
             <label className={labelClasses}>
-              Name <span className="text-red-500">*</span>
+              Full Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={form.name}
               onChange={(e) => updateField("name", e.target.value)}
-              placeholder="Your full name"
+              placeholder="e.g. Appuhamilage Garry Kasparov"
               className={inputClasses}
               autoFocus
             />
+          </div>
+
+          <div className="sm:col-span-1">
+            <label className={labelClasses}>Nickname</label>
+            <input
+              type="text"
+              value={form.nickname}
+              onChange={(e) => updateField("nickname", e.target.value)}
+              placeholder="e.g. Kaspy"
+              className={inputClasses}
+            />
+            <p className="text-xs text-gray-500 mt-1.5 font-medium">
+              This is the name we'll call you around the learning platform.
+            </p>
           </div>
 
           <div>
