@@ -9,6 +9,12 @@ import {
   Search,
   CheckCircle,
   AlertCircle,
+  Clock,
+  Layers,
+  Tag,
+  Users,
+  Film,
+  Award,
 } from "lucide-react";
 
 interface CourseWithFee {
@@ -31,6 +37,14 @@ export default function PlatformFeesPage() {
   const [newFee, setNewFee] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Course Details Modal State
+  const [courseModalOpen, setCourseModalOpen] = useState(false);
+  const [courseInfo, setCourseInfo] = useState<any>(null);
+  const [courseLoading, setCourseLoading] = useState(false);
+  const [viewingCoachPhoto, setViewingCoachPhoto] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     fetchCourses();
@@ -101,6 +115,23 @@ export default function PlatformFeesPage() {
       setIsSaving(false);
     }
   };
+
+  async function viewCourseDetails(courseId: string) {
+    setCourseModalOpen(true);
+    setCourseLoading(true);
+    setCourseInfo(null);
+    try {
+      const res = await fetch(`/api/manager/courses/${courseId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCourseInfo(data);
+      }
+    } catch (error) {
+      console.error("Failed to load course details:", error);
+    } finally {
+      setCourseLoading(false);
+    }
+  }
 
   const filteredCourses = courses.filter((course) =>
     course.title.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -199,23 +230,43 @@ export default function PlatformFeesPage() {
                 className="grid grid-cols-1 md:grid-cols-[1fr_150px_100px_150px_120px] gap-3 md:gap-4 px-8 py-5 items-center hover:bg-gray-50/50 transition-colors"
               >
                 {/* Course Title */}
-                <div>
-                  <div className="text-sm font-bold text-gray-900">
-                    {course.title}
-                  </div>
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1 ${
-                      course.status === "published"
-                        ? "bg-green-100 text-green-800"
-                        : course.status === "approved"
-                          ? "bg-blue-100 text-blue-800"
-                          : course.status === "pending_review"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                    }`}
+                <div className="flex flex-col items-start gap-1">
+                  <button
+                    onClick={() => viewCourseDetails(course._id)}
+                    className="group flex flex-col items-start text-left"
                   >
-                    {course.status.replace("_", " ")}
-                  </span>
+                    <div className="text-sm font-bold text-gray-900 group-hover:text-red-600 transition-colors">
+                      {course.title}
+                    </div>
+                  </button>
+
+                  <div className="flex items-center flex-wrap gap-1">
+                    {course.status === "published" && (
+                      <span className="inline-flex items-center px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-md border border-emerald-200/50 uppercase tracking-widest">
+                        PUBLISHED
+                      </span>
+                    )}
+                    {course.status === "approved" && (
+                      <span className="inline-flex items-center px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-md border border-blue-200/50 uppercase tracking-widest">
+                        APPROVED
+                      </span>
+                    )}
+                    {course.status === "pending_review" && (
+                      <span className="inline-flex items-center px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-bold rounded-md border border-amber-200/50 uppercase tracking-widest">
+                        PENDING
+                      </span>
+                    )}
+                    {course.status === "draft" && (
+                      <span className="inline-flex items-center px-2 py-0.5 bg-gray-50 text-gray-700 text-[10px] font-bold rounded-md border border-gray-200/50 uppercase tracking-widest">
+                        DRAFT
+                      </span>
+                    )}
+                    {course.status === "rejected" && (
+                      <span className="inline-flex items-center px-2 py-0.5 bg-red-50 text-red-700 text-[10px] font-bold rounded-md border border-red-200/50 uppercase tracking-widest">
+                        REJECTED
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Coach */}
@@ -331,6 +382,227 @@ export default function PlatformFeesPage() {
                 Save Changes
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Course Details Modal */}
+      {courseModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 lg:p-6 overflow-y-auto">
+          <div
+            className="w-full max-w-3xl bg-white rounded-[2rem] shadow-2xl overflow-hidden relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setCourseModalOpen(false)}
+              className="absolute top-4 right-4 p-2.5 bg-white/50 backdrop-blur border border-gray-100/50 hover:bg-white text-gray-500 hover:text-red-500 rounded-full transition-all z-20 shadow-sm"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {courseLoading ? (
+              <div className="flex flex-col items-center justify-center min-h-[400px]">
+                <Loader2 className="w-10 h-10 text-red-500 animate-spin mb-4" />
+                <p className="text-sm font-bold text-gray-400 animate-pulse">
+                  Fetching Course Details...
+                </p>
+              </div>
+            ) : courseInfo ? (
+              <div className="flex flex-col">
+                {/* Header Banner */}
+                <div className="h-40 bg-gray-900 relative">
+                  {courseInfo.thumbnailUrl ? (
+                    <img
+                      src={courseInfo.thumbnailUrl}
+                      alt={courseInfo.title}
+                      className="w-full h-full object-cover opacity-60"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 opacity-80"></div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
+                  <div className="absolute bottom-4 left-8 right-8 flex items-end justify-between">
+                    <div>
+                      <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white border border-white/20 text-xs font-bold rounded-lg uppercase tracking-wider mb-2 inline-block">
+                        {courseInfo.level}
+                      </span>
+                      <h2 className="text-3xl font-extrabold text-white leading-tight">
+                        {courseInfo.title}
+                      </h2>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content Body */}
+                <div className="p-8 flex flex-col gap-6">
+                  {/* Stats Row */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50/80 p-4 rounded-2xl border border-gray-100/50">
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                        <Users className="w-3 h-3" /> Enrollments
+                      </p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {courseInfo.enrollmentCount || 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                        <Tag className="w-3 h-3" /> Price
+                      </p>
+                      <p className="text-xl font-bold text-emerald-600">
+                        Rs. {courseInfo.price?.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                        <Award className="w-3 h-3" /> Status
+                      </p>
+                      <p className="text-sm font-bold text-gray-900 capitalize mt-1">
+                        {courseInfo.status?.replace("_", " ")}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                        <CreditCard className="w-3 h-3" /> Platform Fee
+                      </p>
+                      <p className="text-xl font-bold text-red-600">
+                        {courseInfo.platformFee ?? 30}%
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Description & Details Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="md:col-span-2 space-y-4">
+                      <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-red-500" />
+                        Course Description
+                      </h4>
+                      <div className="text-sm text-gray-600 leading-relaxed max-h-48 overflow-y-auto pr-2 custom-scrollbar whitespace-pre-line">
+                        {courseInfo.description || "No description provided."}
+                      </div>
+
+                      {courseInfo.tags && courseInfo.tags.length > 0 && (
+                        <div className="pt-4 border-t border-gray-100">
+                          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                            Tags
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {courseInfo.tags.map((tag: string) => (
+                              <span
+                                key={tag}
+                                className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-lg"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-6">
+                      <div>
+                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
+                          Coach Information
+                        </h4>
+                        <div className="flex items-center gap-3">
+                          {courseInfo.coach?.profilePhotoThumbnail ||
+                          courseInfo.coach?.profilePhoto ? (
+                            <button
+                              onClick={() =>
+                                setViewingCoachPhoto(
+                                  courseInfo.coach.profilePhoto ||
+                                    courseInfo.coach.profilePhotoThumbnail,
+                                )
+                              }
+                              className="w-12 h-12 rounded-xl overflow-hidden border border-gray-100 flex-shrink-0 bg-gray-50 flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-red-500 transition-all shadow-sm group relative"
+                            >
+                              <img
+                                src={
+                                  courseInfo.coach.profilePhotoThumbnail ||
+                                  courseInfo.coach.profilePhoto
+                                }
+                                alt={courseInfo.coach.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </button>
+                          ) : (
+                            <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                              <Users className="w-6 h-6 text-gray-400" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-sm font-bold text-gray-900">
+                              {courseInfo.coach?.name || "Unknown"}
+                            </p>
+                            <p className="text-xs font-medium text-gray-500">
+                              Instructor
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-6 border-t border-gray-100">
+                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                          Discount Rules
+                        </h4>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-500">Allowed:</span>
+                            <span className="font-bold text-gray-900">
+                              {courseInfo.allowDiscounts ? "Yes" : "No"}
+                            </span>
+                          </div>
+                          {courseInfo.allowDiscounts && (
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-gray-500">
+                                Max Discount:
+                              </span>
+                              <span className="font-bold text-red-600">
+                                {courseInfo.maxDiscountPercent}%
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <p className="text-red-500 font-bold">
+                  Failed to load course details.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Full-Size Photo Viewer */}
+      {viewingCoachPhoto && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[70] flex items-center justify-center p-6 cursor-pointer animate-[fade-in_0.2s_ease-out]"
+          onClick={() => setViewingCoachPhoto(null)}
+        >
+          <div
+            className="relative max-w-xl max-h-[80vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setViewingCoachPhoto(null)}
+              className="absolute -top-4 -right-4 p-2.5 bg-white rounded-full shadow-2xl text-gray-600 hover:text-red-500 transition-colors z-10"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img
+              src={viewingCoachPhoto}
+              alt="Coach full view"
+              className="max-w-full max-h-[80vh] object-contain rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border-4 border-white/10"
+            />
           </div>
         </div>
       )}

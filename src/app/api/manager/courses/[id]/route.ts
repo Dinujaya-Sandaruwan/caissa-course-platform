@@ -21,7 +21,10 @@ export async function GET(
 
     // Fetch the course with populated coach info
     const course = await Course.findById(courseId)
-      .populate("coach", "name whatsappNumber email")
+      .populate(
+        "coach",
+        "name whatsappNumber email profilePhoto profilePhotoThumbnail",
+      )
       .lean();
 
     if (!course) {
