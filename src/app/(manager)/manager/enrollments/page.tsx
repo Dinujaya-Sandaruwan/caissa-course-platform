@@ -10,6 +10,7 @@ import {
   X,
   ExternalLink,
   PauseCircle,
+  Trash2,
 } from "lucide-react";
 
 interface PendingEnrollment {
@@ -28,6 +29,7 @@ export default function ManagerEnrollmentsPage() {
   const [enrollments, setEnrollments] = useState<PendingEnrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"pending" | "all">("pending");
 
   // Receipt viewer
   const [viewingReceipt, setViewingReceipt] = useState<string | null>(null);
@@ -35,18 +37,24 @@ export default function ManagerEnrollmentsPage() {
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalEnrollmentId, setModalEnrollmentId] = useState("");
-  const [modalType, setModalType] = useState<"rejected" | "on_hold">(
+  const [modalType, setModalType] = useState<"rejected" | "on_hold" | "revoke">(
     "rejected",
   );
   const [modalNotes, setModalNotes] = useState("");
 
   useEffect(() => {
-    fetchEnrollments();
-  }, []);
+    fetchEnrollments(activeTab);
+  }, [activeTab]);
 
-  async function fetchEnrollments() {
+  async function fetchEnrollments(tab: "pending" | "all") {
+    setLoading(true);
     try {
-      const res = await fetch("/api/manager/enrollments/pending");
+      const url =
+        tab === "pending"
+          ? "/api/manager/enrollments/pending"
+          : "/api/manager/enrollments?filter=all";
+
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setEnrollments(data);
@@ -65,27 +73,46 @@ export default function ManagerEnrollmentsPage() {
   ) {
     setActionLoading(enrollmentId);
     try {
-      const res = await fetch(
-        `/api/manager/enrollments/${enrollmentId}/review`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action, notes }),
-        },
-      );
-      if (res.ok) {
-        setEnrollments((prev) => prev.filter((e) => e._id !== enrollmentId));
-        setModalOpen(false);
-        setModalNotes("");
+      if (action === "revoke") {
+        const res = await fetch(
+          `/api/manager/enrollments/${enrollmentId}/revoke`,
+          {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ notes }),
+          },
+        );
+        if (res.ok) {
+          setEnrollments((prev) => prev.filter((e) => e._id !== enrollmentId));
+          setModalOpen(false);
+          setModalNotes("");
+        }
+      } else {
+        const res = await fetch(
+          `/api/manager/enrollments/${enrollmentId}/review`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action, notes }),
+          },
+        );
+        if (res.ok) {
+          setEnrollments((prev) => prev.filter((e) => e._id !== enrollmentId));
+          setModalOpen(false);
+          setModalNotes("");
+        }
       }
     } catch (error) {
-      console.error("Review failed:", error);
+      console.error("Action failed:", error);
     } finally {
       setActionLoading(null);
     }
   }
 
-  function openModal(enrollmentId: string, type: "rejected" | "on_hold") {
+  function openModal(
+    enrollmentId: string,
+    type: "rejected" | "on_hold" | "revoke",
+  ) {
     setModalEnrollmentId(enrollmentId);
     setModalType(type);
     setModalNotes("");
@@ -101,7 +128,7 @@ export default function ManagerEnrollmentsPage() {
   }
 
   return (
-    <div className="space-y-10 relative z-10">
+    <div className="space-y-6 relative z-10">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -118,28 +145,55 @@ export default function ManagerEnrollmentsPage() {
           </p>
         </div>
         <span className="text-sm font-bold text-gray-400 bg-gray-50 px-4 py-2 rounded-full">
-          {enrollments.length} pending
+          {enrollments.length} records
         </span>
       </div>
 
+      {/* Tabs */}
+      <div className="flex items-center gap-2 p-1.5 bg-gray-100/80 rounded-2xl w-fit">
+        <button
+          onClick={() => setActiveTab("pending")}
+          className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            activeTab === "pending"
+              ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-900/5"
+              : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
+          }`}
+        >
+          Pending Review
+        </button>
+        <button
+          onClick={() => setActiveTab("all")}
+          className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            activeTab === "all"
+              ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-900/5"
+              : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
+          }`}
+        >
+          All Enrollments
+        </button>
+      </div>
+
       {/* Empty State */}
-      {enrollments.length === 0 && (
+      {!loading && enrollments.length === 0 && (
         <div className="bg-white rounded-[2rem] p-12 shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5 text-center">
           <div className="w-16 h-16 rounded-3xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
             <BookOpen className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-xl font-bold text-gray-900">
-            No enrollments pending review
+            {activeTab === "pending"
+              ? "No enrollments pending review"
+              : "No enrollments found"}
           </h3>
           <p className="text-gray-500 mt-2 text-sm max-w-sm mx-auto">
-            All payment receipts have been reviewed. New submissions will appear
-            here.
+            {activeTab === "pending"
+              ? "All payment receipts have been reviewed. New submissions will appear here."
+              : "There are currently no recorded enrollments in the database."}
           </p>
         </div>
       )}
 
       {/* Enrollments Table */}
-      {enrollments.length > 0 && (
+      {!loading && enrollments.length > 0 && (
         <div className="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5 overflow-hidden">
           {/* Header */}
           <div className="hidden lg:grid lg:grid-cols-[1fr_120px_1fr_100px_120px_80px_80px_150px] gap-3 px-6 py-4 bg-gray-50/80 border-b border-gray-100">
@@ -178,11 +232,21 @@ export default function ManagerEnrollmentsPage() {
               >
                 {/* Student */}
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  <span className="text-sm font-bold text-gray-900 flex flex-wrap items-center gap-2">
                     {enrollment.studentId?.name || "Unknown"}
                     {enrollment.paymentStatus === "on_hold" && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
                         ON HOLD
+                      </span>
+                    )}
+                    {enrollment.paymentStatus === "approved" && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                        APPROVED
+                      </span>
+                    )}
+                    {enrollment.paymentStatus === "rejected" && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">
+                        REJECTED
                       </span>
                     )}
                   </span>
@@ -241,36 +305,50 @@ export default function ManagerEnrollmentsPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 lg:justify-end">
-                  <button
-                    onClick={() => handleReview(enrollment._id, "approved")}
-                    disabled={actionLoading === enrollment._id}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-colors disabled:opacity-50"
-                  >
-                    {actionLoading === enrollment._id ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <CheckCircle className="w-3 h-3" />
-                    )}
-                    Approve
-                  </button>
-                  <div className="flex items-center gap-1">
+                  {enrollment.paymentStatus === "approved" ||
+                  enrollment.paymentStatus === "rejected" ? (
                     <button
-                      onClick={() => openModal(enrollment._id, "on_hold")}
+                      onClick={() => openModal(enrollment._id, "revoke")}
                       disabled={actionLoading === enrollment._id}
-                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors disabled:opacity-50"
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors disabled:opacity-50"
                     >
-                      <PauseCircle className="w-3 h-3" />
-                      Hold
+                      <Trash2 className="w-3 h-3" />
+                      Revoke
                     </button>
-                    <button
-                      onClick={() => openModal(enrollment._id, "rejected")}
-                      disabled={actionLoading === enrollment._id}
-                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors disabled:opacity-50"
-                    >
-                      <XCircle className="w-3 h-3" />
-                      Reject
-                    </button>
-                  </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleReview(enrollment._id, "approved")}
+                        disabled={actionLoading === enrollment._id}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-colors disabled:opacity-50"
+                      >
+                        {actionLoading === enrollment._id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <CheckCircle className="w-3 h-3" />
+                        )}
+                        Approve
+                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => openModal(enrollment._id, "on_hold")}
+                          disabled={actionLoading === enrollment._id}
+                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors disabled:opacity-50"
+                        >
+                          <PauseCircle className="w-3 h-3" />
+                          Hold
+                        </button>
+                        <button
+                          onClick={() => openModal(enrollment._id, "rejected")}
+                          disabled={actionLoading === enrollment._id}
+                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors disabled:opacity-50"
+                        >
+                          <XCircle className="w-3 h-3" />
+                          Reject
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -309,9 +387,9 @@ export default function ManagerEnrollmentsPage() {
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-[fade-in-up_0.2s_ease-out]">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-gray-900">
-                {modalType === "on_hold"
-                  ? "Hold Enrollment"
-                  : "Reject Enrollment"}
+                {modalType === "on_hold" && "Hold Enrollment"}
+                {modalType === "rejected" && "Reject Enrollment"}
+                {modalType === "revoke" && "Revoke Access"}
               </h3>
               <button
                 onClick={() => setModalOpen(false)}
@@ -330,7 +408,9 @@ export default function ManagerEnrollmentsPage() {
               placeholder={
                 modalType === "on_hold"
                   ? "e.g. Please provide a clearer screenshot..."
-                  : "e.g. Receipt is unclear, amount doesn't match..."
+                  : modalType === "revoke"
+                    ? "e.g. Violation of terms..."
+                    : "e.g. Receipt is unclear, amount doesn't match..."
               }
               rows={3}
               className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 resize-none"
@@ -347,16 +427,21 @@ export default function ManagerEnrollmentsPage() {
                   handleReview(modalEnrollmentId, modalType, modalNotes)
                 }
                 disabled={
-                  !modalNotes.trim() || actionLoading === modalEnrollmentId
+                  (!modalNotes.trim() && modalType !== "revoke") ||
+                  actionLoading === modalEnrollmentId
                 }
-                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white rounded-xl shadow-lg transition-all disabled:opacity-50 ${modalType === "on_hold" ? "bg-amber-600 hover:bg-amber-700 shadow-amber-600/20" : "bg-red-600 hover:bg-red-700 shadow-red-600/20"}`}
+                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white rounded-xl shadow-lg transition-all disabled:opacity-50 ${
+                  modalType === "on_hold"
+                    ? "bg-amber-600 hover:bg-amber-700 shadow-amber-600/20"
+                    : "bg-red-600 hover:bg-red-700 shadow-red-600/20"
+                }`}
               >
                 {actionLoading === modalEnrollmentId && (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 )}
-                {modalType === "on_hold"
-                  ? "Place on Hold"
-                  : "Reject Enrollment"}
+                {modalType === "on_hold" && "Place on Hold"}
+                {modalType === "rejected" && "Reject Enrollment"}
+                {modalType === "revoke" && "Confirm Revoke"}
               </button>
             </div>
           </div>

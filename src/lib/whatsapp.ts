@@ -207,6 +207,18 @@ export async function notifyStudentEnrollmentOnHold(
   );
 }
 
+export async function notifyStudentEnrollmentRevoked(
+  studentNumber: string,
+  courseTitle: string,
+  reason?: string,
+) {
+  await sendWhatsAppMessage(
+    studentNumber,
+    `⚠️ Your enrollment for *"${courseTitle}"* has been revoked.\n\n📝 *Reason:* ${reason || "Administrative action."}\n\nYour course access has been removed. You may re-enroll by submitting a new payment receipt.`,
+    "enrollment_revoked",
+  );
+}
+
 // ── System Notifications ────────────────────────────────────
 
 export async function notifyDiskUsageHigh(

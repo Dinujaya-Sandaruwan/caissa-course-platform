@@ -3,10 +3,9 @@ import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import Link from "next/link";
-import { LogOut } from "lucide-react";
 import React from "react";
 import StudentNavLinks from "@/components/StudentNavLinks";
-import LogoutButton from "@/components/auth/LogoutButton";
+import StudentProfileMenu from "@/components/student/StudentProfileMenu";
 
 export default async function StudentLayout({
   children,
@@ -23,9 +22,14 @@ export default async function StudentLayout({
   const dbUser = await User.findById(user.userId)
     .select("name nickname profilePhotoThumbnail")
     .lean();
-  const displayName = dbUser?.nickname || dbUser?.name || "Student";
-  const userInitials = displayName.substring(0, 2).toUpperCase();
-  const avatarUrl = dbUser?.profilePhotoThumbnail;
+
+  // Serialize the dbUser to pass to the Client Component
+  const profileUser = {
+    _id: dbUser?._id.toString() || "",
+    name: dbUser?.name || "Student",
+    nickname: dbUser?.nickname || undefined,
+    profilePhotoThumbnail: dbUser?.profilePhotoThumbnail || undefined,
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-red-100 selection:text-red-900">
@@ -51,26 +55,9 @@ export default async function StudentLayout({
               <StudentNavLinks />
             </div>
 
-            {/* Right: User + Logout */}
+            {/* Right: User Menu */}
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2.5">
-                {avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={avatarUrl}
-                    alt={displayName}
-                    className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-xs font-bold text-red-600">
-                    {userInitials}
-                  </div>
-                )}
-                <span className="text-sm font-semibold text-gray-700">
-                  {displayName}
-                </span>
-              </div>
-              <LogoutButton variant="icon" />
+              <StudentProfileMenu user={profileUser} />
             </div>
           </div>
 
