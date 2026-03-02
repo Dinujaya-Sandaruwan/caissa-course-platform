@@ -12,7 +12,37 @@ import {
   PauseCircle,
   Trash2,
   Search,
+  User,
+  MapPin,
+  Calendar,
+  Award,
+  Phone,
+  Mail,
+  Users,
 } from "lucide-react";
+
+interface StudentProfileDetails {
+  _id: string;
+  name: string;
+  nickname?: string;
+  email?: string;
+  whatsappNumber: string;
+  profilePhoto?: string;
+  profilePhotoThumbnail?: string;
+  createdAt: string;
+  profile?: {
+    dateOfBirth: string;
+    gender: "male" | "female" | "other";
+    fideId?: string;
+    skillLevel: "beginner" | "intermediate" | "advanced" | "expert";
+    city?: string;
+    preferredLanguage: "en" | "si" | "ta";
+    parentName?: string;
+    parentDateOfBirth?: string;
+    totalCoursesCompleted: number;
+    totalStudyHours: number;
+  };
+}
 
 interface PendingEnrollment {
   _id: string;
@@ -20,7 +50,7 @@ interface PendingEnrollment {
   amountPaid?: number;
   receiptImageUrl?: string;
   createdAt: string;
-  studentId?: { name?: string; phone?: string };
+  studentId?: { _id?: string; name?: string; phone?: string };
   courseId?: { title?: string; price?: number };
   paymentStatus?: "pending_review" | "approved" | "rejected" | "on_hold";
   reviewNotes?: string;
@@ -43,6 +73,13 @@ export default function ManagerEnrollmentsPage() {
     "rejected",
   );
   const [modalNotes, setModalNotes] = useState("");
+
+  // Student Profile Modal
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [profileData, setProfileData] = useState<StudentProfileDetails | null>(
+    null,
+  );
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     fetchEnrollments(activeTab);
@@ -108,6 +145,24 @@ export default function ManagerEnrollmentsPage() {
       console.error("Action failed:", error);
     } finally {
       setActionLoading(null);
+    }
+  }
+
+  async function viewStudentProfile(studentId: string | undefined) {
+    if (!studentId) return;
+    setProfileModalOpen(true);
+    setProfileLoading(true);
+    setProfileData(null);
+    try {
+      const res = await fetch(`/api/manager/students/${studentId}/profile`);
+      if (res.ok) {
+        const data = await res.json();
+        setProfileData(data);
+      }
+    } catch (error) {
+      console.error("Failed to load profile:", error);
+    } finally {
+      setProfileLoading(false);
     }
   }
 
@@ -242,9 +297,17 @@ export default function ManagerEnrollmentsPage() {
               {/* Top Section */}
               <div className="flex justify-between items-start">
                 <div className="flex flex-col gap-1">
-                  <h3 className="text-xl font-bold text-gray-900">
-                    {enrollment.studentId?.name || "Unknown"}
-                  </h3>
+                  <button
+                    onClick={() =>
+                      viewStudentProfile(enrollment.studentId?._id)
+                    }
+                    className="group flex flex-col items-start gap-1 text-left"
+                  >
+                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-rose-600 transition-colors flex items-center gap-2">
+                      {enrollment.studentId?.name || "Unknown"}
+                      <User className="w-4 h-4 text-gray-400 group-hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all -ml-1" />
+                    </h3>
+                  </button>
                   <span className="text-sm font-medium text-gray-500 font-mono">
                     {enrollment.studentId?.phone || "N/A"}
                   </span>
@@ -487,6 +550,202 @@ export default function ManagerEnrollmentsPage() {
                 {modalType === "revoke" && "Confirm Revoke"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Student Profile Modal */}
+      {profileModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 lg:p-6 overflow-y-auto">
+          <div
+            className="w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setProfileModalOpen(false)}
+              className="absolute top-4 right-4 p-2.5 bg-white/50 backdrop-blur border border-gray-100/50 hover:bg-white text-gray-500 hover:text-red-500 rounded-full transition-all z-20 shadow-sm"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {profileLoading ? (
+              <div className="flex flex-col items-center justify-center min-h-[400px]">
+                <Loader2 className="w-10 h-10 text-rose-500 animate-spin mb-4" />
+                <p className="text-sm font-bold text-gray-400 animate-pulse">
+                  Fetching Student Details...
+                </p>
+              </div>
+            ) : profileData ? (
+              <div className="flex flex-col">
+                {/* Header Banner */}
+                <div className="h-32 bg-gradient-to-r from-rose-500 to-pink-600 relative">
+                  <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay"></div>
+                </div>
+
+                {/* Profile Card Body */}
+                <div className="px-8 pb-8 -mt-16 flex flex-col gap-6 relative z-10">
+                  {/* Avatar & Name Row */}
+                  <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-end">
+                    <div className="w-32 h-32 rounded-3xl overflow-hidden border-4 border-white shadow-xl bg-gray-100 flex-shrink-0 relative group">
+                      {profileData.profilePhotoThumbnail ? (
+                        <img
+                          src={profileData.profilePhotoThumbnail}
+                          alt={profileData.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                          <User className="w-12 h-12 text-gray-300" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 text-center sm:text-left mb-2">
+                      <h2 className="text-2xl font-extrabold text-gray-900 leading-tight">
+                        {profileData.nickname || profileData.name}
+                      </h2>
+                      <p className="text-sm font-bold text-gray-500 mt-1">
+                        {profileData.name} • Joined{" "}
+                        {new Date(profileData.createdAt).getFullYear()}
+                      </p>
+                    </div>
+
+                    {/* Quick Badges */}
+                    <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 mb-2">
+                      {profileData.profile?.skillLevel && (
+                        <span className="px-3 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-xl capitalize shadow-sm">
+                          {profileData.profile.skillLevel}
+                        </span>
+                      )}
+                      {profileData.profile?.gender && (
+                        <span className="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-600 text-xs font-bold rounded-xl capitalize shadow-sm">
+                          {profileData.profile.gender}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <hr className="border-gray-100/80" />
+
+                  {/* Information Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                    {/* Contact Info */}
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        Contact Information
+                      </h4>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                          <Phone className="w-4 h-4 text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 leading-none mb-1 uppercase">
+                            WhatsApp Record
+                          </p>
+                          <p className="text-sm font-mono font-medium text-gray-900">
+                            {profileData.whatsappNumber}
+                          </p>
+                        </div>
+                      </div>
+
+                      {profileData.email && (
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <Mail className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <div className="overflow-hidden">
+                            <p className="text-[10px] font-bold text-gray-400 leading-none mb-1 uppercase">
+                              Email Address
+                            </p>
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {profileData.email}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center flex-shrink-0">
+                          <MapPin className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 leading-none mb-1 uppercase">
+                            Location
+                          </p>
+                          <p className="text-sm font-medium text-gray-900 capitalize">
+                            {profileData.profile?.city || "Not Provided"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chess & Personal Details */}
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        FIDE & Family Details
+                      </h4>
+
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0">
+                          <Award className="w-4 h-4 text-amber-600" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 leading-none mb-1 uppercase">
+                            FIDE ID
+                          </p>
+                          <p className="text-sm font-mono font-medium text-gray-900">
+                            {profileData.profile?.fideId || "None"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                          <Calendar className="w-4 h-4 text-indigo-600" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 leading-none mb-1 uppercase">
+                            Date of Birth
+                          </p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {profileData.profile?.dateOfBirth
+                              ? new Date(
+                                  profileData.profile.dateOfBirth,
+                                ).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                })
+                              : "Not Provided"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center flex-shrink-0">
+                          <Users className="w-4 h-4 text-teal-600" />
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="text-[10px] font-bold text-gray-400 leading-none mb-1 uppercase">
+                            Guardian / Parent
+                          </p>
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {profileData.profile?.parentName || "Independent"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <p className="text-red-500 font-bold">
+                  Failed to load profile parameters.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
