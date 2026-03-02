@@ -220,7 +220,11 @@ function LoginContent() {
           </div>
 
           {/* Form Card */}
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 animate-[fade-in-up_0.5s_ease-out]">
+          <div
+            className={`w-full ${
+              step === "register" ? "max-w-3xl" : "max-w-md"
+            } bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 sm:p-10 animate-[fade-in-up_0.5s_ease-out] transition-all duration-500`}
+          >
             {step === "phone" && <PhoneEntry onSubmit={handleSendOTP} />}
             {step === "otp" && (
               <OTPEntry
