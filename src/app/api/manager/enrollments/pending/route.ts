@@ -13,7 +13,7 @@ export async function GET() {
     await connectDB();
 
     const enrollments = await Enrollment.find({
-      paymentStatus: "pending_review",
+      paymentStatus: { $in: ["pending_review", "on_hold"] },
     })
       .populate("studentId", "name phone")
       .populate("courseId", "title price")

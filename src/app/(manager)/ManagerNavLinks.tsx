@@ -17,6 +17,7 @@ const navLinks = [
   { name: "Courses", href: "/manager/courses", icon: BookOpen },
   { name: "Students", href: "/manager/students", icon: GraduationCap },
   { name: "Payments", href: "/manager/payments", icon: CreditCard },
+  { name: "Enrollments", href: "/manager/enrollments", icon: BookOpen },
   { name: "Managers", href: "/manager/managers", icon: ShieldCheck },
 ];
 

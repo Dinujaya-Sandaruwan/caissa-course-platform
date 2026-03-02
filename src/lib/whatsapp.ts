@@ -195,6 +195,18 @@ export async function notifyStudentEnrollmentRejected(
   );
 }
 
+export async function notifyStudentEnrollmentOnHold(
+  studentNumber: string,
+  courseTitle: string,
+  reason?: string,
+) {
+  await sendWhatsAppMessage(
+    studentNumber,
+    `Hello,\n\nYour enrollment for *"${courseTitle}"* has been placed *on hold* pending review.\n\n📝 *Reason:* ${reason || "We require additional information to verify your payment."}\n\nPlease contact our support team to resolve this issue.`,
+    "enrollment_on_hold",
+  );
+}
+
 // ── System Notifications ────────────────────────────────────
 
 export async function notifyDiskUsageHigh(

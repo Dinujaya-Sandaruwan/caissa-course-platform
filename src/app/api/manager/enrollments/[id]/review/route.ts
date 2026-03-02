@@ -6,6 +6,7 @@ import Course from "@/models/Course";
 import {
   notifyStudentEnrollmentApproved,
   notifyStudentEnrollmentRejected,
+  notifyStudentEnrollmentOnHold,
 } from "@/lib/whatsapp";
 
 export async function PATCH(
@@ -23,9 +24,11 @@ export async function PATCH(
     const body = await request.json();
     const { action, notes } = body;
 
-    if (!action || !["approved", "rejected"].includes(action)) {
+    if (!action || !["approved", "rejected", "on_hold"].includes(action)) {
       return NextResponse.json(
-        { error: "Invalid action. Must be 'approved' or 'rejected'" },
+        {
+          error: "Invalid action. Must be 'approved', 'rejected', or 'on_hold'",
+        },
         { status: 400 },
       );
     }
@@ -43,7 +46,10 @@ export async function PATCH(
       );
     }
 
-    if (enrollment.paymentStatus !== "pending_review") {
+    if (
+      enrollment.paymentStatus !== "pending_review" &&
+      enrollment.paymentStatus !== "on_hold"
+    ) {
       return NextResponse.json(
         { error: "Enrollment has already been reviewed" },
         { status: 400 },
@@ -73,12 +79,14 @@ export async function PATCH(
     if (student?.phone && course?.title) {
       if (action === "approved") {
         await notifyStudentEnrollmentApproved(student.phone, course.title);
-      } else {
+      } else if (action === "rejected") {
         await notifyStudentEnrollmentRejected(
           student.phone,
           course.title,
           notes,
         );
+      } else if (action === "on_hold") {
+        await notifyStudentEnrollmentOnHold(student.phone, course.title, notes);
       }
     }
 

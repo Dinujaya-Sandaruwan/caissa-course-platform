@@ -9,6 +9,7 @@ import {
   BookOpen,
   X,
   ExternalLink,
+  PauseCircle,
 } from "lucide-react";
 
 interface PendingEnrollment {
@@ -19,6 +20,8 @@ interface PendingEnrollment {
   createdAt: string;
   studentId?: { name?: string; phone?: string };
   courseId?: { title?: string; price?: number };
+  paymentStatus?: "pending_review" | "approved" | "rejected" | "on_hold";
+  reviewNotes?: string;
 }
 
 export default function ManagerEnrollmentsPage() {
@@ -29,9 +32,12 @@ export default function ManagerEnrollmentsPage() {
   // Receipt viewer
   const [viewingReceipt, setViewingReceipt] = useState<string | null>(null);
 
-  // Reject modal
+  // Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalEnrollmentId, setModalEnrollmentId] = useState("");
+  const [modalType, setModalType] = useState<"rejected" | "on_hold">(
+    "rejected",
+  );
   const [modalNotes, setModalNotes] = useState("");
 
   useEffect(() => {
@@ -79,8 +85,9 @@ export default function ManagerEnrollmentsPage() {
     }
   }
 
-  function openRejectModal(enrollmentId: string) {
+  function openModal(enrollmentId: string, type: "rejected" | "on_hold") {
     setModalEnrollmentId(enrollmentId);
+    setModalType(type);
     setModalNotes("");
     setModalOpen(true);
   }
@@ -170,9 +177,16 @@ export default function ManagerEnrollmentsPage() {
                 className="grid grid-cols-1 lg:grid-cols-[1fr_120px_1fr_100px_120px_80px_80px_150px] gap-3 px-6 py-4 items-center hover:bg-gray-50/50 transition-colors"
               >
                 {/* Student */}
-                <span className="text-sm font-bold text-gray-900">
-                  {enrollment.studentId?.name || "Unknown"}
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                    {enrollment.studentId?.name || "Unknown"}
+                    {enrollment.paymentStatus === "on_hold" && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                        ON HOLD
+                      </span>
+                    )}
+                  </span>
+                </div>
 
                 {/* WhatsApp */}
                 <span className="text-xs text-gray-500 font-mono">
@@ -239,14 +253,24 @@ export default function ManagerEnrollmentsPage() {
                     )}
                     Approve
                   </button>
-                  <button
-                    onClick={() => openRejectModal(enrollment._id)}
-                    disabled={actionLoading === enrollment._id}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors disabled:opacity-50"
-                  >
-                    <XCircle className="w-3 h-3" />
-                    Reject
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => openModal(enrollment._id, "on_hold")}
+                      disabled={actionLoading === enrollment._id}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors disabled:opacity-50"
+                    >
+                      <PauseCircle className="w-3 h-3" />
+                      Hold
+                    </button>
+                    <button
+                      onClick={() => openModal(enrollment._id, "rejected")}
+                      disabled={actionLoading === enrollment._id}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors disabled:opacity-50"
+                    >
+                      <XCircle className="w-3 h-3" />
+                      Reject
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -279,13 +303,15 @@ export default function ManagerEnrollmentsPage() {
         </div>
       )}
 
-      {/* Reject Modal */}
+      {/* Action Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-[fade-in-up_0.2s_ease-out]">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-gray-900">
-                Reject Enrollment
+                {modalType === "on_hold"
+                  ? "Hold Enrollment"
+                  : "Reject Enrollment"}
               </h3>
               <button
                 onClick={() => setModalOpen(false)}
@@ -295,13 +321,17 @@ export default function ManagerEnrollmentsPage() {
               </button>
             </div>
             <p className="text-sm text-gray-500 mb-4">
-              Provide a reason for rejection. The student will be notified via
-              WhatsApp.
+              Provide a reason for this decision. The student will be notified
+              via WhatsApp.
             </p>
             <textarea
               value={modalNotes}
               onChange={(e) => setModalNotes(e.target.value)}
-              placeholder="e.g. Receipt is unclear, amount doesn't match..."
+              placeholder={
+                modalType === "on_hold"
+                  ? "e.g. Please provide a clearer screenshot..."
+                  : "e.g. Receipt is unclear, amount doesn't match..."
+              }
               rows={3}
               className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 resize-none"
             />
@@ -314,17 +344,19 @@ export default function ManagerEnrollmentsPage() {
               </button>
               <button
                 onClick={() =>
-                  handleReview(modalEnrollmentId, "rejected", modalNotes)
+                  handleReview(modalEnrollmentId, modalType, modalNotes)
                 }
                 disabled={
                   !modalNotes.trim() || actionLoading === modalEnrollmentId
                 }
-                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-600/20 transition-all disabled:opacity-50"
+                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white rounded-xl shadow-lg transition-all disabled:opacity-50 ${modalType === "on_hold" ? "bg-amber-600 hover:bg-amber-700 shadow-amber-600/20" : "bg-red-600 hover:bg-red-700 shadow-red-600/20"}`}
               >
                 {actionLoading === modalEnrollmentId && (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 )}
-                Reject Enrollment
+                {modalType === "on_hold"
+                  ? "Place on Hold"
+                  : "Reject Enrollment"}
               </button>
             </div>
           </div>

@@ -6,7 +6,7 @@ export interface IEnrollment extends Document {
   receiptImageUrl?: string;
   referenceNumber?: string;
   amountPaid?: number;
-  paymentStatus: "pending_review" | "approved" | "rejected";
+  paymentStatus: "pending_review" | "approved" | "rejected" | "on_hold";
   reviewNotes?: string;
   reviewedBy?: Types.ObjectId;
   reviewedAt?: Date;
@@ -41,7 +41,7 @@ const EnrollmentSchema = new Schema<IEnrollment>(
     },
     paymentStatus: {
       type: String,
-      enum: ["pending_review", "approved", "rejected"],
+      enum: ["pending_review", "approved", "rejected", "on_hold"],
       default: "pending_review",
     },
     reviewNotes: {
