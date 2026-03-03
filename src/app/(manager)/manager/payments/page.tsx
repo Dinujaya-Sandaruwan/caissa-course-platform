@@ -11,6 +11,7 @@ import {
   Loader2,
   User,
   Phone,
+  X,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -18,6 +19,8 @@ interface CoachBreakdown {
   coachId: string;
   name: string;
   whatsappNumber: string;
+  profilePicture?: string;
+  profilePictureThumbnail?: string;
   pendingAmount: number;
   unpaidEnrollments: number;
 }
@@ -39,6 +42,7 @@ export default function ManagerPaymentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [isPayingDeveloper, setIsPayingDeveloper] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const fetchPaymentsData = async () => {
     try {
@@ -290,8 +294,31 @@ export default function ManagerPaymentsPage() {
                 >
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                        <User className="w-5 h-5 text-red-600" />
+                      <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0 overflow-hidden group/avatar relative">
+                        {row.profilePictureThumbnail || row.profilePicture ? (
+                          <button
+                            onClick={() =>
+                              setPreviewImage(
+                                row.profilePicture ||
+                                  row.profilePictureThumbnail ||
+                                  null,
+                              )
+                            }
+                            className="w-full h-full cursor-pointer focus:outline-none"
+                            title="Preview Profile Picture"
+                          >
+                            <img
+                              src={
+                                row.profilePictureThumbnail ||
+                                row.profilePicture
+                              }
+                              alt={row.name}
+                              className="w-full h-full object-cover group-hover/avatar:opacity-80 transition-opacity"
+                            />
+                          </button>
+                        ) : (
+                          <User className="w-5 h-5 text-red-600" />
+                        )}
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">
@@ -358,6 +385,30 @@ export default function ManagerPaymentsPage() {
           </table>
         </div>
       </div>
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 animate-in fade-in duration-200"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="relative max-w-xl w-full flex items-center justify-center animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()} // Prevent clicking the image from closing
+          >
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <img
+              src={previewImage}
+              alt="Profile Picture"
+              className="w-full max-h-[85vh] object-cover rounded-2xl shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

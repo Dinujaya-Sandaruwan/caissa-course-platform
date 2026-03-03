@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
         select: "title price platformFee coach",
         populate: {
           path: "coach",
-          select: "name whatsappNumber",
+          select: "name whatsappNumber profilePhoto profilePhotoThumbnail",
         },
       })
       .lean();
@@ -36,6 +36,8 @@ export async function GET(req: NextRequest) {
         coachId: string;
         name: string;
         whatsappNumber: string;
+        profilePicture?: string;
+        profilePictureThumbnail?: string;
         pendingAmount: number;
         unpaidEnrollments: number;
       }
@@ -67,6 +69,8 @@ export async function GET(req: NextRequest) {
           coachId: coachIdStr,
           name: coach.name || "Unknown Coach",
           whatsappNumber: coach.whatsappNumber || "",
+          profilePicture: coach.profilePhoto || undefined,
+          profilePictureThumbnail: coach.profilePhotoThumbnail || undefined,
           pendingAmount: 0,
           unpaidEnrollments: 0,
         };
