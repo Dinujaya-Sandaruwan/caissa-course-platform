@@ -1776,7 +1776,7 @@ export default function CreateCoursePage() {
                                   const input = document.createElement("input");
                                   input.type = "file";
                                   input.accept =
-                                    "application/pdf,image/jpeg,image/png";
+                                    "application/pdf,image/jpeg,image/png,.pgn";
                                   input.onchange = (e) => {
                                     const file = (e.target as HTMLInputElement)
                                       .files?.[0];
@@ -1790,7 +1790,7 @@ export default function CreateCoursePage() {
                                   input.click();
                                 }}
                                 className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
-                                title="Add File (PDF/Image)"
+                                title="Add File (PDF/Image/PGN)"
                               >
                                 <FilePlus className="w-4 h-4" />
                               </button>

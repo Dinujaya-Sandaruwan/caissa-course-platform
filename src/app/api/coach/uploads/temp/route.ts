@@ -40,17 +40,22 @@ export async function POST(request: NextRequest) {
     const allowedMimePrefixes = ["video/", "image/"];
     const allowedExactMimes = ["application/pdf"];
 
+    // file-type module cannot recognize plain text files like PGN (no magic numbers).
+    // so we also check the file extension string for explicit permissions.
+    const isPgn = file.name.toLowerCase().endsWith(".pgn");
+
     if (
-      !mimeInfo ||
-      (!allowedMimePrefixes.some((prefix) =>
-        mimeInfo.mime.startsWith(prefix),
-      ) &&
-        !allowedExactMimes.includes(mimeInfo.mime))
+      !isPgn &&
+      (!mimeInfo ||
+        (!allowedMimePrefixes.some((prefix) =>
+          mimeInfo.mime.startsWith(prefix),
+        ) &&
+          !allowedExactMimes.includes(mimeInfo.mime)))
     ) {
       return NextResponse.json(
         {
           error:
-            "Invalid file type. Only videos, images, and PDFs are allowed.",
+            "Invalid file type. Only videos, images, PDFs, and PGNs are allowed.",
         },
         { status: 415 },
       );
@@ -62,7 +67,7 @@ export async function POST(request: NextRequest) {
     await mkdir(tempDir, { recursive: true });
 
     const id = crypto.randomUUID();
-    const ext = mimeInfo.ext;
+    const ext = isPgn ? "pgn" : mimeInfo?.ext || "bin";
     const fileName = `${id}.${ext}`;
     const fullPath = path.join(tempDir, fileName);
 
