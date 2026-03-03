@@ -29,10 +29,31 @@ export async function GET() {
 
     // Group by status
     const pending = enrollments.filter(
-      (e) => e.paymentStatus === "pending_review",
+      (e) =>
+        e.paymentStatus === "pending_review" || e.paymentStatus === "on_hold",
     );
     const approved = enrollments.filter((e) => e.paymentStatus === "approved");
-    const rejected = enrollments.filter((e) => e.paymentStatus === "rejected");
+
+    const activeCourseIds = new Set([
+      ...pending.map((e) => String((e.courseId as any)?._id || e.courseId)),
+      ...approved.map((e) => String((e.courseId as any)?._id || e.courseId)),
+    ]);
+
+    const rejectedTracker = new Set<string>();
+    const rejected = enrollments.filter((e) => {
+      if (e.paymentStatus !== "rejected") return false;
+
+      const cId = String((e.courseId as any)?._id || e.courseId);
+
+      // If student is already active/pending in this course, hide the rejected one
+      if (activeCourseIds.has(cId)) return false;
+
+      // Only keep the most recent rejected enrollment per course
+      if (rejectedTracker.has(cId)) return false;
+
+      rejectedTracker.add(cId);
+      return true;
+    });
 
     // For approved enrollments, get progress data
     const approvedWithProgress = await Promise.all(
