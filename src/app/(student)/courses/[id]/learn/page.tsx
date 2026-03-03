@@ -12,6 +12,10 @@ import {
   X,
   Loader2,
   BookOpen,
+  Link as LinkIcon,
+  ExternalLink,
+  FileText,
+  Download,
 } from "lucide-react";
 
 interface Lesson {
@@ -20,6 +24,9 @@ interface Lesson {
   videoUrl?: string;
   duration?: number;
   order: number;
+  description?: string;
+  links?: string[];
+  materials?: { title: string; url: string; _id?: string }[];
 }
 
 interface Chapter {
@@ -362,6 +369,85 @@ export default function StudentCourseViewerPage() {
                     )}
                   </div>
                 </div>
+
+                {/* Lesson Description */}
+                {currentLesson.description && (
+                  <div className="mt-8 pt-8 border-t border-gray-100">
+                    <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-red-500" />
+                      Lesson Description
+                    </h3>
+                    <div className="prose prose-sm prose-red max-w-none text-gray-600 leading-relaxed">
+                      {currentLesson.description.split("\n").map((para, i) => (
+                        <p key={i} className="mb-4 last:mb-0">
+                          {para}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Additional Resources Grid */}
+                {((currentLesson.links ?? []).length > 0 ||
+                  (currentLesson.materials ?? []).length > 0) && (
+                  <div className="mt-8 pt-8 border-t border-gray-100">
+                    <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-red-500" />
+                      Additional Resources
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* External Links */}
+                      {currentLesson.links?.map((link, i) => (
+                        <a
+                          key={`link-${i}`}
+                          href={link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group flex items-start gap-4 p-4 rounded-2xl bg-gray-50 hover:bg-red-50 border border-gray-100 hover:border-red-100 transition-all duration-300"
+                        >
+                          <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                            <LinkIcon className="w-5 h-5 text-gray-400 group-hover:text-red-500 transition-colors" />
+                          </div>
+                          <div className="flex-1 min-w-0 pr-2">
+                            <p className="text-sm font-bold text-gray-900 line-clamp-1 group-hover:text-red-700 transition-colors">
+                              External Resource Link
+                            </p>
+                            <p className="text-xs text-gray-500 truncate mt-0.5">
+                              {link}
+                            </p>
+                          </div>
+                          <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-red-400 shrink-0 mt-1 transition-colors" />
+                        </a>
+                      ))}
+
+                      {/* Downloadable Materials */}
+                      {currentLesson.materials?.map((material, i) => (
+                        <a
+                          key={`material-${material._id || i}`}
+                          href={material.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download
+                          className="group flex items-start gap-4 p-4 rounded-2xl bg-gray-50 hover:bg-emerald-50 border border-gray-100 hover:border-emerald-100 transition-all duration-300"
+                        >
+                          <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                            <FileText className="w-5 h-5 text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                          </div>
+                          <div className="flex-1 min-w-0 pr-2">
+                            <p className="text-sm font-bold text-gray-900 line-clamp-1 group-hover:text-emerald-700 transition-colors">
+                              {material.title}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate mt-0.5">
+                              File Download
+                            </p>
+                          </div>
+                          <Download className="w-4 h-4 text-gray-300 group-hover:text-emerald-500 shrink-0 mt-1 transition-colors relative top-0.5" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           ) : (

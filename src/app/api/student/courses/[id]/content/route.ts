@@ -49,7 +49,9 @@ export async function GET(
 
     const chapterIds = chapters.map((ch) => ch._id);
     const lessons = await Lesson.find({ chapterId: { $in: chapterIds } })
-      .select("title chapterId videoUrl duration order")
+      .select(
+        "title chapterId videoUrl duration order description links materials",
+      )
       .sort({ order: 1 })
       .lean();
 
