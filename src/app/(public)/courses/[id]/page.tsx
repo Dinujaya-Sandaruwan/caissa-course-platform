@@ -46,7 +46,12 @@ interface CourseDetail {
   previewVideoUrl?: string;
   enrollmentCount: number;
   createdAt: string;
-  coach?: { name?: string; bio?: string };
+  coach?: {
+    name?: string;
+    bio?: string;
+    profilePhotoThumbnail?: string;
+    profilePhoto?: string;
+  };
   category?: { name?: string };
   chapters: Chapter[];
 }
@@ -222,11 +227,22 @@ export default function PublicCourseDetailPage() {
                 {course.title}
               </h1>
 
-              {/* Coach Info */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-sm font-bold text-red-600">
-                  {course.coach?.name?.charAt(0) || "C"}
-                </div>
+                {course.coach?.profilePhotoThumbnail ||
+                course.coach?.profilePhoto ? (
+                  <img
+                    src={
+                      course.coach.profilePhotoThumbnail ||
+                      course.coach.profilePhoto
+                    }
+                    alt={course.coach.name || "Coach"}
+                    className="w-10 h-10 rounded-full object-cover border border-red-100 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-sm font-bold text-red-600">
+                    {course.coach?.name?.charAt(0) || "C"}
+                  </div>
+                )}
                 <div>
                   <p className="text-sm font-bold text-gray-900">
                     {course.coach?.name || "Caissa Coach"}

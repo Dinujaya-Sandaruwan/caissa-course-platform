@@ -18,7 +18,7 @@ export async function GET(
       _id: courseId,
       status: "published",
     })
-      .populate("coach", "name bio")
+      .populate("coach", "name bio profilePhotoThumbnail profilePhoto")
       .populate("category", "name")
       .lean();
 
