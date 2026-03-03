@@ -7,6 +7,39 @@ import { getSessionUser } from "@/lib/auth";
 import User from "@/models/User";
 import CoachProfile from "@/models/CoachProfile";
 
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getSessionUser();
+    if (!session || session.role !== "coach") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+
+    const user = await User.findById(session.userId).lean();
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const coachProfile = await CoachProfile.findOne({
+      userId: session.userId,
+    }).lean();
+    if (!coachProfile) {
+      return NextResponse.json(
+        { error: "Coach profile not found" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({ user, coachProfile }, { status: 200 });
+  } catch (error: Error | unknown) {
+    console.error("Failed to load coach profile:", error);
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
 export async function PUT(request: NextRequest) {
   try {
     const session = await getSessionUser();

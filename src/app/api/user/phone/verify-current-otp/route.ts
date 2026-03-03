@@ -4,7 +4,6 @@ import { getSessionUser } from "@/lib/auth";
 import User from "@/models/User";
 import OTPSession from "@/models/OTPSession";
 import bcrypt from "bcryptjs";
-import { setCookie } from "@/lib/cookies";
 import { SignJWT } from "jose";
 
 export async function POST(request: NextRequest) {
