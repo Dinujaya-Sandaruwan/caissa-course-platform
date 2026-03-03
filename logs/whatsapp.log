@@ -46,3 +46,5 @@
 [2026-03-03T05:23:45.272Z] SENT | type=generic | to=*******8830
 [2026-03-03T05:26:38.880Z] SENT | type=coach_approved | to=*******8830
 [2026-03-03T05:46:42.310Z] SENT | type=generic | to=*******8830
+[2026-03-03T06:02:27.927Z] SENT | type=generic | to=*******8830
+[2026-03-03T06:04:10.773Z] FAILED | type=generic | to=******8843
