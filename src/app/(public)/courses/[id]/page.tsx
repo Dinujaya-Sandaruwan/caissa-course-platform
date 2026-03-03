@@ -16,6 +16,9 @@ import {
   Loader2,
   CheckCircle2,
   Lock,
+  Check,
+  Award,
+  MonitorSmartphone,
 } from "lucide-react";
 
 interface Lesson {
@@ -337,50 +340,92 @@ export default function PublicCourseDetailPage() {
                   </div>
                 )}
 
-                {/* Price + Enroll CTA */}
-                <div className="p-6 space-y-4">
-                  <div className="text-center">
-                    <span className="text-3xl font-extrabold text-gray-900 flex flex-col items-center">
-                      {course.discountedPrice ? (
-                        <>
-                          <span className="text-gray-400 line-through text-lg font-semibold mb-1">
+                {/* Price + Features + Enroll CTA */}
+                <div className="p-6 md:p-8 flex flex-col h-full">
+                  <div className="flex-1">
+                    <div className="text-center mb-6">
+                      <div className="flex flex-row items-center justify-center gap-3">
+                        {course.discountedPrice ? (
+                          <>
+                            <span className="text-4xl font-extrabold text-red-600">
+                              Rs. {course.discountedPrice?.toLocaleString()}
+                            </span>
+                            <span className="text-gray-400 line-through text-lg font-bold">
+                              Rs. {course.price?.toLocaleString()}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-4xl font-extrabold text-gray-900">
                             Rs. {course.price?.toLocaleString()}
                           </span>
-                          <span className="text-red-600">
-                            Rs. {course.discountedPrice?.toLocaleString()}
-                          </span>
-                        </>
-                      ) : (
-                        <>Rs. {course.price?.toLocaleString()}</>
-                      )}
-                    </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 mb-8">
+                      <h4 className="text-sm font-bold text-gray-900 mb-3">
+                        What's included in this course:
+                      </h4>
+                      <div className="flex items-start gap-3">
+                        <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        </div>
+                        <span className="text-sm text-gray-600 font-medium">
+                          Full lifetime access to {totalLessons} lessons
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        </div>
+                        <span className="text-sm text-gray-600 font-medium">
+                          Access on mobile and desktop
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        </div>
+                        <span className="text-sm text-gray-600 font-medium">
+                          Direct coach support & feedback
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  {checkingEnrollment ? (
-                    <div className="flex justify-center py-3">
-                      <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
-                    </div>
-                  ) : isEnrolled ? (
-                    <div className="flex items-center justify-center gap-2 px-6 py-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                      <span className="text-sm font-bold text-emerald-700">
-                        Already Enrolled
-                      </span>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={handleEnroll}
-                      disabled={enrolling}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-red-600 text-white text-base font-bold rounded-2xl hover:bg-red-700 shadow-xl shadow-red-600/20 hover:shadow-red-600/30 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60"
-                    >
-                      {enrolling ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <BookOpen className="w-5 h-5" />
-                      )}
-                      Enroll Now
-                    </button>
-                  )}
+                  <div className="mt-auto">
+                    {checkingEnrollment ? (
+                      <div className="flex justify-center py-3">
+                        <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+                      </div>
+                    ) : isEnrolled ? (
+                      <div className="flex items-center justify-center gap-2 px-6 py-4 bg-emerald-50 border border-emerald-200 rounded-2xl w-full">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                        <span className="text-sm font-bold text-emerald-700">
+                          Already Enrolled
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          onClick={handleEnroll}
+                          disabled={enrolling}
+                          className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-red-600 text-white text-base font-bold rounded-2xl hover:bg-red-700 shadow-xl shadow-red-600/20 hover:shadow-red-600/30 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60"
+                        >
+                          {enrolling ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <BookOpen className="w-5 h-5" />
+                          )}
+                          Enroll Now
+                        </button>
+                        <p className="text-xs text-center text-gray-500 font-medium mt-4 flex items-center justify-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-gray-400" /> Secure
+                          checkout & 24/7 support
+                        </p>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
