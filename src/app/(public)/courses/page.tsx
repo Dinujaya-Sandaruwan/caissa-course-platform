@@ -19,6 +19,7 @@ interface PublicCourse {
   enrollmentCount: number;
   tags: string[];
   coach?: { name?: string };
+  category?: { name?: string };
 }
 
 const levelEmoji: Record<string, string> = {
@@ -48,6 +49,7 @@ function CoursesContent() {
   const searchParams = useSearchParams();
   const search = searchParams.get("search") || "";
   const levelParam = searchParams.get("level") || "";
+  const categoryParam = searchParams.get("category") || "";
   const sortParam = searchParams.get("sort") || "newest";
 
   const [courses, setCourses] = useState<PublicCourse[]>([]);
@@ -68,6 +70,7 @@ function CoursesContent() {
         const params = new URLSearchParams();
         if (search.trim()) params.set("search", search.trim());
         if (levelParam) params.set("level", levelParam);
+        if (categoryParam) params.set("category", categoryParam);
         params.set("sort", sortParam);
         if (!reset && cursor) params.set("cursor", cursor);
 
@@ -89,7 +92,7 @@ function CoursesContent() {
         setLoadingMore(false);
       }
     },
-    [search, levelParam, sortParam, cursor],
+    [search, levelParam, categoryParam, sortParam, cursor],
   );
 
   // Refetch when URL params change
@@ -97,7 +100,7 @@ function CoursesContent() {
     setCursor(null);
     fetchCourses(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, levelParam, sortParam]);
+  }, [search, levelParam, categoryParam, sortParam]);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -192,6 +195,12 @@ function CoursesContent() {
                           <p className="text-xs text-gray-500 mt-1.5 font-medium">
                             by {course.coach?.name || "Caissa Coach"}
                           </p>
+
+                          {course.category && (
+                            <div className="mt-2 inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-[10px] font-bold text-gray-600 border border-gray-200 uppercase tracking-wider">
+                              {course.category.name}
+                            </div>
+                          )}
 
                           {course.tags?.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-3">

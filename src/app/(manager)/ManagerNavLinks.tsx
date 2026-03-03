@@ -9,12 +9,14 @@ import {
   GraduationCap,
   CreditCard,
   ShieldCheck,
+  FolderOpen,
 } from "lucide-react";
 
 const navLinks = [
   { name: "Dashboard", href: "/manager/dashboard", icon: LayoutDashboard },
   { name: "Coaches", href: "/manager/coaches", icon: Users },
   { name: "Courses", href: "/manager/courses", icon: BookOpen },
+  { name: "Categories", href: "/manager/categories", icon: FolderOpen },
   { name: "Students", href: "/manager/students", icon: GraduationCap },
   { name: "Payments", href: "/manager/payments", icon: CreditCard },
   { name: "Enrollments", href: "/manager/enrollments", icon: BookOpen },

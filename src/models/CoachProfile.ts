@@ -11,7 +11,7 @@ export interface ICoachProfile extends Document {
   specializations: string[];
   coachAchievements: string[];
   playerAchievements: string[];
-  verificationStatus: "pending" | "approved" | "rejected";
+  verificationStatus: "pending" | "approved" | "rejected" | "paused";
   verificationNotes?: string;
   verifiedBy?: Types.ObjectId;
   verifiedAt?: Date;
@@ -65,7 +65,7 @@ const CoachProfileSchema = new Schema<ICoachProfile>(
     },
     verificationStatus: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
+      enum: ["pending", "approved", "rejected", "paused"],
       default: "pending",
     },
     verificationNotes: {

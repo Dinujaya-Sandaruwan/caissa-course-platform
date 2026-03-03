@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const level = searchParams.get("level") || "";
+    const category = searchParams.get("category") || "";
     const sort = searchParams.get("sort") || "newest";
     const cursor = searchParams.get("cursor") || "";
     const limit = 20;
@@ -24,6 +25,14 @@ export async function GET(request: NextRequest) {
 
     if (level && ["beginner", "intermediate", "advanced"].includes(level)) {
       query.level = level;
+    }
+
+    if (category) {
+      if (category === "none") {
+        query.category = null;
+      } else {
+        query.category = new Types.ObjectId(category);
+      }
     }
 
     // Cursor-based pagination
@@ -60,8 +69,9 @@ export async function GET(request: NextRequest) {
 
     const courses = await Course.find(query)
       .populate("coach", "name")
+      .populate("category", "name")
       .select(
-        "title thumbnailUrl previewVideoUrl price discountedPrice level enrollmentCount tags createdAt coach",
+        "title thumbnailUrl previewVideoUrl price discountedPrice level enrollmentCount tags createdAt coach category",
       )
       .sort(sortObj)
       .limit(limit + 1)

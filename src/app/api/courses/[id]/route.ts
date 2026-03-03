@@ -19,6 +19,7 @@ export async function GET(
       status: "published",
     })
       .populate("coach", "name bio")
+      .populate("category", "name")
       .lean();
 
     if (!course) {
@@ -55,6 +56,7 @@ export async function GET(
       title: course.title,
       description: course.description,
       price: course.price,
+      discountedPrice: course.discountedPrice,
       level: course.level,
       tags: course.tags,
       thumbnailUrl: course.thumbnailUrl,
@@ -62,6 +64,7 @@ export async function GET(
       enrollmentCount: course.enrollmentCount,
       createdAt: course.createdAt,
       coach: course.coach,
+      category: course.category,
       chapters: chaptersWithLessons,
     });
   } catch (error) {

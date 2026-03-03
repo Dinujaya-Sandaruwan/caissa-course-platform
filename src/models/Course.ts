@@ -14,6 +14,7 @@ export interface ICourse extends Document {
   discountedPrice?: number;
   level: "beginner" | "intermediate" | "advanced";
   tags: string[];
+  category?: Types.ObjectId;
   status:
     | "draft"
     | "pending_review"
@@ -87,6 +88,10 @@ const CourseSchema = new Schema<ICourse>(
     tags: {
       type: [String],
       default: [],
+    },
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
     },
     status: {
       type: String,

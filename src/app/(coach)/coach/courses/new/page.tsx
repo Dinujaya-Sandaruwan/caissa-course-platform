@@ -30,6 +30,7 @@ import {
   Sprout,
   Swords,
   Crown,
+  Folder,
   LucideIcon,
 } from "lucide-react";
 
@@ -40,6 +41,7 @@ interface CourseMetadata {
   description: string;
   price: string;
   level: CourseLevel;
+  category: string;
   tags: string[];
   thumbnailFile: File | null;
   tempThumbnailPath: string | null;
@@ -96,6 +98,7 @@ export default function CreateCoursePage() {
     description: "",
     price: "",
     level: "beginner",
+    category: "",
     tags: [],
     thumbnailFile: null,
     tempThumbnailPath: null,
@@ -114,6 +117,16 @@ export default function CreateCoursePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const [categories, setCategories] = useState<{ _id: string; name: string }[]>(
+    [],
+  );
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => setCategories(data))
+      .catch((err) => console.error("Failed to fetch categories:", err));
+  }, []);
 
   // Preview video state
   const [previewVideoFile, setPreviewVideoFile] = useState<File | null>(null);
@@ -348,6 +361,10 @@ export default function CreateCoursePage() {
       newErrors.price = "Price is required";
     } else if (isNaN(Number(metadata.price)) || Number(metadata.price) < 0) {
       newErrors.price = "Price must be a valid positive number";
+    }
+
+    if (!metadata.category) {
+      newErrors.category = "Please select a course category";
     }
 
     if (metadata.tags.length === 0) {
@@ -971,6 +988,7 @@ export default function CreateCoursePage() {
           description: metadata.description.trim(),
           price: Number(metadata.price),
           level: metadata.level,
+          category: metadata.category === "none" ? null : metadata.category,
           tags: metadata.tags,
           tempThumbnailPath: metadata.tempThumbnailPath,
           allowDiscounts: metadata.allowDiscounts,
@@ -1224,6 +1242,17 @@ export default function CreateCoursePage() {
                   })()}
                   {metadata.level}
                 </span>
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                Category
+              </p>
+              <p className="text-base font-semibold text-gray-900">
+                {metadata.category === "none"
+                  ? "General"
+                  : categories.find((c) => c._id === metadata.category)?.name ||
+                    "Not set"}
               </p>
             </div>
             <div>
@@ -2606,6 +2635,42 @@ export default function CreateCoursePage() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5 mt-6">
+                <Folder className="w-4 h-4 text-red-500" />
+                Course Category
+              </label>
+              <div className="relative">
+                <select
+                  value={metadata.category}
+                  onChange={(e) =>
+                    setMetadata({ ...metadata, category: e.target.value })
+                  }
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 text-sm font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 appearance-none"
+                >
+                  <option value="" disabled>
+                    Select a category
+                  </option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                  <option value="none">None of the above (General)</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                </div>
+              </div>
+              {errors.category && (
+                <p className="text-red-500 text-xs mt-1 font-medium flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {errors.category}
+                </p>
+              )}
             </div>
           </div>
         </div>

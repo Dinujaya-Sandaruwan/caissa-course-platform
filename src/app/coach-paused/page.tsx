@@ -1,12 +1,12 @@
 import { getSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Clock, ShieldCheck, ArrowRight } from "lucide-react";
+import { PauseCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import LogoutButton from "@/components/auth/LogoutButton";
 import { connectDB } from "@/lib/db";
 import CoachProfile from "@/models/CoachProfile";
 
-export default async function CoachPendingPage() {
+export default async function CoachPausedPage() {
   const session = await getSessionUser();
 
   if (!session) {
@@ -24,17 +24,15 @@ export default async function CoachPendingPage() {
     redirect("/coach/dashboard");
   }
 
-  if (coach && coach.verificationStatus === "paused") {
-    redirect("/coach-paused");
+  if (!coach || coach.verificationStatus !== "paused") {
+    redirect("/coach-pending");
   }
-
-  // Pending page will only show if verificationStatus is pending or rejected
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden">
       {/* Subtle Background Elements */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-red-100/40 rounded-full blur-3xl mix-blend-multiply pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-50/40 rounded-full blur-3xl mix-blend-multiply pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-50/40 rounded-full blur-3xl mix-blend-multiply pointer-events-none" />
       <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-[0.02] z-0">
         <svg
           viewBox="0 0 24 24"
@@ -69,33 +67,37 @@ export default async function CoachPendingPage() {
           <div className="p-12 md:p-16 text-center">
             {/* Animated Icon */}
             <div className="relative w-28 h-28 mx-auto mb-10">
-              <div className="absolute inset-0 bg-amber-100 rounded-[2rem] rotate-6 opacity-50 animate-pulse" />
-              <div className="absolute inset-0 bg-white rounded-[2rem] shadow-[0_10px_30px_rgba(245,158,11,0.15)] flex items-center justify-center border border-amber-50">
-                <Clock className="w-12 h-12 text-amber-500" strokeWidth={2.5} />
+              <div className="absolute inset-0 bg-red-100 rounded-[2rem] rotate-6 opacity-50 animate-pulse" />
+              <div className="absolute inset-0 bg-white rounded-[2rem] shadow-[0_10px_30px_rgba(239,68,68,0.15)] flex items-center justify-center border border-red-50">
+                <PauseCircle
+                  className="w-12 h-12 text-red-500"
+                  strokeWidth={2.5}
+                />
               </div>
             </div>
 
             <h1 className="text-4xl md:text-5xl font-black text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight mb-6">
-              Account Under Review
+              Account Paused
             </h1>
 
             <p className="text-lg md:text-xl text-gray-500 font-medium leading-relaxed mb-10 max-w-lg mx-auto">
-              Thank you for applying to teach at Caissa! Our team is currently
-              reviewing your application details and credentials.
+              Your coaching account has been temporarily paused by an
+              administrator. During this time, you will not be able to access
+              your dashboard or manage courses.
             </p>
 
             {/* Info Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 text-left">
               <div className="bg-slate-50/80 rounded-3xl p-6 border border-gray-100 transition-colors hover:bg-slate-50">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                    <ShieldCheck className="w-4 h-4 text-blue-600" />
+                  <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                    <PauseCircle className="w-4 h-4 text-red-600" />
                   </div>
                   <span className="text-sm font-bold text-gray-900 tracking-wide uppercase">
-                    Timeframe
+                    Status
                   </span>
                 </div>
-                <p className="text-gray-600 font-medium">Within 24-48 hours</p>
+                <p className="text-gray-600 font-medium">Temporarily Paused</p>
               </div>
 
               <div className="bg-slate-50/80 rounded-3xl p-6 border border-gray-100 transition-colors hover:bg-slate-50">
@@ -127,8 +129,8 @@ export default async function CoachPendingPage() {
 
             {/* Action Bar */}
             <div className="inline-flex items-center justify-center w-full px-8 py-4 bg-red-50 text-red-700 rounded-2xl font-bold text-sm">
-              We will notify you via WhatsApp as soon as your account is
-              approved.
+              If you believe this is a mistake, please contact the
+              administration via WhatsApp.
             </div>
 
             <div className="mt-10">

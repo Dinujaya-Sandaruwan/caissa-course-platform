@@ -27,6 +27,9 @@ export default async function CoachLayout({
   // Using /coach-pending instead of /coach/pending to avoid an infinite redirect loop
   const profile = await CoachProfile.findOne({ userId: user.userId }).lean();
   if (!profile || profile.verificationStatus !== "approved") {
+    if (profile?.verificationStatus === "paused") {
+      redirect("/coach-paused");
+    }
     redirect("/coach-pending");
   }
 

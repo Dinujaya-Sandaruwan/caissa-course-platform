@@ -45,6 +45,7 @@ interface CourseDetail {
   enrollmentCount: number;
   createdAt: string;
   coach?: { name?: string; bio?: string };
+  category?: { name?: string };
   chapters: Chapter[];
 }
 
@@ -206,11 +207,19 @@ export default function PublicCourseDetailPage() {
             {/* Left: Course Info */}
             <div className="lg:col-span-3 space-y-6">
               {/* Level Badge */}
-              <span
-                className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg border ${lc.text} ${lc.bg} ${lc.border}`}
-              >
-                {levelEmoji[course.level]} {course.level}
-              </span>
+              <div className="flex items-center gap-3">
+                <span
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg border ${lc.text} ${lc.bg} ${lc.border}`}
+                >
+                  {levelEmoji[course.level]} {course.level}
+                </span>
+
+                {course.category && (
+                  <span className="inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-lg border border-gray-200 bg-gray-50 text-gray-700 uppercase tracking-wider">
+                    {course.category.name}
+                  </span>
+                )}
+              </div>
 
               <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight leading-tight">
                 {course.title}

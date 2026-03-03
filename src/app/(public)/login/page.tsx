@@ -65,6 +65,11 @@ function LoginContent() {
         router.push(callbackUrl);
       } else if (
         data.role === "coach" &&
+        data.verificationStatus === "paused"
+      ) {
+        router.push("/coach-paused");
+      } else if (
+        data.role === "coach" &&
         data.verificationStatus === "pending"
       ) {
         router.push("/coach-pending");

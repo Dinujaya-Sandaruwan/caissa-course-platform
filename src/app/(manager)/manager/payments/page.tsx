@@ -263,7 +263,7 @@ export default function ManagerPaymentsPage() {
               placeholder="Search by name or number..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:w-80 pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
+              className="w-full sm:w-80 pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
             />
           </div>
         </div>
