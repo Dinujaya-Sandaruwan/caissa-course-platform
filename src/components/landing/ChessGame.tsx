@@ -99,9 +99,14 @@ type GameStatus =
 
 export default function ChessGame() {
   // ─── Random coach selection (once on mount) ────────────────────────────
-  const [coach] = useState<Coach>(
-    () => coachesData[Math.floor(Math.random() * coachesData.length)] as Coach,
-  );
+  // ─── Random coach selection (once on mount) ────────────────────────────
+  const [coach, setCoach] = useState<Coach>(coachesData[0] as Coach);
+
+  useEffect(() => {
+    setCoach(
+      coachesData[Math.floor(Math.random() * coachesData.length)] as Coach,
+    );
+  }, []);
 
   const gameRef = useRef(new Chess());
   const [gameFen, setGameFen] = useState(gameRef.current.fen());

@@ -5,6 +5,7 @@ const footerLinks = {
   platform: {
     title: "Platform",
     links: [
+      { label: "Our Courses", href: "/courses" },
       { label: "Browse Courses", href: "/courses" },
       { label: "Our Coaches", href: "/coaches" },
       { label: "About Us", href: "/about" },
