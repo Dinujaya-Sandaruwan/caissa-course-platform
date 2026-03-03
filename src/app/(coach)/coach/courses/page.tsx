@@ -144,26 +144,20 @@ export default function CoachCoursesPage() {
   }
 
   return (
-    <div className="space-y-8 animate-[fade-in-up_0.4s_ease-out]">
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8 animate-[fade-in-up_0.4s_ease-out]">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5 relative overflow-hidden">
-        <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-red-500 to-red-300 rounded-r-full" />
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-            <BookOpen className="w-5 h-5 text-red-500" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight leading-tight">
-              My Courses
-            </h1>
-            <p className="text-gray-400 text-sm font-medium mt-0.5">
-              Manage and track all your courses
-            </p>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
+            My Courses
+          </h1>
+          <p className="text-gray-500 mt-2 font-medium">
+            Manage and track all your courses
+          </p>
         </div>
         <Link
           href="/coach/courses/new"
-          className="group flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 shadow-lg shadow-red-600/20 transition-all duration-200 hover:-translate-y-0.5 shrink-0"
+          className="group flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 shadow-[0_4px_14px_0_rgba(220,38,38,0.39)] hover:shadow-[0_6px_20px_rgba(220,38,38,0.23)] transition-all duration-200 hover:-translate-y-0.5 shrink-0"
         >
           <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
           Create New Course
@@ -194,7 +188,7 @@ export default function CoachCoursesPage() {
       )}
 
       {/* Course Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {courses.map((course) => {
           const status = statusConfig[course.status] || statusConfig.draft;
           const StatusIcon: LucideIcon = status.icon;

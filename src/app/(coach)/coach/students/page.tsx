@@ -101,21 +101,15 @@ export default function CoachStudentsPage() {
   const selectedCourseData = courses.find((c) => c._id === selectedCourse);
 
   return (
-    <div className="space-y-10 relative z-10">
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8 animate-[fade-in-up_0.4s_ease-out]">
       {/* Page Header */}
-      <div className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5 relative overflow-hidden">
-        <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-blue-500 to-blue-300 rounded-r-full" />
-        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-          <Users className="w-5 h-5 text-blue-500" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight leading-tight">
-            My Students
-          </h1>
-          <p className="text-gray-400 text-sm font-medium mt-0.5">
-            View enrolled students across your courses
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
+          My Students
+        </h1>
+        <p className="text-gray-500 mt-2 font-medium">
+          View enrolled students across your courses
+        </p>
       </div>
 
       {/* No Published Courses */}
@@ -145,7 +139,7 @@ export default function CoachStudentsPage() {
               <select
                 value={selectedCourse}
                 onChange={(e) => setSelectedCourse(e.target.value)}
-                className="appearance-none w-full px-5 py-3.5 rounded-2xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 text-base font-semibold transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 cursor-pointer pr-12"
+                className="appearance-none w-full px-5 py-3.5 bg-white border border-gray-200 shadow-sm rounded-xl text-gray-900 font-medium placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all cursor-pointer pr-12"
               >
                 {courses.map((course) => (
                   <option key={course._id} value={course._id}>
