@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
 
     let totalOwedToCoaches = 0;
     let totalPlatformRevenue = 0;
+    let developerCut = 0;
 
     // Dictionary to group pending amounts by coach
     const coachesMap: Record<
@@ -53,6 +54,10 @@ export async function GET(req: NextRequest) {
 
       totalPlatformRevenue += platformCut;
 
+      if (enrollment.developerPayoutStatus === "pending") {
+        developerCut += platformCut * 0.05;
+      }
+
       const coach = course.coach;
       const coachIdStr = coach._id.toString();
 
@@ -73,8 +78,6 @@ export async function GET(req: NextRequest) {
         coachesMap[coachIdStr].unpaidEnrollments += 1;
       }
     });
-
-    const developerCut = totalPlatformRevenue * 0.05; // 5% of platform revenue
 
     // Convert the dictionary map to a flat array for the frontend table
     const coachBreakdowns = Object.values(coachesMap).sort(

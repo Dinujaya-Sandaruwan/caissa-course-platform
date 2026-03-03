@@ -13,6 +13,8 @@ export interface IEnrollment extends Document {
   enrolledAt?: Date;
   coachPayoutStatus: "pending" | "paid";
   coachPaidAt?: Date;
+  developerPayoutStatus: "pending" | "paid";
+  developerPaidAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -68,6 +70,15 @@ const EnrollmentSchema = new Schema<IEnrollment>(
     coachPaidAt: {
       type: Date,
     },
+    developerPayoutStatus: {
+      type: String,
+      enum: ["pending", "paid"],
+      default: "pending",
+      index: true,
+    },
+    developerPaidAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
@@ -76,6 +87,7 @@ const EnrollmentSchema = new Schema<IEnrollment>(
 
 EnrollmentSchema.index({ studentId: 1, courseId: 1 });
 EnrollmentSchema.index({ coachPayoutStatus: 1, paymentStatus: 1 });
+EnrollmentSchema.index({ developerPayoutStatus: 1, paymentStatus: 1 });
 
 const Enrollment: Model<IEnrollment> =
   mongoose.models.Enrollment ||

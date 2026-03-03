@@ -38,6 +38,7 @@ export default function ManagerPaymentsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [isPayingDeveloper, setIsPayingDeveloper] = useState(false);
 
   const fetchPaymentsData = async () => {
     try {
@@ -87,6 +88,35 @@ export default function ManagerPaymentsPage() {
       toast.error(`Failed to process payout for ${coachName}`);
     } finally {
       setProcessingId(null);
+    }
+  };
+
+  const handleDeveloperPayout = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to mark the developer cut as Paid? This will reset the pending developer balance to zero.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setIsPayingDeveloper(true);
+      const res = await fetch("/api/manager/payments/pay-developer", {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        throw new Error("Developer payout transaction failed");
+      }
+
+      toast.success("Successfully processed developer payout");
+      await fetchPaymentsData();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to process developer payout");
+    } finally {
+      setIsPayingDeveloper(false);
     }
   };
 
@@ -169,7 +199,7 @@ export default function ManagerPaymentsPage() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm font-medium text-blue-600 mb-1">
-                Developer Cut (5%)
+                Pending Developer Cut
               </p>
               <h3 className="text-3xl font-bold text-gray-900 tracking-tight">
                 Rs.{" "}
@@ -184,9 +214,35 @@ export default function ManagerPaymentsPage() {
           </div>
           <p className="text-xs text-blue-500 mt-4 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" />
-            Agreed Lifetime Cut
+            Accrued Unpaid Cut (5%)
           </p>
         </div>
+      </div>
+
+      {/* Developer Payout Execution Container */}
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">Developer Payouts</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Execute payments to clear the pending developer cut balance.
+          </p>
+        </div>
+        <button
+          onClick={handleDeveloperPayout}
+          disabled={
+            !data?.summary.developerCut ||
+            data.summary.developerCut === 0 ||
+            isPayingDeveloper
+          }
+          className="inline-flex items-center justify-center px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-100 disabled:text-blue-400 text-white text-sm font-semibold rounded-xl transition-all shadow-sm active:scale-95 whitespace-nowrap"
+        >
+          {isPayingDeveloper ? (
+            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          ) : (
+            <Wallet className="w-4 h-4 mr-2" />
+          )}
+          {isPayingDeveloper ? "Processing..." : "Pay Developer"}
+        </button>
       </div>
 
       {/* Filter and Table Box */}
