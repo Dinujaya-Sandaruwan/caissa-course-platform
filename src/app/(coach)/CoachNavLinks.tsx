@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, BookOpen, PlusSquare, Users } from "lucide-react";
+import {
+  LayoutDashboard,
+  BookOpen,
+  PlusSquare,
+  Users,
+  CreditCard,
+} from "lucide-react";
 
 export default function CoachNavLinks() {
   const pathname = usePathname();
@@ -12,6 +18,7 @@ export default function CoachNavLinks() {
     { name: "My Courses", href: "/coach/courses", icon: BookOpen },
     { name: "Create Course", href: "/coach/courses/new", icon: PlusSquare },
     { name: "Students", href: "/coach/students", icon: Users },
+    { name: "Billing", href: "/coach/billing", icon: CreditCard },
   ];
 
   return (

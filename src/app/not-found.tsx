@@ -84,13 +84,13 @@ export default function NotFound() {
         </div>
 
         {/* Go back link */}
-        <button
-          onClick={() => history.back()}
+        <Link
+          href="/"
           className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
-          Go back to previous page
-        </button>
+          Return to platform
+        </Link>
 
         {/* Fun footer */}
         <p className="mt-16 text-xs text-gray-300 font-medium">

@@ -11,6 +11,8 @@ export interface IEnrollment extends Document {
   reviewedBy?: Types.ObjectId;
   reviewedAt?: Date;
   enrolledAt?: Date;
+  coachPayoutStatus: "pending" | "paid";
+  coachPaidAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,6 +59,15 @@ const EnrollmentSchema = new Schema<IEnrollment>(
     enrolledAt: {
       type: Date,
     },
+    coachPayoutStatus: {
+      type: String,
+      enum: ["pending", "paid"],
+      default: "pending",
+      index: true,
+    },
+    coachPaidAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
@@ -64,6 +75,7 @@ const EnrollmentSchema = new Schema<IEnrollment>(
 );
 
 EnrollmentSchema.index({ studentId: 1, courseId: 1 });
+EnrollmentSchema.index({ coachPayoutStatus: 1, paymentStatus: 1 });
 
 const Enrollment: Model<IEnrollment> =
   mongoose.models.Enrollment ||
