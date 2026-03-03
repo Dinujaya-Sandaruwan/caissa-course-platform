@@ -6,6 +6,32 @@ import { connectDB } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import User from "@/models/User";
 
+export async function GET() {
+  try {
+    const session = await getSessionUser();
+    if (!session || session.role !== "student") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+    const user = await User.findById(session.userId)
+      .select("name nickname email whatsappNumber profilePhotoThumbnail")
+      .lean();
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ user });
+  } catch (error) {
+    console.error("Failed to fetch student profile:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
 export async function PUT(request: NextRequest) {
   try {
     const session = await getSessionUser();

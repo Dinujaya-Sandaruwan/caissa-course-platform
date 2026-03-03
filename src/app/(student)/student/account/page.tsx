@@ -61,7 +61,7 @@ export default function StudentAccountPage() {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch("/api/student/dashboard"); // Re-using dashboard logic since it returns the user
+      const res = await fetch("/api/student/profile");
       if (!res.ok) throw new Error("Failed to load profile");
       const data = await res.json();
 
