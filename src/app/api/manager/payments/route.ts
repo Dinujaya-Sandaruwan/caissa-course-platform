@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Enrollment from "@/models/Enrollment";
+import CoachProfile from "@/models/CoachProfile";
 
 export async function GET(req: NextRequest) {
   try {
@@ -40,6 +41,12 @@ export async function GET(req: NextRequest) {
         profilePictureThumbnail?: string;
         pendingAmount: number;
         unpaidEnrollments: number;
+        bankDetails?: {
+          accountOwnerName: string;
+          bankName: string;
+          bankLocation: string;
+          accountNumber: string;
+        };
       }
     > = {};
 
@@ -87,10 +94,25 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // Convert the dictionary map to a flat array for the frontend table
-    const coachBreakdowns = Object.values(coachesMap).sort(
-      (a, b) => b.pendingAmount - a.pendingAmount,
-    );
+    const coachBreakdowns = Object.values(coachesMap);
+    const coachIdsArray = coachBreakdowns.map((c) => c.coachId);
+
+    const coachProfiles = await CoachProfile.find({
+      userId: { $in: coachIdsArray },
+    })
+      .select("userId bankDetails")
+      .lean();
+
+    coachBreakdowns.forEach((coach) => {
+      const profileInfo = coachProfiles.find(
+        (p) => p.userId.toString() === coach.coachId,
+      );
+      if (profileInfo && profileInfo.bankDetails) {
+        coach.bankDetails = profileInfo.bankDetails;
+      }
+    });
+
+    coachBreakdowns.sort((a, b) => b.pendingAmount - a.pendingAmount);
 
     return NextResponse.json({
       summary: {

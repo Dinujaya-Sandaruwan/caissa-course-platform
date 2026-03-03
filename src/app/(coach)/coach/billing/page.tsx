@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Save,
+  Building2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -33,6 +35,13 @@ interface BillingData {
 export default function CoachBillingPage() {
   const [data, setData] = useState<BillingData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [bankDetails, setBankDetails] = useState({
+    accountOwnerName: "",
+    bankName: "",
+    bankLocation: "",
+    accountNumber: "",
+  });
+  const [isSavingBank, setIsSavingBank] = useState(false);
 
   const fetchBillingData = async () => {
     try {
@@ -42,6 +51,9 @@ export default function CoachBillingPage() {
 
       const json = await res.json();
       setData(json);
+      if (json.bankDetails) {
+        setBankDetails(json.bankDetails);
+      }
     } catch (error) {
       console.error(error);
       toast.error("Failed to load your billing analytics.");
@@ -53,6 +65,26 @@ export default function CoachBillingPage() {
   useEffect(() => {
     fetchBillingData();
   }, []);
+
+  const handleSaveBankDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingBank(true);
+    try {
+      const res = await fetch("/api/coach/billing/bank", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bankDetails),
+      });
+
+      if (!res.ok) throw new Error("Failed to save bank details");
+      toast.success("Bank details saved successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to save bank details");
+    } finally {
+      setIsSavingBank(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -220,6 +252,115 @@ export default function CoachBillingPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Bank Account Details Form */}
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-6 border-b border-gray-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100">
+            <Building2 className="w-5 h-5 text-gray-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Payout Details</h2>
+            <p className="text-sm text-gray-500">
+              Provide your bank account information to receive your earnings.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSaveBankDetails} className="p-6 md:p-8 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Account Owner Name
+              </label>
+              <input
+                type="text"
+                placeholder="Name on bank account"
+                value={bankDetails.accountOwnerName}
+                onChange={(e) =>
+                  setBankDetails({
+                    ...bankDetails,
+                    accountOwnerName: e.target.value,
+                  })
+                }
+                required
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Account Number
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. 100010001000"
+                value={bankDetails.accountNumber}
+                onChange={(e) =>
+                  setBankDetails({
+                    ...bankDetails,
+                    accountNumber: e.target.value,
+                  })
+                }
+                required
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Bank Name
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Commercial Bank"
+                value={bankDetails.bankName}
+                onChange={(e) =>
+                  setBankDetails({ ...bankDetails, bankName: e.target.value })
+                }
+                required
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Bank Branch / Location
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Colombo Main Branch"
+                value={bankDetails.bankLocation}
+                onChange={(e) =>
+                  setBankDetails({
+                    ...bankDetails,
+                    bankLocation: e.target.value,
+                  })
+                }
+                required
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4 border-t border-gray-100">
+            <button
+              type="submit"
+              disabled={isSavingBank}
+              className="inline-flex items-center justify-center px-6 py-3 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-200 disabled:text-gray-500 text-white text-sm font-bold rounded-xl transition-all shadow-sm active:scale-95 min-w-[140px]"
+            >
+              {isSavingBank ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Details
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

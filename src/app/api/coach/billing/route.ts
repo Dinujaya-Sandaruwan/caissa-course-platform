@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
 import Enrollment from "@/models/Enrollment";
+import CoachProfile from "@/models/CoachProfile";
 
 export async function GET(req: NextRequest) {
   try {
@@ -96,6 +97,10 @@ export async function GET(req: NextRequest) {
       (a, b) => b.revenueGenerated - a.revenueGenerated,
     );
 
+    const coachProfile = await CoachProfile.findOne({ userId: session.userId })
+      .select("bankDetails")
+      .lean();
+
     return NextResponse.json({
       summary: {
         lifetimeRevenue,
@@ -103,6 +108,7 @@ export async function GET(req: NextRequest) {
         totalEnrolledStudents,
       },
       courseBreakdowns,
+      bankDetails: coachProfile?.bankDetails || null,
     });
   } catch (error) {
     console.error("Error fetching coach billing analytics:", error);

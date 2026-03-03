@@ -15,6 +15,12 @@ export interface ICoachProfile extends Document {
   verificationNotes?: string;
   verifiedBy?: Types.ObjectId;
   verifiedAt?: Date;
+  bankDetails?: {
+    accountOwnerName: string;
+    bankName: string;
+    bankLocation: string;
+    accountNumber: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -77,6 +83,12 @@ const CoachProfileSchema = new Schema<ICoachProfile>(
     },
     verifiedAt: {
       type: Date,
+    },
+    bankDetails: {
+      accountOwnerName: { type: String, trim: true },
+      bankName: { type: String, trim: true },
+      bankLocation: { type: String, trim: true },
+      accountNumber: { type: String, trim: true },
     },
   },
   {

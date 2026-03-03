@@ -12,6 +12,8 @@ import {
   User,
   Phone,
   X,
+  Copy,
+  Building2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -23,6 +25,12 @@ interface CoachBreakdown {
   profilePictureThumbnail?: string;
   pendingAmount: number;
   unpaidEnrollments: number;
+  bankDetails?: {
+    accountOwnerName: string;
+    bankName: string;
+    bankLocation: string;
+    accountNumber: string;
+  };
 }
 
 interface PaymentSummary {
@@ -44,6 +52,16 @@ export default function ManagerPaymentsPage() {
   const [isPayingDeveloper, setIsPayingDeveloper] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
+  const [coachPayoutModal, setCoachPayoutModal] =
+    useState<CoachBreakdown | null>(null);
+  const [developerPayoutModalOpen, setDeveloperPayoutModalOpen] =
+    useState(false);
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard`);
+  };
+
   const fetchPaymentsData = async () => {
     try {
       setLoading(true);
@@ -64,46 +82,38 @@ export default function ManagerPaymentsPage() {
     fetchPaymentsData();
   }, []);
 
-  const handlePayout = async (coachId: string, coachName: string) => {
-    if (
-      !confirm(
-        `Are you sure you want to mark ${coachName} as Paid? This will trigger a WhatsApp notification and reset their pending balance to zero.`,
-      )
-    ) {
-      return;
-    }
-
+  const executeCoachPayout = async () => {
+    if (!coachPayoutModal) return;
     try {
-      setProcessingId(coachId);
+      setProcessingId(coachPayoutModal.coachId);
       const res = await fetch("/api/manager/payments/payout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coachId }),
+        body: JSON.stringify({ coachId: coachPayoutModal.coachId }),
       });
 
       if (!res.ok) {
         throw new Error("Payout transaction failed");
       }
 
-      toast.success(`Successfully processed payout for ${coachName}`);
-      await fetchPaymentsData(); // Refresh the data grid
+      toast.success(
+        `Successfully processed payout for ${coachPayoutModal.name}`,
+      );
+      setCoachPayoutModal(null);
+      await fetchPaymentsData();
     } catch (error) {
       console.error(error);
-      toast.error(`Failed to process payout for ${coachName}`);
+      toast.error(`Failed to process payout for ${coachPayoutModal.name}`);
     } finally {
       setProcessingId(null);
     }
   };
 
-  const handleDeveloperPayout = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to mark the developer cut as Paid? This will reset the pending developer balance to zero.",
-      )
-    ) {
-      return;
-    }
+  const handleDeveloperPayout = () => {
+    setDeveloperPayoutModalOpen(true);
+  };
 
+  const executeDeveloperPayout = async () => {
     try {
       setIsPayingDeveloper(true);
       const res = await fetch("/api/manager/payments/pay-developer", {
@@ -115,6 +125,7 @@ export default function ManagerPaymentsPage() {
       }
 
       toast.success("Successfully processed developer payout");
+      setDeveloperPayoutModalOpen(false);
       await fetchPaymentsData();
     } catch (error) {
       console.error(error);
@@ -358,7 +369,7 @@ export default function ManagerPaymentsPage() {
                   </td>
                   <td className="py-4 px-6 text-right">
                     <button
-                      onClick={() => handlePayout(row.coachId, row.name)}
+                      onClick={() => setCoachPayoutModal(row)}
                       disabled={
                         row.pendingAmount === 0 || processingId === row.coachId
                       }
@@ -388,12 +399,12 @@ export default function ManagerPaymentsPage() {
       {/* Image Preview Modal */}
       {previewImage && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 animate-in fade-in duration-200"
           onClick={() => setPreviewImage(null)}
         >
           <div
             className="relative max-w-xl w-full flex items-center justify-center animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()} // Prevent clicking the image from closing
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setPreviewImage(null)}
@@ -406,6 +417,363 @@ export default function ManagerPaymentsPage() {
               alt="Profile Picture"
               className="w-full max-h-[85vh] object-cover rounded-2xl shadow-2xl"
             />
+          </div>
+        </div>
+      )}
+
+      {/* Developer Payout Modal */}
+      {developerPayoutModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl ring-1 ring-gray-900/10 p-6 sm:p-8">
+            <div className="flex justify-between items-start mb-6 border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center border border-blue-100">
+                  <Wallet className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Developer Payout
+                  </h3>
+                  <p className="text-sm font-medium text-gray-500">
+                    Pay the accrued platform maintenance fee.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDeveloperPayoutModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-full p-2 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-8 bg-gray-50/50 p-5 rounded-2xl border border-gray-100">
+              <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                    Account Owner
+                  </p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {process.env.NEXT_PUBLIC_DEVELOPER_BANK_ACCOUNT_NAME || "-"}
+                  </p>
+                </div>
+                <button
+                  onClick={() =>
+                    handleCopy(
+                      process.env.NEXT_PUBLIC_DEVELOPER_BANK_ACCOUNT_NAME || "",
+                      "Account Owner",
+                    )
+                  }
+                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Copy Account Owner"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                    Bank Name
+                  </p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {process.env.NEXT_PUBLIC_DEVELOPER_BANK_NAME || "-"}
+                  </p>
+                </div>
+                <button
+                  onClick={() =>
+                    handleCopy(
+                      process.env.NEXT_PUBLIC_DEVELOPER_BANK_NAME || "",
+                      "Bank Name",
+                    )
+                  }
+                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Copy Bank Name"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                    Branch
+                  </p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {process.env.NEXT_PUBLIC_DEVELOPER_BANK_BRANCH || "-"}
+                  </p>
+                </div>
+                <button
+                  onClick={() =>
+                    handleCopy(
+                      process.env.NEXT_PUBLIC_DEVELOPER_BANK_BRANCH || "",
+                      "Branch",
+                    )
+                  }
+                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Copy Branch"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                    Account Number
+                  </p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {process.env.NEXT_PUBLIC_DEVELOPER_BANK_ACCOUNT_NUMBER ||
+                      "-"}
+                  </p>
+                </div>
+                <button
+                  onClick={() =>
+                    handleCopy(
+                      process.env.NEXT_PUBLIC_DEVELOPER_BANK_ACCOUNT_NUMBER ||
+                        "",
+                      "Account Number",
+                    )
+                  }
+                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Copy Account Number"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="pt-2 text-center">
+                <button
+                  onClick={() =>
+                    handleCopy(
+                      `Developer Payment Details:\nAccount Owner: ${process.env.NEXT_PUBLIC_DEVELOPER_BANK_ACCOUNT_NAME}\nBank Name: ${process.env.NEXT_PUBLIC_DEVELOPER_BANK_NAME}\nBranch: ${process.env.NEXT_PUBLIC_DEVELOPER_BANK_BRANCH}\nAccount Number: ${process.env.NEXT_PUBLIC_DEVELOPER_BANK_ACCOUNT_NUMBER}\nAmount: Rs. ${data?.summary.developerCut}`,
+                      "All Developer Bank Details",
+                    )
+                  }
+                  className="inline-flex justify-center items-center py-2 px-4 text-xs font-bold text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors w-full"
+                >
+                  <Copy className="w-3.5 h-3.5 mr-2" /> Copy All Details
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-2xl mb-6">
+              <p className="text-sm text-blue-700 text-center font-medium">
+                Please transfer{" "}
+                <strong className="font-extrabold text-blue-900">
+                  Rs. {data?.summary.developerCut.toLocaleString()}
+                </strong>{" "}
+                before confirming.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeveloperPayoutModalOpen(false)}
+                className="flex-1 py-3 text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeDeveloperPayout}
+                disabled={isPayingDeveloper}
+                className="flex-1 py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors flex justify-center items-center shadow-sm"
+              >
+                {isPayingDeveloper ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Confirm Paid"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Coach Payout Modal */}
+      {coachPayoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl ring-1 ring-gray-900/10 p-6 sm:p-8">
+            <div className="flex justify-between items-start mb-6 border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-red-100 shrink-0">
+                  {coachPayoutModal.profilePictureThumbnail ||
+                  coachPayoutModal.profilePicture ? (
+                    <img
+                      src={
+                        coachPayoutModal.profilePictureThumbnail ||
+                        coachPayoutModal.profilePicture
+                      }
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-red-100 flex items-center justify-center text-red-600 font-bold text-xl">
+                      {coachPayoutModal.name.charAt(0)}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Payout: {coachPayoutModal.name}
+                  </h3>
+                  <p className="text-sm font-medium text-gray-500">
+                    {coachPayoutModal.unpaidEnrollments} Pending Enrollments
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setCoachPayoutModal(null)}
+                className="text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-full p-2 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {coachPayoutModal.bankDetails ? (
+              <div className="space-y-4 mb-8 bg-gray-50/50 p-5 rounded-2xl border border-gray-100">
+                <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Account Owner
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {coachPayoutModal.bankDetails.accountOwnerName}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      handleCopy(
+                        coachPayoutModal.bankDetails?.accountOwnerName || "",
+                        "Account Owner",
+                      )
+                    }
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Copy Name"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Bank Name
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {coachPayoutModal.bankDetails.bankName}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      handleCopy(
+                        coachPayoutModal.bankDetails?.bankName || "",
+                        "Bank Name",
+                      )
+                    }
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Copy Bank Name"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Branch
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {coachPayoutModal.bankDetails.bankLocation}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      handleCopy(
+                        coachPayoutModal.bankDetails?.bankLocation || "",
+                        "Branch",
+                      )
+                    }
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Copy Branch"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Account Number
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {coachPayoutModal.bankDetails.accountNumber}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      handleCopy(
+                        coachPayoutModal.bankDetails?.accountNumber || "",
+                        "Account Number",
+                      )
+                    }
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Copy Account Number"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="pt-2 text-center">
+                  <button
+                    onClick={() =>
+                      handleCopy(
+                        `Payment Details for ${coachPayoutModal.name}:\nAccount Owner: ${coachPayoutModal.bankDetails?.accountOwnerName}\nBank Name: ${coachPayoutModal.bankDetails?.bankName}\nBranch: ${coachPayoutModal.bankDetails?.bankLocation}\nAccount Number: ${coachPayoutModal.bankDetails?.accountNumber}\nAmount: Rs. ${coachPayoutModal.pendingAmount}`,
+                        "All Coach Bank Details",
+                      )
+                    }
+                    className="inline-flex justify-center items-center py-2 px-4 text-xs font-bold text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-colors w-full"
+                  >
+                    <Copy className="w-3.5 h-3.5 mr-2" /> Copy All Details
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="mb-8 p-6 text-center bg-gray-50 rounded-2xl border border-gray-100">
+                <Building2 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-900 font-bold mb-1">
+                  No Bank Details Provided
+                </p>
+                <p className="text-sm text-gray-500">
+                  This coach has not updated their bank account on the billing
+                  portal. Please contact them outside the platform.
+                </p>
+              </div>
+            )}
+
+            <div className="bg-red-50 p-4 rounded-2xl mb-6">
+              <p className="text-sm text-red-700 text-center font-medium">
+                Please transfer{" "}
+                <strong className="font-extrabold text-red-900">
+                  Rs. {coachPayoutModal.pendingAmount.toLocaleString()}
+                </strong>{" "}
+                before confirming.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setCoachPayoutModal(null)}
+                className="flex-1 py-3 text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeCoachPayout}
+                disabled={processingId === coachPayoutModal.coachId}
+                className="flex-1 py-3 text-sm font-bold text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 rounded-xl transition-colors flex justify-center items-center shadow-sm"
+              >
+                {processingId === coachPayoutModal.coachId ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Confirm Paid"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
