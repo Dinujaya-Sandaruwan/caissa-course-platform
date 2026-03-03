@@ -1,90 +1,96 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
-  Clock,
   Users,
-  Star,
   ChevronRight,
   Sparkles,
-  Crown,
-  Target,
-  Zap,
+  BookOpen,
+  Loader2,
+  Clock,
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
-const courses = [
-  {
-    title: "Opening Principles for Beginners",
-    coach: "GM Arjun Sharma",
-    level: "Beginner",
-    levelColor:
-      "bg-success-green/10 text-success-green border-success-green/20",
-    price: "Rs. 5,900",
-    students: 142,
-    rating: 4.9,
-    lessons: 24,
-    duration: "6h 30m",
-    icon: Target,
-    thumbnail: "/images/course-opening-principles.png",
-    gradient: "from-emerald-500/20 to-teal-500/10",
-    accentColor: "group-hover:shadow-success-green/20",
-    description:
-      "Master the fundamentals of chess openings with solid principles that will transform your early game.",
+interface FeaturedCourse {
+  _id: string;
+  title: string;
+  thumbnailUrl?: string;
+  price: number;
+  discountedPrice?: number;
+  level: string;
+  enrollmentCount: number;
+  tags: string[];
+  coach?: { name?: string; profilePhotoThumbnail?: string };
+  category?: { name?: string };
+  durationHours?: number;
+  durationMinutes?: number;
+}
+
+const levelStyles: Record<
+  string,
+  { label: string; color: string; bg: string; emoji: string }
+> = {
+  beginner: {
+    label: "Beginner",
+    color: "text-emerald-700",
+    bg: "bg-emerald-50 border-emerald-200",
+    emoji: "🌱",
   },
-  {
-    title: "Sicilian Defense Masterclass",
-    coach: "IM Kavitha Perera",
-    level: "Intermediate",
-    levelColor: "bg-info-blue/10 text-info-blue border-info-blue/20",
-    price: "Rs. 9,900",
-    students: 89,
-    rating: 4.8,
-    lessons: 32,
-    duration: "9h 15m",
-    icon: Zap,
-    thumbnail: "/images/course-sicilian-defense.png",
-    gradient: "from-blue-500/20 to-indigo-500/10",
-    accentColor: "group-hover:shadow-info-blue/20",
-    description:
-      "Deep dive into the most popular and aggressive response to 1.e4. Learn all major variations.",
+  intermediate: {
+    label: "Intermediate",
+    color: "text-amber-700",
+    bg: "bg-amber-50 border-amber-200",
+    emoji: "⚔️",
   },
-  {
-    title: "Endgame Essentials",
-    coach: "GM Rajesh Kumar",
-    level: "Intermediate",
-    levelColor: "bg-info-blue/10 text-info-blue border-info-blue/20",
-    price: "Rs. 7,500",
-    students: 210,
-    rating: 4.9,
-    lessons: 28,
-    duration: "7h 45m",
-    icon: Crown,
-    thumbnail: "/images/course-endgame.png",
-    gradient: "from-purple-500/20 to-pink-500/10",
-    accentColor: "group-hover:shadow-purple/20",
-    description:
-      "Convert winning positions into victories. King & pawn endings, rook endings, and key techniques.",
+  advanced: {
+    label: "Advanced",
+    color: "text-red-700",
+    bg: "bg-red-50 border-red-200",
+    emoji: "👑",
   },
-  {
-    title: "Advanced Tactical Patterns",
-    coach: "GM Nimal Fernando",
-    level: "Advanced",
-    levelColor:
-      "bg-warning-orange/10 text-warning-orange border-warning-orange/20",
-    price: "Rs. 12,500",
-    students: 64,
-    rating: 5.0,
-    lessons: 40,
-    duration: "12h 00m",
-    icon: Sparkles,
-    thumbnail: "/images/course-tactics.png",
-    gradient: "from-orange-500/20 to-red-500/10",
-    accentColor: "group-hover:shadow-warning-orange/20",
-    description:
-      "Sharpen your tactical vision with complex combinations, sacrifices, and attacking motifs.",
-  },
-];
+};
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+function formatDuration(hours?: number, minutes?: number): string | null {
+  const h = hours || 0;
+  const m = minutes || 0;
+  if (h === 0 && m === 0) return null;
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
 
 export default function FeaturedCourses() {
+  const [courses, setCourses] = useState<FeaturedCourse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        const res = await fetch("/api/courses?sort=popular");
+        if (res.ok) {
+          const data = await res.json();
+          const pool: FeaturedCourse[] = data.courses || [];
+          const picked = shuffleArray(pool).slice(0, 4);
+          setCourses(picked);
+        }
+      } catch (error) {
+        console.error("Failed to fetch featured courses:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCourses();
+  }, []);
+
   return (
     <section className="relative bg-gray-50 py-20 lg:py-28 overflow-hidden">
       {/* Decorative Background Elements */}
@@ -113,105 +119,176 @@ export default function FeaturedCourses() {
           </p>
         </div>
 
-        {/* Course Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8">
-          {courses.map((course, index) => (
-            <div
-              key={course.title}
-              className={`group relative bg-white rounded-3xl border border-gray-200/80 shadow-sm hover:shadow-2xl ${course.accentColor} transition-all duration-500 hover:-translate-y-2 flex flex-col`}
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {/* Thumbnail Area */}
-              <div className="relative h-48 rounded-t-3xl overflow-hidden">
-                <Image
-                  src={course.thumbnail}
-                  alt={course.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
-                />
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+          </div>
+        )}
 
-                {/* Gradient overlay for readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
-
-                {/* Level Badge */}
-                <div
-                  className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-bold border ${course.levelColor} backdrop-blur-sm bg-white/80`}
-                >
-                  {course.level}
-                </div>
-
-                {/* Price Badge */}
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm">
-                  <span className="font-heading font-extrabold text-gray-900 text-xs">
-                    {course.price}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card Content */}
-              <div className="p-6 flex flex-col flex-1">
-                {/* Coach Info */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600 border border-gray-200">
-                    {course.coach
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </div>
-                  <span className="text-sm text-gray-500 font-medium">
-                    {course.coach}
-                  </span>
-                </div>
-
-                {/* Title */}
-                <h3 className="font-heading font-bold text-lg text-gray-900 mb-2 leading-snug group-hover:text-primary-red transition-colors duration-300">
-                  {course.title}
-                </h3>
-
-                {/* Description */}
-                <p className="text-sm text-gray-500 leading-relaxed mb-5 flex-1">
-                  {course.description}
-                </p>
-
-                {/* Meta Info Row */}
-                <div className="flex items-center gap-4 text-xs text-gray-400 mb-5 font-medium">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    {course.duration}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5" />
-                    {course.students}
-                  </div>
-                  <div className="flex items-center gap-1 text-warning-yellow">
-                    <Star className="w-3.5 h-3.5 fill-current" />
-                    {course.rating}
-                  </div>
-                </div>
-
-                {/* CTA Button */}
-                <Link
-                  href="#"
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gray-50 hover:bg-primary-red hover:text-white text-gray-700 font-semibold text-sm border border-gray-200 hover:border-primary-red transition-all duration-300 group/btn"
-                >
-                  View Course
-                  <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                </Link>
-              </div>
+        {/* Empty State */}
+        {!loading && courses.length === 0 && (
+          <div className="text-center py-16">
+            <div className="w-20 h-20 rounded-[1.5rem] bg-white shadow-lg border border-gray-100 flex items-center justify-center mx-auto mb-5">
+              <BookOpen className="w-9 h-9 text-gray-300" />
             </div>
-          ))}
-        </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              No courses available yet
+            </h3>
+            <p className="text-gray-500 text-sm max-w-md mx-auto">
+              Our coaches are preparing amazing courses for you. Check back soon
+              or sign up to get notified when new courses launch!
+            </p>
+          </div>
+        )}
+
+        {/* Course Cards Grid */}
+        {!loading && courses.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8">
+            {courses.map((course) => {
+              const level = levelStyles[course.level] || levelStyles.beginner;
+              const hasDiscount =
+                course.discountedPrice && course.discountedPrice < course.price;
+              const coachName = course.coach?.name || "Caissa Coach";
+              const coachInitials = coachName
+                .split(" ")
+                .map((n) => n[0])
+                .join("");
+              const coachAvatar = course.coach?.profilePhotoThumbnail;
+              const duration = formatDuration(
+                course.durationHours,
+                course.durationMinutes,
+              );
+
+              return (
+                <Link
+                  key={course._id}
+                  href={`/courses/${course._id}`}
+                  className="group relative bg-white rounded-[24px] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] transition-all duration-500 hover:-translate-y-2 flex flex-col overflow-hidden"
+                >
+                  {/* Thumbnail */}
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    {course.thumbnailUrl ? (
+                      <img
+                        src={course.thumbnailUrl}
+                        alt={course.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-200 flex items-center justify-center">
+                        <BookOpen className="w-12 h-12 text-gray-300" />
+                      </div>
+                    )}
+
+                    {/* Gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent"></div>
+
+                    {/* Level Badge — bottom left on thumbnail */}
+                    <div
+                      className={`absolute bottom-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-extrabold border uppercase tracking-wider ${level.color} ${level.bg}`}
+                    >
+                      {level.emoji} {level.label}
+                    </div>
+
+                    {/* Duration Badge — bottom right */}
+                    {duration && (
+                      <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-lg">
+                        <Clock className="w-3 h-3" />
+                        {duration}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="p-5 flex flex-col flex-1">
+                    {/* Coach Row */}
+                    <div className="flex items-center gap-2.5 mb-3">
+                      {coachAvatar ? (
+                        <img
+                          src={coachAvatar}
+                          alt={coachName}
+                          className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center text-[10px] font-extrabold text-red-600 border-2 border-white shadow-sm">
+                          {coachInitials}
+                        </div>
+                      )}
+                      <span className="text-xs text-gray-500 font-semibold truncate">
+                        {coachName}
+                      </span>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="font-heading font-extrabold text-[15px] text-gray-900 leading-snug group-hover:text-red-600 transition-colors duration-300 line-clamp-2 mb-2">
+                      {course.title}
+                    </h3>
+
+                    {/* Category & Tags */}
+                    <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                      {course.category && (
+                        <span className="text-[10px] font-bold text-gray-600 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-md uppercase tracking-wider truncate max-w-[100px]">
+                          {course.category.name}
+                        </span>
+                      )}
+                      {course.tags?.slice(0, 2).map((tag, i) => (
+                        <span
+                          key={i}
+                          className="text-[10px] font-medium text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md truncate max-w-[80px]"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Spacer */}
+                    <div className="flex-1" />
+
+                    {/* Footer: Price + Students */}
+                    <div className="flex items-end justify-between pt-4 border-t border-gray-100 mt-2">
+                      <div>
+                        {hasDiscount ? (
+                          <div className="flex flex-col">
+                            <span className="text-gray-400 line-through text-[10px] font-semibold mb-0.5">
+                              Rs. {course.price.toLocaleString()}
+                            </span>
+                            <span className="text-lg font-extrabold text-red-600 leading-none">
+                              Rs. {course.discountedPrice!.toLocaleString()}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-lg font-extrabold text-gray-900 leading-none">
+                            Rs. {course.price.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      <span className="flex items-center gap-1.5 text-[10px] text-gray-500 font-bold bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-100">
+                        <Users className="w-3 h-3 text-gray-400" />
+                        {course.enrollmentCount || 0}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Hover Accent Line */}
+                  <div className="h-1 bg-gradient-to-r from-red-500 via-red-400 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
 
         {/* View All CTA */}
-        <div className="text-center mt-14">
-          <Link
-            href="/courses"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gray-900 hover:bg-gray-800 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
-          >
-            Browse All Courses
-            <ChevronRight className="w-5 h-5" />
-          </Link>
-        </div>
+        {!loading && courses.length > 0 && (
+          <div className="text-center mt-14">
+            <Link
+              href="/courses"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gray-900 hover:bg-gray-800 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
+            >
+              Browse All Courses
+              <ChevronRight className="w-5 h-5" />
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );
