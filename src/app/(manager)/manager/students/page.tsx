@@ -12,6 +12,9 @@ import {
   Mail,
   Phone,
   X,
+  Upload,
+  Download,
+  Camera,
 } from "lucide-react";
 
 interface Student {
@@ -39,6 +42,8 @@ export default function ManagerStudentsPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [newProfilePhoto, setNewProfilePhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
@@ -72,12 +77,24 @@ export default function ManagerStudentsPage() {
 
   const openEditModal = (student: Student) => {
     setEditingStudent(student);
+    setNewProfilePhoto(null);
+    setPhotoPreview(null);
     setEditModalOpen(true);
   };
 
   const closeEditModal = () => {
     setEditModalOpen(false);
     setEditingStudent(null);
+    setNewProfilePhoto(null);
+    setPhotoPreview(null);
+  };
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setNewProfilePhoto(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSaveStudent = async (e: React.FormEvent) => {
@@ -86,6 +103,36 @@ export default function ManagerStudentsPage() {
 
     setIsSaving(true);
     try {
+      let finalPhoto = editingStudent.profilePhoto;
+      let finalThumbnail = editingStudent.profilePhotoThumbnail;
+
+      if (newProfilePhoto) {
+        // Upload photo first
+        const photoFormData = new FormData();
+        // Since we don't have a reliable way to make an ideal thumbnail on the frontend without canvas, we'll just send the same file for both for managers overriding it
+        photoFormData.append("profilePicture", newProfilePhoto);
+        photoFormData.append("profilePictureThumbnail", newProfilePhoto);
+
+        const photoRes = await fetch(
+          `/api/manager/students/${editingStudent._id}/photo`,
+          {
+            method: "POST",
+            body: photoFormData,
+          },
+        );
+
+        if (photoRes.ok) {
+          const photoData = await photoRes.json();
+          finalPhoto = photoData.profilePhoto;
+          finalThumbnail = photoData.profilePhotoThumbnail;
+        } else {
+          console.error("Failed to upload photo");
+          alert(
+            "Failed to upload the profile picture, but we'll try saving the other details.",
+          );
+        }
+      }
+
       const res = await fetch(`/api/manager/students/${editingStudent._id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -94,7 +141,15 @@ export default function ManagerStudentsPage() {
 
       if (res.ok) {
         setStudents((prev) =>
-          prev.map((s) => (s._id === editingStudent._id ? editingStudent : s)),
+          prev.map((s) =>
+            s._id === editingStudent._id
+              ? {
+                  ...editingStudent,
+                  profilePhoto: finalPhoto,
+                  profilePhotoThumbnail: finalThumbnail,
+                }
+              : s,
+          ),
         );
         closeEditModal();
       } else {
@@ -310,7 +365,7 @@ export default function ManagerStudentsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl ring-1 ring-gray-900/10">
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h2 className="text-xl font-bold border-b-2 border-red-500 pb-1 -mb-[25px]">
+              <h2 className="text-2xl font-extrabold text-gray-900">
                 Edit Student Details
               </h2>
               <button
@@ -322,6 +377,72 @@ export default function ManagerStudentsPage() {
             </div>
 
             <form onSubmit={handleSaveStudent} className="p-6 space-y-6">
+              {/* Profile Photo Section */}
+              <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-gray-50/50 rounded-2xl border border-gray-100 mb-2">
+                <div className="relative group">
+                  {photoPreview ||
+                  editingStudent.profilePhotoThumbnail ||
+                  editingStudent.profilePhoto ? (
+                    <img
+                      src={
+                        photoPreview ||
+                        editingStudent.profilePhotoThumbnail ||
+                        editingStudent.profilePhoto
+                      }
+                      alt={editingStudent.name}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-3xl border-4 border-white shadow-lg">
+                      {editingStudent.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+
+                  <label className="absolute bottom-0 right-0 p-2 bg-red-600 text-white rounded-full cursor-pointer hover:bg-red-700 hover:scale-110 transition-all shadow-md">
+                    <Camera className="w-4 h-4" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoSelect}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                <div className="flex-1 text-center sm:text-left space-y-2">
+                  <h3 className="text-base font-bold text-gray-900">
+                    Profile Picture
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Upload a new square image. JPG, PNG, or WebP.
+                  </p>
+
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-2">
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors">
+                      <Upload className="w-3.5 h-3.5" /> Change Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoSelect}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {editingStudent.profilePhoto && (
+                      <a
+                        href={editingStudent.profilePhoto}
+                        download
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 shadow-sm border border-gray-200 rounded-lg transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" /> Download Original
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700">
