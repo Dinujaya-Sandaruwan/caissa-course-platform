@@ -165,10 +165,10 @@ function CoursesContent() {
                       <Link
                         key={course._id}
                         href={`/courses/${course._id}`}
-                        className="group bg-white rounded-3xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_16px_50px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300"
+                        className="group bg-white rounded-[24px] flex flex-col overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300"
                       >
                         {/* Thumbnail */}
-                        <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                        <div className="aspect-[16/10] bg-gray-100 relative overflow-hidden shrink-0">
                           {course.thumbnailUrl ? (
                             <img
                               src={course.thumbnailUrl}
@@ -176,64 +176,70 @@ function CoursesContent() {
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center">
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200">
                               <BookOpen className="w-12 h-12 text-gray-300" />
                             </div>
                           )}
-                          <span
-                            className={`absolute top-3 left-3 px-2.5 py-1 text-xs font-bold rounded-lg border ${lc.text} ${lc.bg} ${lc.border}`}
-                          >
-                            {levelEmoji[course.level]} {course.level}
-                          </span>
                         </div>
 
                         {/* Content */}
-                        <div className="p-5">
-                          <h3 className="text-base font-bold text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2 leading-snug">
+                        <div className="p-5 flex flex-col flex-1">
+                          {/* Top Row: Category & Level */}
+                          <div className="flex flex-wrap items-center gap-2 mb-3">
+                            <span
+                              className={`px-2 py-1 text-[10px] font-extrabold rounded-md border uppercase tracking-wider ${lc.text} ${lc.bg} ${lc.border}`}
+                            >
+                              {levelEmoji[course.level]} {course.level}
+                            </span>
+                            {course.category && (
+                              <span className="px-2 py-1 text-[10px] font-bold text-gray-600 bg-gray-50 border border-gray-100 rounded-md uppercase tracking-wider truncate max-w-[120px]">
+                                {course.category.name}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Title & Coach */}
+                          <h3 className="text-[17px] font-bold text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2 leading-tight mb-1.5">
                             {course.title}
                           </h3>
-                          <p className="text-xs text-gray-500 mt-1.5 font-medium">
+                          <p className="text-sm text-gray-500 font-medium mb-3">
                             by {course.coach?.name || "Caissa Coach"}
                           </p>
 
-                          {course.category && (
-                            <div className="mt-2 inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-[10px] font-bold text-gray-600 border border-gray-200 uppercase tracking-wider">
-                              {course.category.name}
-                            </div>
-                          )}
-
+                          {/* Tags */}
                           {course.tags?.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-3">
-                              {course.tags.slice(0, 3).map((tag) => (
-                                <span
-                                  key={tag}
-                                  className="px-2 py-0.5 text-[10px] font-semibold text-gray-500 bg-gray-100 rounded-md"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
+                            <p className="text-xs text-gray-400 font-medium truncate mb-4">
+                              {course.tags.slice(0, 4).join(" • ")}
+                            </p>
                           )}
 
-                          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                            <span className="text-lg font-extrabold text-gray-900 flex shrink-0 min-w-0">
+                          {/* Spacer to push footer down */}
+                          <div className="flex-1"></div>
+
+                          {/* Footer: Price & Students */}
+                          <div className="flex items-end justify-between mt-auto pt-4 border-t border-gray-100">
+                            <div>
                               {course.discountedPrice ? (
-                                <span className="flex items-center gap-2 truncate">
-                                  <span className="text-gray-400 line-through text-xs font-semibold">
+                                <div className="flex flex-col">
+                                  <span className="text-gray-400 line-through text-xs font-semibold mb-0.5">
                                     Rs. {course.price?.toLocaleString()}
                                   </span>
-                                  <span className="text-red-600">
+                                  <span className="text-lg sm:text-xl font-extrabold text-red-600 leading-none">
                                     Rs.{" "}
-                                    {course.discountedPrice?.toLocaleString()}
+                                    {course.discountedPrice.toLocaleString()}
                                   </span>
-                                </span>
+                                </div>
                               ) : (
-                                <>Rs. {course.price?.toLocaleString()}</>
+                                <div className="flex flex-col justify-end h-full">
+                                  <span className="text-lg sm:text-xl font-extrabold text-gray-900 leading-none">
+                                    Rs. {course.price?.toLocaleString()}
+                                  </span>
+                                </div>
                               )}
-                            </span>
-                            <span className="flex items-center gap-1 text-xs text-gray-400 font-medium">
-                              <Users className="w-3.5 h-3.5" />
-                              {course.enrollmentCount || 0} students
+                            </div>
+                            <span className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-100 shrink-0">
+                              <Users className="w-3.5 h-3.5 text-gray-400" />
+                              {course.enrollmentCount || 0}
                             </span>
                           </div>
                         </div>
