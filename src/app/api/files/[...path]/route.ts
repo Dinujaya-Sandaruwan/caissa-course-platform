@@ -18,6 +18,8 @@ export async function GET(
 
     const { path: segments } = await params;
     const filePath = segments.join("/");
+    const searchParams = request.nextUrl.searchParams;
+    const forceDownload = searchParams.get("download") === "true";
 
     // Prevent directory traversal attacks
     if (filePath.includes("..") || filePath.includes("~")) {
@@ -77,13 +79,19 @@ export async function GET(
     const fileBuffer = await readFile(absolutePath);
     const mimeType = lookup(absolutePath) || "application/octet-stream";
 
-    return new NextResponse(fileBuffer, {
-      headers: {
-        "Content-Type": mimeType,
-        "Cache-Control": "private, max-age=3600",
-        "Content-Length": fileBuffer.length.toString(),
-      },
-    });
+    const headers: Record<string, string> = {
+      "Content-Type": mimeType,
+      "Cache-Control": "private, max-age=3600",
+      "Content-Length": fileBuffer.length.toString(),
+    };
+
+    if (forceDownload) {
+      const ext = path.extname(absolutePath) || ".jpg";
+      headers["Content-Disposition"] =
+        `attachment; filename="profile_picture${ext}"`;
+    }
+
+    return new NextResponse(fileBuffer, { headers });
   } catch (error) {
     console.error("Error serving file:", error);
     return NextResponse.json(

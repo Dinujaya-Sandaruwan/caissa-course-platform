@@ -430,7 +430,7 @@ export default function ManagerStudentsPage() {
 
                     {editingStudent.profilePhoto && (
                       <a
-                        href={editingStudent.profilePhoto}
+                        href={`${editingStudent.profilePhoto}?download=true`}
                         download
                         target="_blank"
                         rel="noreferrer"
