@@ -285,7 +285,7 @@ export default function CoachAccountPage() {
   };
 
   const inputClasses =
-    "w-full px-5 py-3.5 bg-slate-50 border border-gray-100 rounded-xl text-gray-900 font-medium placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all";
+    "w-full px-5 py-3.5 bg-white border border-gray-200 shadow-sm rounded-xl text-gray-900 font-medium placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all";
   const labelClasses = "block text-sm font-bold text-gray-700 mb-2";
 
   if (loading) {
@@ -297,7 +297,7 @@ export default function CoachAccountPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-[fade-in-up_0.4s_ease-out]">
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8 animate-[fade-in-up_0.4s_ease-out]">
       <div>
         <h1 className="text-3xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
           Account Settings
@@ -307,9 +307,9 @@ export default function CoachAccountPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
         {/* Left Col: Main Profile Details */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-8 space-y-6">
           <div className="bg-white rounded-3xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
             <h2 className="text-xl font-bold text-gray-900 mb-6 font-[family-name:var(--font-outfit)]">
               General Information
@@ -438,7 +438,7 @@ export default function CoachAccountPage() {
         </div>
 
         {/* Right Col: Security & Phone */}
-        <div className="space-y-6">
+        <div className="lg:col-span-4 space-y-6">
           <div className="bg-white rounded-3xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
             <h2 className="text-xl font-bold text-gray-900 mb-2 font-[family-name:var(--font-outfit)] flex items-center gap-2">
               <Phone className="w-5 h-5 text-red-500" /> Security
@@ -468,7 +468,7 @@ export default function CoachAccountPage() {
 
             {/* Phone Change Flow */}
             {isChangingPhone && (
-              <div className="mt-6 p-5 border border-red-100 bg-white rounded-2xl shadow-sm animate-[fade-in_0.3s_ease-out]">
+              <div className="mt-6 p-5 sm:p-6 border border-red-100 bg-gradient-to-br from-red-50/50 to-white rounded-2xl shadow-[0_4px_20px_rgb(220,38,38,0.05)] animate-[fade-in_0.3s_ease-out]">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-gray-900">Change Number</h3>
                   <button
@@ -511,7 +511,7 @@ export default function CoachAccountPage() {
                       placeholder="123456"
                       value={phoneOtp}
                       onChange={(e) => setPhoneOtp(e.target.value)}
-                      className="w-full text-center tracking-[0.5em] font-bold text-2xl px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none transition-all"
+                      className="w-full text-center tracking-[0.5em] font-bold text-2xl text-gray-900 px-4 py-3 bg-white shadow-sm border border-gray-200 rounded-xl focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all"
                       maxLength={6}
                     />
                     <button
@@ -567,7 +567,7 @@ export default function CoachAccountPage() {
                       placeholder="123456"
                       value={phoneOtp}
                       onChange={(e) => setPhoneOtp(e.target.value)}
-                      className="w-full text-center tracking-[0.5em] font-bold text-2xl px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none transition-all"
+                      className="w-full text-center tracking-[0.5em] font-bold text-2xl text-gray-900 px-4 py-3 bg-white shadow-sm border border-gray-200 rounded-xl focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all"
                       maxLength={6}
                     />
                     <button
