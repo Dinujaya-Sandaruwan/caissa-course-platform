@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import imageCompression from "browser-image-compression";
 import ImageCropModal from "@/components/ui/ImageCropModal";
+import PhoneInput from "@/components/ui/PhoneInput";
 import toast from "react-hot-toast";
 
 type ProfileData = {
@@ -536,16 +537,16 @@ export default function CoachAccountPage() {
                     <p className="text-sm text-gray-600">
                       Enter your new mobile number with country code.
                     </p>
-                    <input
-                      type="tel"
-                      placeholder="+1234567890"
+                    <PhoneInput
                       value={newPhoneNumber}
-                      onChange={(e) => setNewPhoneNumber(e.target.value)}
-                      className={inputClasses}
+                      onChange={(val) => setNewPhoneNumber(val)}
                     />
                     <button
                       onClick={sendNewOtp}
-                      disabled={phoneLoading || !newPhoneNumber.trim()}
+                      disabled={
+                        phoneLoading ||
+                        newPhoneNumber.replace(/\D/g, "").length < 8
+                      }
                       className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 hover:bg-black text-white rounded-xl font-bold transition-colors disabled:opacity-50"
                     >
                       {phoneLoading && (
