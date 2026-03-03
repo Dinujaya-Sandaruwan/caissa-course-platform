@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
     // 1. Fetch all courses belonging to this coach
     const coachCourses = await Course.find({ coach: session.userId })
-      .select("_id title price platformFee")
+      .select("_id title price platformFee allowDiscounts discountedPrice")
       .lean();
 
     if (!coachCourses.length) {
@@ -70,7 +70,11 @@ export async function GET(req: NextRequest) {
 
       if (!course) return;
 
-      const amountPaid = enrollment.amountPaid || course.price;
+      const actualCoursePrice =
+        course.allowDiscounts && course.discountedPrice
+          ? course.discountedPrice
+          : course.price;
+      const amountPaid = enrollment.amountPaid || actualCoursePrice;
       const platformFeePercent = course.platformFee || 0;
 
       const platformCut = amountPaid * (platformFeePercent / 100);

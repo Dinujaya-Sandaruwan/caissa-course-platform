@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const enrollments = await Enrollment.find({ paymentStatus: "approved" })
       .populate({
         path: "courseId",
-        select: "title price platformFee coach",
+        select: "title price platformFee coach allowDiscounts discountedPrice",
         populate: {
           path: "coach",
           select: "name whatsappNumber profilePhoto profilePhotoThumbnail",
@@ -48,7 +48,11 @@ export async function GET(req: NextRequest) {
       if (!enrollment.courseId || !enrollment.courseId.coach) return;
 
       const course = enrollment.courseId;
-      const amountPaid = enrollment.amountPaid || course.price; // Fallback to course price if amountPaid is missing
+      const actualCoursePrice =
+        course.allowDiscounts && course.discountedPrice
+          ? course.discountedPrice
+          : course.price;
+      const amountPaid = enrollment.amountPaid || actualCoursePrice; // Fallback to course price if amountPaid is missing
       const platformFeePercent = course.platformFee || 0;
 
       const platformCut = amountPaid * (platformFeePercent / 100);

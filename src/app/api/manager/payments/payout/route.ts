@@ -26,7 +26,9 @@ export async function POST(req: NextRequest) {
 
     // Find all courses by this coach
     const coachCourses = await Course.find({ coach: coachId })
-      .select("_id title price platformFee coach")
+      .select(
+        "_id title price platformFee coach allowDiscounts discountedPrice",
+      )
       .populate("coach");
 
     if (coachCourses.length === 0) {
@@ -70,7 +72,11 @@ export async function POST(req: NextRequest) {
       );
       if (!course) continue;
 
-      const amountPaid = enrollment.amountPaid || course.price;
+      const actualCoursePrice =
+        course.allowDiscounts && course.discountedPrice
+          ? course.discountedPrice
+          : course.price;
+      const amountPaid = enrollment.amountPaid || actualCoursePrice;
       const platformFeePercent = course.platformFee || 0;
 
       const platformCut = amountPaid * (platformFeePercent / 100);

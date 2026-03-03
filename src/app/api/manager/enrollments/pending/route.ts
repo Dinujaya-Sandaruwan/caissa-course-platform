@@ -16,7 +16,7 @@ export async function GET() {
       paymentStatus: { $in: ["pending_review", "on_hold"] },
     })
       .populate("studentId", "name whatsappNumber profilePhotoThumbnail")
-      .populate("courseId", "title price")
+      .populate("courseId", "title price allowDiscounts discountedPrice")
       .sort({ createdAt: 1 })
       .lean();
 

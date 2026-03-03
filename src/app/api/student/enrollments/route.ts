@@ -112,7 +112,10 @@ export async function POST(request: NextRequest) {
       courseId,
       receiptImageUrl,
       referenceNumber: referenceNumber.trim(),
-      amountPaid: course.price,
+      amountPaid:
+        course.allowDiscounts && course.discountedPrice
+          ? course.discountedPrice
+          : course.price,
       paymentStatus: "pending_review",
     });
 

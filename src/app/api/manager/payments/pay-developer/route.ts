@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       developerPayoutStatus: "pending",
     }).populate({
       path: "courseId",
-      select: "price platformFee",
+      select: "price platformFee allowDiscounts discountedPrice",
     });
 
     if (pendingEnrollments.length === 0) {
@@ -37,7 +37,11 @@ export async function POST(req: NextRequest) {
       const course = enrollment.courseId as any;
       if (!course) continue;
 
-      const amountPaid = enrollment.amountPaid || course.price;
+      const actualCoursePrice =
+        course.allowDiscounts && course.discountedPrice
+          ? course.discountedPrice
+          : course.price;
+      const amountPaid = enrollment.amountPaid || actualCoursePrice;
       const platformFeePercent = course.platformFee || 0;
 
       const platformCut = amountPaid * (platformFeePercent / 100);

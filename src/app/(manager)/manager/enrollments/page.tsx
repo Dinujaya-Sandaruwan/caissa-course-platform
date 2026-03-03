@@ -57,7 +57,12 @@ interface PendingEnrollment {
     whatsappNumber?: string;
     profilePhotoThumbnail?: string;
   };
-  courseId?: { title?: string; price?: number };
+  courseId?: {
+    title?: string;
+    price?: number;
+    allowDiscounts?: boolean;
+    discountedPrice?: number;
+  };
   paymentStatus?: "pending_review" | "approved" | "rejected" | "on_hold";
   reviewNotes?: string;
 }
@@ -368,7 +373,13 @@ export default function ManagerEnrollmentsPage() {
                     Amount
                   </p>
                   <p className="text-sm font-bold text-emerald-600">
-                    Rs. {enrollment.amountPaid?.toLocaleString()}
+                    Rs.{" "}
+                    {enrollment.courseId?.allowDiscounts &&
+                    enrollment.courseId?.discountedPrice
+                      ? enrollment.courseId.discountedPrice.toLocaleString()
+                      : enrollment.amountPaid?.toLocaleString() ||
+                        enrollment.courseId?.price?.toLocaleString() ||
+                        "0"}
                   </p>
                 </div>
                 <div className="col-span-1 pt-1">

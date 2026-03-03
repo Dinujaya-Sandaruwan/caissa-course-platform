@@ -16,7 +16,9 @@ export async function GET(req: NextRequest) {
     // Fetch all courses that are NOT trashed
     const courses = await Course.find({ status: { $ne: "trashed" } })
       .populate("coach", "name")
-      .select("_id title price status platformFee coach")
+      .select(
+        "_id title price status platformFee coach allowDiscounts discountedPrice",
+      )
       .sort({ createdAt: -1 })
       .lean();
 

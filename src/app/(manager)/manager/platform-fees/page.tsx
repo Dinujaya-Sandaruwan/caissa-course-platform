@@ -24,6 +24,8 @@ interface CourseWithFee {
   status: string;
   platformFee: number;
   coach?: { name?: string };
+  allowDiscounts?: boolean;
+  discountedPrice?: number;
 }
 
 export default function PlatformFeesPage() {
@@ -275,8 +277,19 @@ export default function PlatformFeesPage() {
                 </span>
 
                 {/* Price */}
-                <span className="text-sm font-bold text-gray-700">
-                  Rs. {course.price?.toLocaleString()}
+                <span className="text-sm font-bold text-gray-700 flex flex-col gap-0.5">
+                  {course.allowDiscounts && course.discountedPrice ? (
+                    <>
+                      <span className="text-xs text-gray-400 line-through">
+                        Rs. {course.price?.toLocaleString()}
+                      </span>
+                      <span className="text-emerald-600">
+                        Rs. {course.discountedPrice.toLocaleString()}
+                      </span>
+                    </>
+                  ) : (
+                    <span>Rs. {course.price?.toLocaleString()}</span>
+                  )}
                 </span>
 
                 {/* Platform Fee */}
