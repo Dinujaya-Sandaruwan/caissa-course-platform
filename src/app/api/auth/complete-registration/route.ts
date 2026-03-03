@@ -160,6 +160,7 @@ export async function POST(request: NextRequest) {
       userId: user._id!.toString(),
       role: user.role,
       whatsappNumber: user.whatsappNumber,
+      status: user.status,
     });
 
     await setSessionCookie(token);

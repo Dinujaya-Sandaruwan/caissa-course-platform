@@ -7,6 +7,7 @@ interface SessionPayload {
   userId: string;
   role: "student" | "coach" | "manager";
   whatsappNumber: string;
+  status?: "active" | "suspended" | string;
 }
 
 const protectedRoutes: Record<string, string> = {
@@ -94,6 +95,24 @@ export async function middleware(request: NextRequest) {
       const loginUrl = new URL("/login", request.url);
       return NextResponse.redirect(loginUrl);
     }
+
+    // Suspension logic for students
+    if (session.role === "student" && session.status === "suspended") {
+      const isAllowedSuspendedRoute =
+        pathname === "/student/profile" ||
+        pathname === "/student/suspended" ||
+        pathname.startsWith("/api/student/profile") ||
+        pathname.startsWith("/api/user");
+
+      if (
+        !isAllowedSuspendedRoute &&
+        (pathname.startsWith("/student") || pathname.startsWith("/api/student"))
+      ) {
+        return NextResponse.redirect(
+          new URL("/student/suspended", request.url),
+        );
+      }
+    }
   }
 
   // Redirect root role paths to their respective dashboards
@@ -102,8 +121,21 @@ export async function middleware(request: NextRequest) {
     pathname === "/manager" ||
     pathname === "/student"
   ) {
+    if (pathname === "/student" && session.status === "suspended") {
+      return NextResponse.redirect(new URL("/student/suspended", request.url));
+    }
     const dashboardUrl = new URL(`${pathname}/dashboard`, request.url);
     return NextResponse.redirect(dashboardUrl);
+  }
+
+  // Course enrollment/learning logic for suspended students
+  if (session.role === "student" && session.status === "suspended") {
+    if (
+      pathname.startsWith("/courses/") &&
+      (pathname.endsWith("/enroll") || pathname.endsWith("/learn"))
+    ) {
+      return NextResponse.redirect(new URL("/student/suspended", request.url));
+    }
   }
 
   return NextResponse.next();

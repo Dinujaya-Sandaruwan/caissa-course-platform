@@ -6,6 +6,7 @@ export interface SessionUser {
   userId: string;
   role: "student" | "coach" | "manager";
   whatsappNumber: string;
+  status?: "active" | "suspended" | string;
   isNewUser?: boolean;
 }
 
@@ -27,6 +28,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       userId: payload.userId as string,
       role: payload.role as SessionUser["role"],
       whatsappNumber: payload.whatsappNumber as string,
+      status: payload.status as string | undefined,
       isNewUser: payload.isNewUser as boolean | undefined,
     };
   } catch {
