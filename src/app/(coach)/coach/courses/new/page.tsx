@@ -2414,13 +2414,19 @@ export default function CreateCoursePage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 border-t border-gray-100 pt-8 mt-4">
               {/* Course Length */}
               <div className="sm:col-span-2">
-                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-1">
                   <Clock className="w-4 h-4 text-red-500" />
                   Course Length
                 </label>
+                <p className="text-xs text-gray-500 mb-3">
+                  Estimated time it takes to complete the entire course.
+                </p>
                 <div className="grid grid-cols-2 gap-4">
                   {/* Hours */}
                   <div>
+                    <label className="text-xs font-bold text-gray-600 mb-1.5 block">
+                      Hours
+                    </label>
                     <div className="relative">
                       <input
                         type="number"
@@ -2451,6 +2457,9 @@ export default function CreateCoursePage() {
 
                   {/* Minutes */}
                   <div>
+                    <label className="text-xs font-bold text-gray-600 mb-1.5 block">
+                      Minutes
+                    </label>
                     <div className="relative">
                       <input
                         type="number"
