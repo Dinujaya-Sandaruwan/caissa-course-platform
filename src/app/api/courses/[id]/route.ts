@@ -59,6 +59,8 @@ export async function GET(
       discountedPrice: course.discountedPrice,
       level: course.level,
       tags: course.tags,
+      durationHours: course.durationHours,
+      durationMinutes: course.durationMinutes,
       thumbnailUrl: course.thumbnailUrl,
       previewVideoUrl: course.previewVideoUrl,
       enrollmentCount: course.enrollmentCount,

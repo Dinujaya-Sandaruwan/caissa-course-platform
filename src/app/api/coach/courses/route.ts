@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       status: { $ne: "trashed" },
     })
       .select(
-        "title status price discountedPrice allowDiscounts level enrollmentCount createdAt thumbnailUrl",
+        "title status price discountedPrice allowDiscounts level enrollmentCount createdAt thumbnailUrl durationHours durationMinutes reviewNotes",
       )
       .sort({ createdAt: -1 })
       .lean();
@@ -76,6 +76,8 @@ export async function POST(request: NextRequest) {
       allowDiscounts,
       maxDiscountPercent,
       discountedPrice,
+      durationHours,
+      durationMinutes,
     } = body;
 
     // Validate required fields
@@ -104,6 +106,32 @@ export async function POST(request: NextRequest) {
     ]);
     if ("error" in levelResult)
       return NextResponse.json({ error: levelResult.error }, { status: 400 });
+
+    const durationHrsResult = validateNumber(durationHours, "Duration Hours", {
+      required: true,
+      min: 0,
+      max: 1000,
+    });
+    if ("error" in durationHrsResult)
+      return NextResponse.json(
+        { error: durationHrsResult.error },
+        { status: 400 },
+      );
+
+    const durationMinsResult = validateNumber(
+      durationMinutes,
+      "Duration Minutes",
+      {
+        required: true,
+        min: 0,
+        max: 59,
+      },
+    );
+    if ("error" in durationMinsResult)
+      return NextResponse.json(
+        { error: durationMinsResult.error },
+        { status: 400 },
+      );
 
     // Sanitize tags
     const safeTags = Array.isArray(tags)
@@ -191,6 +219,8 @@ export async function POST(request: NextRequest) {
       level: levelResult.value,
       category: category || null,
       tags: safeTags,
+      durationHours: durationHrsResult.value,
+      durationMinutes: durationMinsResult.value,
       thumbnailUrl,
       thumbnailOriginalUrl,
       status: "draft",

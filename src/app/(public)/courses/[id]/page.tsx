@@ -40,6 +40,8 @@ interface CourseDetail {
   discountedPrice?: number;
   level: string;
   tags: string[];
+  durationHours?: number;
+  durationMinutes?: number;
   thumbnailUrl?: string;
   previewVideoUrl?: string;
   enrollmentCount: number;
@@ -180,11 +182,6 @@ export default function PublicCourseDetailPage() {
     (acc, ch) => acc + ch.lessons.length,
     0,
   );
-  const totalDuration = course.chapters.reduce(
-    (acc, ch) => acc + ch.lessons.reduce((a, l) => a + (l.duration || 0), 0),
-    0,
-  );
-  const totalMinutes = Math.round(totalDuration / 60);
 
   return (
     <>
@@ -248,6 +245,23 @@ export default function PublicCourseDetailPage() {
                   <BookOpen className="w-4 h-4 text-gray-400" />
                   <span className="font-semibold">{totalLessons}</span> lessons
                 </div>
+                {(course.durationHours
+                  ? course.durationHours > 0
+                  : false ||
+                    (course.durationMinutes
+                      ? course.durationMinutes > 0
+                      : false)) && (
+                  <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    <span className="font-semibold">
+                      {course.durationHours ? `${course.durationHours}h ` : ""}
+                      {course.durationMinutes
+                        ? `${course.durationMinutes}m`
+                        : ""}
+                    </span>{" "}
+                    total
+                  </div>
+                )}
                 <div className="flex items-center gap-1.5 text-sm text-gray-600">
                   <Users className="w-4 h-4 text-gray-400" />
                   <span className="font-semibold">
@@ -255,12 +269,6 @@ export default function PublicCourseDetailPage() {
                   </span>{" "}
                   students
                 </div>
-                {totalMinutes > 0 && (
-                  <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    <span className="font-semibold">{totalMinutes}</span> min
-                  </div>
-                )}
               </div>
 
               {/* Description */}

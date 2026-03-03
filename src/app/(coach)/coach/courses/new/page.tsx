@@ -32,6 +32,7 @@ import {
   Crown,
   Folder,
   LucideIcon,
+  Clock,
 } from "lucide-react";
 
 type CourseLevel = "beginner" | "intermediate" | "advanced";
@@ -42,6 +43,8 @@ interface CourseMetadata {
   price: string;
   level: CourseLevel;
   category: string;
+  durationHours: string;
+  durationMinutes: string;
   tags: string[];
   thumbnailFile: File | null;
   tempThumbnailPath: string | null;
@@ -99,6 +102,8 @@ export default function CreateCoursePage() {
     price: "",
     level: "beginner",
     category: "",
+    durationHours: "0",
+    durationMinutes: "0",
     tags: [],
     thumbnailFile: null,
     tempThumbnailPath: null,
@@ -369,6 +374,23 @@ export default function CreateCoursePage() {
 
     if (metadata.tags.length === 0) {
       newErrors.tags = "Please add at least one tag";
+    }
+
+    if (
+      !metadata.durationHours ||
+      isNaN(Number(metadata.durationHours)) ||
+      Number(metadata.durationHours) < 0
+    ) {
+      newErrors.durationHours = "Valid hours required";
+    }
+
+    if (
+      !metadata.durationMinutes ||
+      isNaN(Number(metadata.durationMinutes)) ||
+      Number(metadata.durationMinutes) < 0 ||
+      Number(metadata.durationMinutes) >= 60
+    ) {
+      newErrors.durationMinutes = "Valid minutes (0-59) required";
     }
 
     if (!metadata.tempThumbnailPath) {
@@ -989,6 +1011,8 @@ export default function CreateCoursePage() {
           price: Number(metadata.price),
           level: metadata.level,
           category: metadata.category === "none" ? null : metadata.category,
+          durationHours: Number(metadata.durationHours),
+          durationMinutes: Number(metadata.durationMinutes),
           tags: metadata.tags,
           tempThumbnailPath: metadata.tempThumbnailPath,
           allowDiscounts: metadata.allowDiscounts,
@@ -1261,6 +1285,18 @@ export default function CreateCoursePage() {
               </p>
               <p className="text-base font-semibold text-gray-900">
                 Rs. {metadata.price}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                Duration
+              </p>
+              <p className="text-base font-semibold text-gray-900 flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-red-500" />
+                {Number(metadata.durationHours) > 0
+                  ? `${metadata.durationHours}h `
+                  : ""}
+                {metadata.durationMinutes}m
               </p>
             </div>
             <div>
@@ -2634,6 +2670,76 @@ export default function CreateCoursePage() {
                     </div>
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Course Time */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5 mt-6">
+                  <Clock className="w-4 h-4 text-red-500" />
+                  Course Hours
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    value={metadata.durationHours}
+                    onChange={(e) => {
+                      setMetadata({
+                        ...metadata,
+                        durationHours: e.target.value,
+                      });
+                      if (errors.durationHours)
+                        setErrors({ ...errors, durationHours: "" });
+                    }}
+                    placeholder="e.g. 5"
+                    className={`w-full px-4 py-3 rounded-xl border-2 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none ${
+                      errors.durationHours
+                        ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                        : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+                    }`}
+                  />
+                </div>
+                {errors.durationHours && (
+                  <p className="mt-2 text-xs text-red-500 font-medium">
+                    {errors.durationHours}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5 mt-6">
+                  <span className="w-4 h-4 text-red-500 invisible" />
+                  Minutes
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={metadata.durationMinutes}
+                    onChange={(e) => {
+                      setMetadata({
+                        ...metadata,
+                        durationMinutes: e.target.value,
+                      });
+                      if (errors.durationMinutes)
+                        setErrors({ ...errors, durationMinutes: "" });
+                    }}
+                    placeholder="e.g. 30"
+                    className={`w-full px-4 py-3 rounded-xl border-2 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none ${
+                      errors.durationMinutes
+                        ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                        : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+                    }`}
+                  />
+                </div>
+                {errors.durationMinutes && (
+                  <p className="mt-2 text-xs text-red-500 font-medium">
+                    {errors.durationMinutes}
+                  </p>
+                )}
               </div>
             </div>
 

@@ -33,6 +33,8 @@ interface Course {
   createdAt: string;
   thumbnailUrl?: string;
   reviewNotes?: string;
+  durationHours?: number;
+  durationMinutes?: number;
 }
 
 const statusConfig: Record<
@@ -259,12 +261,32 @@ export default function CoachCoursesPage() {
 
                 {/* Stats */}
                 <div className="flex items-center justify-between mb-5 pb-5 border-b border-gray-100">
-                  <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                    <Users className="w-4 h-4 text-gray-400" />
-                    <span className="font-bold text-gray-800">
-                      {course.enrollmentCount || 0}
-                    </span>{" "}
-                    students
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                      <Users className="w-4 h-4 text-gray-400" />
+                      <span className="font-bold text-gray-800">
+                        {course.enrollmentCount || 0}
+                      </span>{" "}
+                      students
+                    </div>
+                    {(course.durationHours
+                      ? course.durationHours > 0
+                      : false ||
+                        (course.durationMinutes
+                          ? course.durationMinutes > 0
+                          : false)) && (
+                      <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <span className="font-bold text-gray-800">
+                          {course.durationHours
+                            ? `${course.durationHours}h `
+                            : ""}
+                          {course.durationMinutes
+                            ? `${course.durationMinutes}m`
+                            : ""}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="font-extrabold text-gray-900">
                     {course.discountedPrice ? (

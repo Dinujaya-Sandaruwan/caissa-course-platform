@@ -15,6 +15,8 @@ export interface ICourse extends Document {
   level: "beginner" | "intermediate" | "advanced";
   tags: string[];
   category?: Types.ObjectId;
+  durationHours: number;
+  durationMinutes: number;
   status:
     | "draft"
     | "pending_review"
@@ -92,6 +94,17 @@ const CourseSchema = new Schema<ICourse>(
     category: {
       type: Schema.Types.ObjectId,
       ref: "Category",
+    },
+    durationHours: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    durationMinutes: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 59,
     },
     status: {
       type: String,

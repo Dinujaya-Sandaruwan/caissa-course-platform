@@ -105,6 +105,8 @@ export async function PATCH(
       allowDiscounts,
       maxDiscountPercent,
       discountedPrice,
+      durationHours,
+      durationMinutes,
     } = body;
 
     if (title !== undefined) course.title = stripHtml(String(title));
@@ -120,6 +122,24 @@ export async function PATCH(
       if (!["beginner", "intermediate", "advanced"].includes(level))
         return NextResponse.json({ error: "Invalid level" }, { status: 400 });
       course.level = level;
+    }
+    if (durationHours !== undefined) {
+      const h = Number(durationHours);
+      if (isNaN(h) || h < 0)
+        return NextResponse.json(
+          { error: "Invalid duration hours" },
+          { status: 400 },
+        );
+      course.durationHours = h;
+    }
+    if (durationMinutes !== undefined) {
+      const m = Number(durationMinutes);
+      if (isNaN(m) || m < 0 || m > 59)
+        return NextResponse.json(
+          { error: "Invalid duration minutes" },
+          { status: 400 },
+        );
+      course.durationMinutes = m;
     }
     if (tags !== undefined) {
       const oldTags: string[] = course.tags || [];
