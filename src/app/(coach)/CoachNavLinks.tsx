@@ -8,6 +8,7 @@ import {
   PlusSquare,
   Users,
   CreditCard,
+  UserCircle,
 } from "lucide-react";
 
 export default function CoachNavLinks() {
@@ -19,6 +20,7 @@ export default function CoachNavLinks() {
     { name: "Create Course", href: "/coach/courses/new", icon: PlusSquare },
     { name: "Students", href: "/coach/students", icon: Users },
     { name: "Billing", href: "/coach/billing", icon: CreditCard },
+    { name: "My Account", href: "/coach/account", icon: UserCircle },
   ];
 
   return (
