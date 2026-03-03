@@ -480,6 +480,15 @@ export default function EditCoursePage() {
       newErrors.durationMinutes = "Valid minutes (0-59) required";
     }
 
+    if (
+      !newErrors.durationHours &&
+      !newErrors.durationMinutes &&
+      Number(metadata.durationHours) === 0 &&
+      Number(metadata.durationMinutes) === 0
+    ) {
+      newErrors.durationMinutes = "Course length must be greater than 0";
+    }
+
     if (!metadata.tempThumbnailPath) {
       newErrors.thumbnailFile = "A course thumbnail is required";
     }
@@ -2750,73 +2759,76 @@ export default function EditCoursePage() {
               )}
             </div>
 
-            {/* Course Time */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5 mt-6">
+            {/* Course Time & Category Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 border-t border-gray-100 pt-8 mt-4">
+              {/* Course Length */}
+              <div className="sm:col-span-2">
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
                   <Clock className="w-4 h-4 text-red-500" />
-                  Course Hours
+                  Course Length
                 </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    value={metadata.durationHours}
-                    onChange={(e) => {
-                      setMetadata({
-                        ...metadata,
-                        durationHours: e.target.value,
-                      });
-                      if (errors.durationHours)
-                        setErrors({ ...errors, durationHours: "" });
-                    }}
-                    placeholder="e.g. 5"
-                    className={`w-full px-4 py-3 rounded-xl border-2 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none ${
-                      errors.durationHours
-                        ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-                        : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
-                    }`}
-                  />
-                </div>
-                {errors.durationHours && (
-                  <p className="mt-2 text-xs text-red-500 font-medium">
-                    {errors.durationHours}
-                  </p>
-                )}
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Hours */}
+                  <div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        value={metadata.durationHours}
+                        onChange={(e) => {
+                          setMetadata({
+                            ...metadata,
+                            durationHours: e.target.value,
+                          });
+                          if (errors.durationHours)
+                            setErrors({ ...errors, durationHours: "" });
+                        }}
+                        placeholder="Hours (e.g. 5)"
+                        className={`w-full px-4 py-3 rounded-xl border-2 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none ${
+                          errors.durationHours
+                            ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                            : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+                        }`}
+                      />
+                    </div>
+                    {errors.durationHours && (
+                      <p className="mt-2 text-xs text-red-500 font-medium">
+                        {errors.durationHours}
+                      </p>
+                    )}
+                  </div>
 
-              <div>
-                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5 mt-6">
-                  <span className="w-4 h-4 text-red-500 invisible" />
-                  Minutes
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={metadata.durationMinutes}
-                    onChange={(e) => {
-                      setMetadata({
-                        ...metadata,
-                        durationMinutes: e.target.value,
-                      });
-                      if (errors.durationMinutes)
-                        setErrors({ ...errors, durationMinutes: "" });
-                    }}
-                    placeholder="e.g. 30"
-                    className={`w-full px-4 py-3 rounded-xl border-2 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none ${
-                      errors.durationMinutes
-                        ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-                        : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
-                    }`}
-                  />
+                  {/* Minutes */}
+                  <div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={metadata.durationMinutes}
+                        onChange={(e) => {
+                          setMetadata({
+                            ...metadata,
+                            durationMinutes: e.target.value,
+                          });
+                          if (errors.durationMinutes)
+                            setErrors({ ...errors, durationMinutes: "" });
+                        }}
+                        placeholder="Minutes (e.g. 30)"
+                        className={`w-full px-4 py-3 rounded-xl border-2 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none ${
+                          errors.durationMinutes
+                            ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                            : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+                        }`}
+                      />
+                    </div>
+                    {errors.durationMinutes && (
+                      <p className="mt-2 text-xs text-red-500 font-medium">
+                        {errors.durationMinutes}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                {errors.durationMinutes && (
-                  <p className="mt-2 text-xs text-red-500 font-medium">
-                    {errors.durationMinutes}
-                  </p>
-                )}
               </div>
             </div>
 

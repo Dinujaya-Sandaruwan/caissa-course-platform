@@ -393,6 +393,15 @@ export default function CreateCoursePage() {
       newErrors.durationMinutes = "Valid minutes (0-59) required";
     }
 
+    if (
+      !newErrors.durationHours &&
+      !newErrors.durationMinutes &&
+      Number(metadata.durationHours) === 0 &&
+      Number(metadata.durationMinutes) === 0
+    ) {
+      newErrors.durationMinutes = "Course length must be greater than 0";
+    }
+
     if (!metadata.tempThumbnailPath) {
       newErrors.thumbnailFile = "A course thumbnail is required";
     }
@@ -2400,6 +2409,115 @@ export default function CreateCoursePage() {
                 )}
               </div>
             </div>
+
+            {/* Course Time & Category Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 border-t border-gray-100 pt-8 mt-4">
+              {/* Course Length */}
+              <div className="sm:col-span-2">
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
+                  <Clock className="w-4 h-4 text-red-500" />
+                  Course Length
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Hours */}
+                  <div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        value={metadata.durationHours}
+                        onChange={(e) => {
+                          setMetadata({
+                            ...metadata,
+                            durationHours: e.target.value,
+                          });
+                          if (errors.durationHours)
+                            setErrors({ ...errors, durationHours: "" });
+                        }}
+                        placeholder="Hours (e.g. 5)"
+                        className={`w-full px-4 py-3 rounded-xl border-2 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none ${
+                          errors.durationHours
+                            ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                            : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+                        }`}
+                      />
+                    </div>
+                    {errors.durationHours && (
+                      <p className="mt-2 text-xs text-red-500 font-medium">
+                        {errors.durationHours}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Minutes */}
+                  <div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={metadata.durationMinutes}
+                        onChange={(e) => {
+                          setMetadata({
+                            ...metadata,
+                            durationMinutes: e.target.value,
+                          });
+                          if (errors.durationMinutes)
+                            setErrors({ ...errors, durationMinutes: "" });
+                        }}
+                        placeholder="Minutes (e.g. 30)"
+                        className={`w-full px-4 py-3 rounded-xl border-2 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none ${
+                          errors.durationMinutes
+                            ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                            : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+                        }`}
+                      />
+                    </div>
+                    {errors.durationMinutes && (
+                      <p className="mt-2 text-xs text-red-500 font-medium">
+                        {errors.durationMinutes}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
+                  <Folder className="w-4 h-4 text-red-500" />
+                  Course Category
+                </label>
+                <div className="relative">
+                  <select
+                    value={metadata.category}
+                    onChange={(e) =>
+                      setMetadata({ ...metadata, category: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 text-sm font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 appearance-none"
+                  >
+                    <option value="" disabled>
+                      Select a category
+                    </option>
+                    {categories.map((cat) => (
+                      <option key={cat._id} value={cat._id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                    <option value="none">None of the above (General)</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                  </div>
+                </div>
+                {errors.category && (
+                  <p className="text-red-500 text-xs mt-1 font-medium flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    {errors.category}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Sidebar Column */}
@@ -2671,112 +2789,6 @@ export default function CreateCoursePage() {
                   </button>
                 ))}
               </div>
-            </div>
-
-            {/* Course Time */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5 mt-6">
-                  <Clock className="w-4 h-4 text-red-500" />
-                  Course Hours
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    value={metadata.durationHours}
-                    onChange={(e) => {
-                      setMetadata({
-                        ...metadata,
-                        durationHours: e.target.value,
-                      });
-                      if (errors.durationHours)
-                        setErrors({ ...errors, durationHours: "" });
-                    }}
-                    placeholder="e.g. 5"
-                    className={`w-full px-4 py-3 rounded-xl border-2 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none ${
-                      errors.durationHours
-                        ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-                        : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
-                    }`}
-                  />
-                </div>
-                {errors.durationHours && (
-                  <p className="mt-2 text-xs text-red-500 font-medium">
-                    {errors.durationHours}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5 mt-6">
-                  <span className="w-4 h-4 text-red-500 invisible" />
-                  Minutes
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={metadata.durationMinutes}
-                    onChange={(e) => {
-                      setMetadata({
-                        ...metadata,
-                        durationMinutes: e.target.value,
-                      });
-                      if (errors.durationMinutes)
-                        setErrors({ ...errors, durationMinutes: "" });
-                    }}
-                    placeholder="e.g. 30"
-                    className={`w-full px-4 py-3 rounded-xl border-2 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none ${
-                      errors.durationMinutes
-                        ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-                        : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
-                    }`}
-                  />
-                </div>
-                {errors.durationMinutes && (
-                  <p className="mt-2 text-xs text-red-500 font-medium">
-                    {errors.durationMinutes}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Category */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5 mt-6">
-                <Folder className="w-4 h-4 text-red-500" />
-                Course Category
-              </label>
-              <div className="relative">
-                <select
-                  value={metadata.category}
-                  onChange={(e) =>
-                    setMetadata({ ...metadata, category: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 text-sm font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 appearance-none"
-                >
-                  <option value="" disabled>
-                    Select a category
-                  </option>
-                  {categories.map((cat) => (
-                    <option key={cat._id} value={cat._id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                  <option value="none">None of the above (General)</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                  <ChevronDown className="w-5 h-5 text-gray-400" />
-                </div>
-              </div>
-              {errors.category && (
-                <p className="text-red-500 text-xs mt-1 font-medium flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" />
-                  {errors.category}
-                </p>
-              )}
             </div>
           </div>
         </div>
