@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, PlayCircle, Trophy, Star } from "lucide-react";
-import ChessModelCanvas from "./ChessModelCanvas";
+import ChessGame from "./ChessGame";
 
 export default function HeroSection() {
   return (
@@ -76,9 +76,9 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* 3D Model Area — breaks out to the full right edge */}
-        <div className="w-full lg:w-[55%] relative h-[450px] lg:h-[85vh] animate-[fade-in-up_1.2s_ease-out]">
-          <ChessModelCanvas />
+        {/* Chess Game Area — breaks out to the full right edge */}
+        <div className="w-full lg:w-[55%] relative min-h-[500px] lg:h-[85vh] flex items-center justify-center">
+          <ChessGame />
         </div>
       </div>
     </section>

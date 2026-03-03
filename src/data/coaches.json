@@ -1,0 +1,23 @@
+[
+  {
+    "id": "coach_1",
+    "name": "Kasun Perera",
+    "elo": 2100,
+    "title": "FM",
+    "avatar": "/images/coaches/coach_kasun.png"
+  },
+  {
+    "id": "coach_2",
+    "name": "Nuwan Jayawardena",
+    "elo": 2350,
+    "title": "IM",
+    "avatar": "/images/coaches/coach_nuwan.png"
+  },
+  {
+    "id": "coach_3",
+    "name": "Sachini Fernando",
+    "elo": 1950,
+    "title": "CM",
+    "avatar": "/images/coaches/coach_sachini.png"
+  }
+]
