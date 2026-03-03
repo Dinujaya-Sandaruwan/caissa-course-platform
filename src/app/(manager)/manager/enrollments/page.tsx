@@ -19,6 +19,7 @@ import {
   Phone,
   Mail,
   Users,
+  FileText,
 } from "lucide-react";
 
 interface StudentProfileDetails {
@@ -400,13 +401,19 @@ export default function ManagerEnrollmentsPage() {
                       onClick={() =>
                         setViewingReceipt(enrollment.receiptImageUrl!)
                       }
-                      className="w-14 h-14 rounded-2xl border-[3px] border-white ring-1 ring-gray-200 overflow-hidden hover:ring-rose-300 transition-all cursor-pointer group relative shadow-md"
+                      className="w-14 h-14 rounded-2xl border-[3px] border-white ring-1 ring-gray-200 overflow-hidden hover:ring-rose-300 transition-all cursor-pointer group relative shadow-md bg-white flex items-center justify-center"
                     >
-                      <img
-                        src={enrollment.receiptImageUrl}
-                        alt="Receipt"
-                        className="w-full h-full object-cover"
-                      />
+                      {enrollment.receiptImageUrl
+                        .toLowerCase()
+                        .endsWith(".pdf") ? (
+                        <FileText className="w-6 h-6 text-rose-500" />
+                      ) : (
+                        <img
+                          src={enrollment.receiptImageUrl}
+                          alt="Receipt"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                         <ExternalLink className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity scale-75 group-hover:scale-100" />
                       </div>
@@ -486,20 +493,28 @@ export default function ManagerEnrollmentsPage() {
           onClick={() => setViewingReceipt(null)}
         >
           <div
-            className="relative max-w-3xl max-h-[80vh]"
+            className="relative w-full max-w-4xl max-h-[85vh] flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setViewingReceipt(null)}
-              className="absolute -top-3 -right-3 p-2 bg-white rounded-full shadow-lg text-gray-600 hover:text-red-500 transition-colors z-10"
+              className="absolute -top-4 -right-4 p-2.5 bg-white rounded-full shadow-xl text-gray-600 hover:text-red-500 transition-colors z-10"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </button>
-            <img
-              src={viewingReceipt}
-              alt="Receipt full view"
-              className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl"
-            />
+            {viewingReceipt.toLowerCase().endsWith(".pdf") ? (
+              <iframe
+                src={viewingReceipt}
+                className="w-full h-[80vh] rounded-2xl shadow-2xl bg-white"
+                title="Receipt PDF viewer"
+              />
+            ) : (
+              <img
+                src={viewingReceipt}
+                alt="Receipt full view"
+                className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+              />
+            )}
           </div>
         </div>
       )}
