@@ -9,12 +9,13 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  User,
   Phone,
   X,
   Copy,
   Building2,
+  User,
 } from "lucide-react";
+import Link from "next/link";
 import toast from "react-hot-toast";
 
 interface CoachBreakdown {
@@ -292,6 +293,9 @@ export default function ManagerPaymentsPage() {
                 <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Owed Amount
                 </th>
+                <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">
+                  Details
+                </th>
                 <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
                   Actions
                 </th>
@@ -367,6 +371,14 @@ export default function ManagerPaymentsPage() {
                       })}
                     </p>
                   </td>
+                  <td className="py-4 px-6 text-center">
+                    <Link
+                      href={`/manager/payments/${row.coachId}`}
+                      className="inline-flex items-center justify-center px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 font-semibold text-xs rounded-lg transition-colors border border-red-100 shadow-sm"
+                    >
+                      View Details
+                    </Link>
+                  </td>
                   <td className="py-4 px-6 text-right">
                     <button
                       onClick={() => setCoachPayoutModal(row)}
@@ -387,7 +399,7 @@ export default function ManagerPaymentsPage() {
 
               {filteredCoaches.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-gray-500">
+                  <td colSpan={5} className="py-8 text-center text-gray-500">
                     No matching coaches found.
                   </td>
                 </tr>
