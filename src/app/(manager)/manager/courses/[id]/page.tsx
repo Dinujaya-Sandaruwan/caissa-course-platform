@@ -24,6 +24,15 @@ import {
   Trash2,
   Mail,
   Phone,
+  User as UserIcon,
+  Award,
+  MapPin,
+  FileText,
+  Calendar,
+  ExternalLink,
+  Maximize2,
+  Star,
+  Trophy,
 } from "lucide-react";
 
 interface Lesson {
@@ -57,8 +66,38 @@ interface CourseDetail {
   discountedPrice?: number;
   reviewNotes?: string;
   createdAt: string;
-  coach?: { name?: string; whatsappNumber?: string; email?: string };
+  coach?: {
+    _id?: string;
+    name?: string;
+    whatsappNumber?: string;
+    email?: string;
+    profilePhoto?: string;
+    profilePhotoThumbnail?: string;
+  };
   chapters: Chapter[];
+}
+
+interface CoachFullProfile {
+  user: {
+    _id: string;
+    name: string;
+    email?: string;
+    whatsappNumber: string;
+    profilePhoto?: string;
+    profilePhotoThumbnail?: string;
+  };
+  profile: {
+    fideId?: string;
+    fideRating?: number;
+    bio?: string;
+    specializations?: string[];
+    coachAchievements?: string[];
+    playerAchievements?: string[];
+    dateOfBirth?: string;
+    address?: string;
+    cvUrl?: string;
+    verificationStatus?: string;
+  } | null;
 }
 
 const levelEmoji: Record<string, string> = {
@@ -128,12 +167,35 @@ export default function ManagerCourseDetailPage() {
   const [savingDiscount, setSavingDiscount] = useState(false);
   const [discountError, setDiscountError] = useState("");
 
-  // Modal
+  // Review Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState<"rejected" | "held">(
     "rejected",
   );
   const [modalNotes, setModalNotes] = useState("");
+
+  // Coach Info Modal
+  const [coachModalOpen, setCoachModalOpen] = useState(false);
+  const [coachData, setCoachData] = useState<CoachFullProfile | null>(null);
+  const [coachLoading, setCoachLoading] = useState(false);
+  const [photoFullscreen, setPhotoFullscreen] = useState(false);
+
+  const fetchCoachProfile = async () => {
+    if (!course?.coach?._id) return;
+    setCoachLoading(true);
+    setCoachModalOpen(true);
+    try {
+      const res = await fetch(`/api/manager/coaches/${course.coach._id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCoachData(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch coach profile:", error);
+    } finally {
+      setCoachLoading(false);
+    }
+  };
 
   const fetchCourse = useCallback(async () => {
     try {
@@ -381,7 +443,13 @@ export default function ManagerCourseDetailPage() {
               <span className="text-gray-300">·</span>
               <span>Rs. {course.price?.toLocaleString()}</span>
               <span className="text-gray-300">·</span>
-              <span>By {course.coach?.name || "Unknown"}</span>
+              <button
+                onClick={fetchCoachProfile}
+                className="text-red-600 hover:text-red-700 font-semibold hover:underline underline-offset-2 transition-colors cursor-pointer"
+                title="Click to view coach profile"
+              >
+                By {course.coach?.name || "Unknown"}
+              </button>
             </p>
           </div>
           <span
@@ -853,6 +921,286 @@ export default function ManagerCourseDetailPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Coach Info Modal */}
+      {coachModalOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => {
+            setCoachModalOpen(false);
+            setCoachData(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-lg w-full shadow-2xl animate-[fade-in-up_0.2s_ease-out] max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {coachLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+              </div>
+            ) : coachData ? (
+              <>
+                {/* Header with profile photo */}
+                <div className="relative bg-gradient-to-br from-red-50 via-orange-50 to-amber-50 rounded-t-3xl p-8 pb-6">
+                  <button
+                    onClick={() => {
+                      setCoachModalOpen(false);
+                      setCoachData(null);
+                    }}
+                    className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-white/60 rounded-xl transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+
+                  <div className="flex items-center gap-5">
+                    {/* Profile Photo */}
+                    <div className="relative group">
+                      {coachData.user.profilePhoto ||
+                      coachData.user.profilePhotoThumbnail ? (
+                        <div
+                          className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-white shadow-lg cursor-pointer relative"
+                          onClick={() => setPhotoFullscreen(true)}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={
+                              coachData.user.profilePhotoThumbnail ||
+                              coachData.user.profilePhoto ||
+                              ""
+                            }
+                            alt={coachData.user.name}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                            <Maximize2 className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-red-100 to-orange-100 ring-4 ring-white shadow-lg flex items-center justify-center">
+                          <UserIcon className="w-8 h-8 text-red-400" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Name & Status */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-bold text-gray-900 font-[family-name:var(--font-outfit)] truncate">
+                        {coachData.user.name}
+                      </h3>
+                      {coachData.profile?.verificationStatus && (
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 text-[10px] font-bold rounded-full mt-1.5 ${
+                            coachData.profile.verificationStatus === "approved"
+                              ? "text-emerald-700 bg-emerald-100 border border-emerald-200"
+                              : coachData.profile.verificationStatus ===
+                                  "paused"
+                                ? "text-amber-700 bg-amber-100 border border-amber-200"
+                                : "text-gray-600 bg-gray-100 border border-gray-200"
+                          }`}
+                        >
+                          {coachData.profile.verificationStatus
+                            .charAt(0)
+                            .toUpperCase() +
+                            coachData.profile.verificationStatus.slice(1)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Body */}
+                <div className="p-8 pt-6 space-y-5">
+                  {/* Contact Info */}
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      Contact
+                    </p>
+                    <div className="grid grid-cols-1 gap-2 text-sm">
+                      <span className="flex items-center gap-2.5 text-gray-700">
+                        <Mail className="w-4 h-4 text-gray-400 shrink-0" />
+                        {coachData.user.email || "N/A"}
+                      </span>
+                      <span className="flex items-center gap-2.5 text-gray-700">
+                        <Phone className="w-4 h-4 text-gray-400 shrink-0" />
+                        {coachData.user.whatsappNumber}
+                      </span>
+                      {coachData.profile?.address && (
+                        <span className="flex items-center gap-2.5 text-gray-700">
+                          <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
+                          {coachData.profile.address}
+                        </span>
+                      )}
+                      {coachData.profile?.dateOfBirth && (
+                        <span className="flex items-center gap-2.5 text-gray-700">
+                          <Calendar className="w-4 h-4 text-gray-400 shrink-0" />
+                          {new Date(
+                            coachData.profile.dateOfBirth,
+                          ).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* FIDE Info */}
+                  {coachData.profile &&
+                    (coachData.profile.fideId ||
+                      coachData.profile.fideRating) && (
+                      <div className="flex gap-3">
+                        {coachData.profile.fideId && (
+                          <div className="flex-1 p-3 bg-blue-50/80 rounded-xl border border-blue-100">
+                            <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">
+                              FIDE ID
+                            </p>
+                            <p className="text-sm font-bold text-blue-900 mt-0.5">
+                              {coachData.profile.fideId}
+                            </p>
+                          </div>
+                        )}
+                        {coachData.profile.fideRating != null && (
+                          <div className="flex-1 p-3 bg-amber-50/80 rounded-xl border border-amber-100">
+                            <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">
+                              FIDE Rating
+                            </p>
+                            <p className="text-sm font-bold text-amber-900 mt-0.5">
+                              {coachData.profile.fideRating}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                  {/* Bio */}
+                  {coachData.profile?.bio && (
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                        Bio
+                      </p>
+                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                        {coachData.profile.bio}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Specializations */}
+                  {coachData.profile?.specializations &&
+                    coachData.profile.specializations.length > 0 && (
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                          Specializations
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {coachData.profile.specializations.map((s) => (
+                            <span
+                              key={s}
+                              className="px-2.5 py-1 text-xs font-semibold text-red-600 bg-red-50 rounded-full border border-red-100"
+                            >
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Coach Achievements */}
+                  {coachData.profile?.coachAchievements &&
+                    coachData.profile.coachAchievements.length > 0 && (
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                          <Trophy className="w-3 h-3" /> Coach Achievements
+                        </p>
+                        <ul className="space-y-1">
+                          {coachData.profile.coachAchievements.map((a, i) => (
+                            <li
+                              key={i}
+                              className="text-sm text-gray-700 flex items-start gap-2"
+                            >
+                              <Star className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                              {a}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                  {/* Player Achievements */}
+                  {coachData.profile?.playerAchievements &&
+                    coachData.profile.playerAchievements.length > 0 && (
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                          <Award className="w-3 h-3" /> Player Achievements
+                        </p>
+                        <ul className="space-y-1">
+                          {coachData.profile.playerAchievements.map((a, i) => (
+                            <li
+                              key={i}
+                              className="text-sm text-gray-700 flex items-start gap-2"
+                            >
+                              <Star className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                              {a}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                  {/* CV Link */}
+                  {coachData.profile?.cvUrl && (
+                    <a
+                      href={coachData.profile.cvUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-100 transition-colors"
+                    >
+                      <FileText className="w-4 h-4" />
+                      View CV
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+                <UserIcon className="w-10 h-10 mb-2" />
+                <p className="text-sm font-medium">Could not load coach info</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Photo Fullscreen Overlay */}
+      {photoFullscreen && coachData?.user.profilePhoto && (
+        <div
+          className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setPhotoFullscreen(false)}
+        >
+          <button
+            onClick={() => setPhotoFullscreen(false)}
+            className="absolute top-6 right-6 p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-2xl transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div
+            className="relative max-w-3xl max-h-[85vh] w-full flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={coachData.user.profilePhoto}
+              alt={coachData.user.name}
+              className="max-w-full max-h-[85vh] object-contain rounded-2xl"
+            />
+          </div>
+          <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/60 text-sm font-medium">
+            {coachData.user.name} — Click anywhere to close
+          </p>
         </div>
       )}
     </div>
