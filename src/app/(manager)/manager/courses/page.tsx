@@ -12,6 +12,7 @@ import {
   X,
   Trash2,
   RotateCcw,
+  Rocket,
 } from "lucide-react";
 
 interface PendingCourse {
@@ -230,6 +231,26 @@ export default function ManagerCoursesPage() {
       setTrashModalOpen(false);
     } catch (error) {
       console.error("Trash action failed:", error);
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleRepublish(courseId: string) {
+    setActionLoading(courseId);
+    try {
+      const res = await fetch(`/api/manager/courses/${courseId}/publish`, {
+        method: "PATCH",
+      });
+      if (res.ok) {
+        setUnpublishedCourses((prev) => prev.filter((c) => c._id !== courseId));
+        fetchPublishedCourses();
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to republish course");
+      }
+    } catch (error) {
+      console.error("Republish failed:", error);
     } finally {
       setActionLoading(null);
     }
@@ -473,6 +494,20 @@ export default function ManagerCoursesPage() {
                         <CheckCircle className="w-3 h-3" />
                       )}
                       Approve
+                    </button>
+                  )}
+                  {activeTab === "unpublished" && (
+                    <button
+                      onClick={() => handleRepublish(course._id)}
+                      disabled={actionLoading === course._id}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-sm transition-colors disabled:opacity-50"
+                    >
+                      {actionLoading === course._id ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Rocket className="w-3 h-3" />
+                      )}
+                      Republish
                     </button>
                   )}
                   {activeTab === "trashed" ? (

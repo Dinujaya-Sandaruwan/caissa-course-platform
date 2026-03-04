@@ -417,7 +417,9 @@ export default function ManagerCourseDetailPage() {
   );
   const allReady = totalLessons > 0 && readyLessons === totalLessons;
   const canPublish =
-    course.status === "approved" && allReady && !!course.previewVideoUrl;
+    (course.status === "approved" || course.status === "unpublished") &&
+    allReady &&
+    !!course.previewVideoUrl;
 
   return (
     <div className="space-y-8 animate-[fade-in-up_0.4s_ease-out]">
@@ -852,6 +854,22 @@ export default function ManagerCourseDetailPage() {
             </button>
           )}
           {course.status === "approved" && !canPublish && (
+            <span className="text-xs text-amber-600 font-medium self-center">
+              {!allReady ? "Set all video URLs first" : "Set preview URL first"}
+            </span>
+          )}
+
+          {/* Republish (only for unpublished) */}
+          {course.status === "unpublished" && (
+            <button
+              onClick={handlePublish}
+              disabled={actionLoading || !canPublish}
+              className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-xl shadow-red-600/20 transition-all disabled:opacity-50"
+            >
+              <Rocket className="w-4 h-4" /> Republish Course
+            </button>
+          )}
+          {course.status === "unpublished" && !canPublish && (
             <span className="text-xs text-amber-600 font-medium self-center">
               {!allReady ? "Set all video URLs first" : "Set preview URL first"}
             </span>

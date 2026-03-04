@@ -29,9 +29,9 @@ export async function PATCH(
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    if (course.status !== "approved") {
+    if (course.status !== "approved" && course.status !== "unpublished") {
       return NextResponse.json(
-        { error: "Only approved courses can be published" },
+        { error: "Only approved or unpublished courses can be published" },
         { status: 400 },
       );
     }
