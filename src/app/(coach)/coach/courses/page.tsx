@@ -99,7 +99,6 @@ export default function CoachCoursesPage() {
     id: string;
     title: string;
   } | null>(null);
-  const [trashing, setTrashing] = useState(false);
 
   useEffect(() => {
     async function fetchCourses() {
@@ -117,24 +116,6 @@ export default function CoachCoursesPage() {
     }
     fetchCourses();
   }, []);
-
-  async function handleTrash() {
-    if (!trashTarget) return;
-    setTrashing(true);
-    try {
-      const res = await fetch(`/api/coach/courses/${trashTarget.id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        setCourses((prev) => prev.filter((c) => c._id !== trashTarget.id));
-        setTrashTarget(null);
-      }
-    } catch (error) {
-      console.error("Failed to trash course:", error);
-    } finally {
-      setTrashing(false);
-    }
-  }
 
   if (loading) {
     return (
@@ -383,13 +364,14 @@ export default function CoachCoursesPage() {
         })}
       </div>
 
-      {/* Trash Confirmation Modal */}
+      {/* Trash Notification Modal (Disabled) */}
       {trashTarget && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-[fade-in-up_0.2s_ease-out]">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">
-                Move to Trash?
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                Action Disabled
               </h3>
               <button
                 onClick={() => setTrashTarget(null)}
@@ -399,27 +381,19 @@ export default function CoachCoursesPage() {
               </button>
             </div>
             <p className="text-sm text-gray-500 mb-6">
+              Course deletion by coaches is currently disabled. If you need to
+              remove{" "}
               <strong className="text-gray-700">
                 &ldquo;{trashTarget.title}&rdquo;
               </strong>{" "}
-              will be moved to trash. Students will no longer be able to access
-              this course. A manager can permanently delete or reactivate it
-              later.
+              from the platform, please contact a manager.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setTrashTarget(null)}
-                className="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                className="px-6 py-2.5 text-sm font-bold text-white bg-gray-900 hover:bg-gray-800 rounded-xl transition-colors shadow-lg shadow-gray-900/20"
               >
-                Cancel
-              </button>
-              <button
-                onClick={handleTrash}
-                disabled={trashing}
-                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-600/20 transition-all disabled:opacity-50"
-              >
-                {trashing && <Loader2 className="w-4 h-4 animate-spin" />}
-                Move to Trash
+                Understood
               </button>
             </div>
           </div>
