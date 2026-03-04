@@ -6,6 +6,7 @@ import Course from "@/models/Course";
 import PayoutRequest from "@/models/PayoutRequest";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
 import User from "@/models/User";
+import { logAction } from "@/lib/auditLog";
 
 export async function POST(
   req: NextRequest,
@@ -159,6 +160,14 @@ export async function POST(
         console.error("Failed to send WhatsApp notification:", waError);
       }
     }
+
+    logAction({
+      managerId: session.userId,
+      action: `Sent payout request of Rs. ${totalAmount.toLocaleString()} to coach "${coach.name}"`,
+      category: "payments",
+      targetId: coachId,
+      targetName: coach.name,
+    });
 
     return NextResponse.json({
       success: true,

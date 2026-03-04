@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
+import { logAction } from "@/lib/auditLog";
 
 export async function GET() {
   try {
@@ -79,6 +80,13 @@ export async function POST(req: NextRequest) {
       password: hashedPassword,
       role: "manager",
       status: "active",
+    });
+
+    logAction({
+      managerId: session.userId,
+      action: `Added new manager "${name}"`,
+      category: "managers",
+      targetName: name,
     });
 
     return NextResponse.json(

@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Enrollment from "@/models/Enrollment";
 import Course from "@/models/Course";
+import { logAction } from "@/lib/auditLog";
 
 export async function POST(req: NextRequest) {
   try {
@@ -61,6 +62,12 @@ export async function POST(req: NextRequest) {
         },
       },
     );
+
+    logAction({
+      managerId: session.userId,
+      action: `Processed developer payout of Rs. ${totalPayout.toLocaleString()}`,
+      category: "payments",
+    });
 
     return NextResponse.json({
       success: true,

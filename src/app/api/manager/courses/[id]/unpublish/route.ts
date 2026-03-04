@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
+import { logAction } from "@/lib/auditLog";
 
 export async function PATCH(
   request: NextRequest,
@@ -32,6 +33,14 @@ export async function PATCH(
 
     course.status = "unpublished";
     await course.save();
+
+    logAction({
+      managerId: session.userId,
+      action: `Unpublished course "${course.title}"`,
+      category: "courses",
+      targetId: courseId,
+      targetName: course.title,
+    });
 
     return NextResponse.json({
       message: "Course unpublished successfully",

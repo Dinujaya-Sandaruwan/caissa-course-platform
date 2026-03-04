@@ -9,6 +9,7 @@ import {
 } from "@/lib/whatsapp";
 
 import mongoose from "mongoose";
+import { logAction } from "@/lib/auditLog";
 
 export async function PATCH(
   req: NextRequest,
@@ -79,6 +80,19 @@ export async function PATCH(
     } catch (waError) {
       console.error("Failed to send WhatsApp verification update:", waError);
     }
+
+    const coachName = (coachProfile.userId as any)?.name || "Unknown Coach";
+    logAction({
+      managerId: session.userId,
+      action:
+        action === "approved"
+          ? `Verified coach "${coachName}"`
+          : `Rejected coach "${coachName}"`,
+      category: "coaches",
+      targetId: id,
+      targetName: coachName,
+      details: notes?.trim() || undefined,
+    });
 
     return NextResponse.json({ success: true, profile: coachProfile });
   } catch (error) {

@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import Enrollment from "@/models/Enrollment";
 import Course from "@/models/Course";
 import { notifyStudentEnrollmentRevoked } from "@/lib/whatsapp";
+import { logAction } from "@/lib/auditLog";
 
 export async function DELETE(
   request: NextRequest,
@@ -51,6 +52,13 @@ export async function DELETE(
     if (student?.phone && course?.title) {
       await notifyStudentEnrollmentRevoked(student.phone, course.title, notes);
     }
+
+    logAction({
+      managerId: session.userId,
+      action: `Revoked enrollment by student on course`,
+      category: "enrollments",
+      targetId: enrollmentId,
+    });
 
     return NextResponse.json({
       message: "Enrollment successfully revoked and removed.",

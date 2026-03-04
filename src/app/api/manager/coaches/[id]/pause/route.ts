@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import CoachProfile from "@/models/CoachProfile";
+import { logAction } from "@/lib/auditLog";
 
 export async function PATCH(
   req: NextRequest,
@@ -51,6 +52,14 @@ export async function PATCH(
     coachProfile.verificationStatus =
       action === "pause" ? "paused" : "approved";
     await coachProfile.save();
+
+    logAction({
+      managerId: session.userId,
+      action:
+        action === "pause" ? `Paused coach account` : `Resumed coach account`,
+      category: "coaches",
+      targetId: id,
+    });
 
     return NextResponse.json({ success: true, profile: coachProfile });
   } catch (error) {

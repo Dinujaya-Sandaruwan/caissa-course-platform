@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
+import { logAction } from "@/lib/auditLog";
 
 export async function PATCH(
   req: NextRequest,
@@ -43,6 +44,14 @@ export async function PATCH(
     if (!updatedCourse) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
+
+    logAction({
+      managerId: session.userId,
+      action: `Updated platform fee to ${platformFee}%`,
+      category: "platform-fees",
+      targetId: id,
+      targetName: updatedCourse.title,
+    });
 
     return NextResponse.json({
       success: true,

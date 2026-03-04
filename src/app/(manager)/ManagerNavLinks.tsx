@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   FolderOpen,
   Mail,
+  Activity,
 } from "lucide-react";
 
 const navLinks = [
@@ -24,6 +25,7 @@ const navLinks = [
   { name: "Platform Fees", href: "/manager/platform-fees", icon: CreditCard },
   { name: "Managers", href: "/manager/managers", icon: ShieldCheck },
   { name: "Messages", href: "/manager/messages", icon: Mail },
+  { name: "Activity Log", href: "/manager/activity-log", icon: Activity },
 ];
 
 export default function ManagerNavLinks() {

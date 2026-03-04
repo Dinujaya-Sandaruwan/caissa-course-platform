@@ -7,6 +7,7 @@ import {
   notifyCoachCourseRejected,
   notifyCoachCourseOnHold,
 } from "@/lib/whatsapp";
+import { logAction } from "@/lib/auditLog";
 
 export async function PATCH(
   request: NextRequest,
@@ -82,6 +83,21 @@ export async function PATCH(
         await notifyCoachCourseOnHold(coachPhone, course.title, notes);
       }
     }
+
+    const actionLabel =
+      action === "approved"
+        ? "Approved"
+        : action === "rejected"
+          ? "Rejected"
+          : "Put on hold";
+    logAction({
+      managerId: session.userId,
+      action: `${actionLabel} course "${course.title}"`,
+      category: "courses",
+      targetId: courseId,
+      targetName: course.title,
+      details: notes || undefined,
+    });
 
     return NextResponse.json({
       message: `Course ${action} successfully`,

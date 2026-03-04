@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import StudentProfile from "@/models/StudentProfile";
+import { logAction } from "@/lib/auditLog";
 
 export async function GET(
   request: NextRequest,
@@ -94,6 +95,14 @@ export async function PATCH(
 
     await profile.save();
 
+    logAction({
+      managerId: session.userId,
+      action: `Updated student profile "${user.name}"`,
+      category: "students",
+      targetId: studentId,
+      targetName: user.name,
+    });
+
     return NextResponse.json({ message: "Student updated successfully" });
   } catch (error) {
     console.error("Error updating student:", error);
@@ -126,6 +135,14 @@ export async function DELETE(
     // Soft delete: set status to suspended
     user.status = "suspended";
     await user.save();
+
+    logAction({
+      managerId: session.userId,
+      action: `Suspended student "${user.name}"`,
+      category: "students",
+      targetId: studentId,
+      targetName: user.name,
+    });
 
     return NextResponse.json({ message: "Student suspended successfully" });
   } catch (error) {

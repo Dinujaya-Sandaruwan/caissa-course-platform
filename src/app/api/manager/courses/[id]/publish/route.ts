@@ -5,6 +5,7 @@ import Course from "@/models/Course";
 import Chapter from "@/models/Chapter";
 import Lesson from "@/models/Lesson";
 import { notifyCoachCoursePublished } from "@/lib/whatsapp";
+import { logAction } from "@/lib/auditLog";
 
 export async function PATCH(
   request: NextRequest,
@@ -72,6 +73,14 @@ export async function PATCH(
     if (populatedCoach?.phone) {
       await notifyCoachCoursePublished(populatedCoach.phone, course.title);
     }
+
+    logAction({
+      managerId: session.userId,
+      action: `Published course "${course.title}"`,
+      category: "courses",
+      targetId: courseId,
+      targetName: course.title,
+    });
 
     return NextResponse.json({
       message: "Course published successfully",

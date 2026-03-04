@@ -8,6 +8,7 @@ import {
   notifyStudentEnrollmentRejected,
   notifyStudentEnrollmentOnHold,
 } from "@/lib/whatsapp";
+import { logAction } from "@/lib/auditLog";
 
 export async function PATCH(
   request: NextRequest,
@@ -73,7 +74,10 @@ export async function PATCH(
     await enrollment.save();
 
     // Send WhatsApp notification to the student
-    const student = enrollment.studentId as unknown as { phone?: string };
+    const student = enrollment.studentId as unknown as {
+      name?: string;
+      phone?: string;
+    };
     const course = enrollment.courseId as unknown as { title?: string };
 
     if (student?.phone && course?.title) {
@@ -89,6 +93,23 @@ export async function PATCH(
         await notifyStudentEnrollmentOnHold(student.phone, course.title, notes);
       }
     }
+
+    const studentName = student?.name || "Unknown Student";
+    const courseTitle = course?.title || "Unknown Course";
+    const actionLabel =
+      action === "approved"
+        ? "Approved"
+        : action === "rejected"
+          ? "Rejected"
+          : "Put on hold";
+    logAction({
+      managerId: session.userId,
+      action: `${actionLabel} enrollment for "${studentName}" in "${courseTitle}"`,
+      category: "enrollments",
+      targetId: enrollmentId,
+      targetName: studentName,
+      details: notes?.trim() || undefined,
+    });
 
     return NextResponse.json({
       message: `Enrollment ${action} successfully`,

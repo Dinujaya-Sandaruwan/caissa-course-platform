@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { ContactMessage } from "@/models/ContactMessage";
 import { getSessionUser } from "@/lib/auth";
 import mongoose from "mongoose";
+import { logAction } from "@/lib/auditLog";
 
 // PATCH: Mark a message as read or replied
 export async function PATCH(
@@ -49,6 +50,13 @@ export async function PATCH(
       );
     }
 
+    logAction({
+      managerId: user.userId,
+      action: `Marked message as "${status}"`,
+      category: "messages",
+      targetId: id,
+    });
+
     return NextResponse.json({
       success: true,
       data: updatedMessage,
@@ -92,6 +100,13 @@ export async function DELETE(
         { status: 404 },
       );
     }
+
+    logAction({
+      managerId: user.userId,
+      action: `Deleted a contact message from "${(deletedMessage as any).name || "Unknown"}"`,
+      category: "messages",
+      targetId: id,
+    });
 
     return NextResponse.json({ success: true, id: deletedMessage._id });
   } catch (error) {

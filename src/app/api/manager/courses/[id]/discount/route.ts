@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
+import { logAction } from "@/lib/auditLog";
 
 // PATCH — Manager sets discounted price
 export async function PATCH(
@@ -62,6 +63,14 @@ export async function PATCH(
     course.discountedPrice = dp;
     await course.save();
 
+    logAction({
+      managerId: user.userId,
+      action: `Set discount on course "${course.title}" to Rs. ${dp}`,
+      category: "courses",
+      targetId: courseId,
+      targetName: course.title,
+    });
+
     return NextResponse.json({ success: true, discountedPrice: dp });
   } catch (error) {
     console.error("Error setting discount:", error);
@@ -93,6 +102,14 @@ export async function DELETE(
 
     course.discountedPrice = undefined;
     await course.save();
+
+    logAction({
+      managerId: user.userId,
+      action: `Removed discount from course "${course.title}"`,
+      category: "courses",
+      targetId: courseId,
+      targetName: course.title,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

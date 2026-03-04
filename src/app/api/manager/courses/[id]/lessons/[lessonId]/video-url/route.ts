@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import Lesson from "@/models/Lesson";
 import { unlink } from "fs/promises";
 import path from "path";
+import { logAction } from "@/lib/auditLog";
 
 export async function PATCH(
   request: NextRequest,
@@ -52,6 +53,13 @@ export async function PATCH(
         console.warn(`Could not delete temp video at: ${oldTempPath}`);
       }
     }
+
+    logAction({
+      managerId: session.userId,
+      action: `Updated video URL for lesson "${lesson.title}"`,
+      category: "courses",
+      targetId: lesson._id.toString(),
+    });
 
     return NextResponse.json({
       message: "Video URL set and lesson marked as ready",

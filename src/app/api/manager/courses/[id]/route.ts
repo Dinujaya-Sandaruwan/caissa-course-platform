@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
 import Chapter from "@/models/Chapter";
 import Lesson from "@/models/Lesson";
+import { logAction } from "@/lib/auditLog";
 
 export async function GET(
   request: NextRequest,
@@ -95,6 +96,8 @@ export async function DELETE(
     ]);
     await course.deleteOne();
 
+    logAction({ managerId: session.userId, action: `Permanently deleted course "${course.title}"`, category: "courses", targetId: courseId, targetName: course.title });
+
     return NextResponse.json({ message: "Course permanently deleted" });
   } catch (error) {
     console.error("Error permanently deleting course:", error);
@@ -135,6 +138,8 @@ export async function PATCH(
     course.status = "draft";
     course.trashedAt = undefined;
     await course.save();
+
+    logAction({ managerId: session.userId, action: `Reactivated course "${course.title}" as draft`, category: "courses", targetId: courseId, targetName: course.title });
 
     return NextResponse.json({ message: "Course reactivated as draft" });
   } catch (error) {

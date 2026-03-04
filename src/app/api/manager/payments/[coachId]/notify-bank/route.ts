@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { logAction } from "@/lib/auditLog";
 
 export async function POST(
   req: NextRequest,
@@ -50,6 +51,14 @@ export async function POST(
     const message = `Hello ${coachUser.name || "Coach"},\n\nYou have a pending payout of *Rs. ${Number(pendingAmount).toLocaleString()}*. However, we cannot process this payment because your bank details are missing.\n\nPlease update your billing information here: ${billingUrl}`;
 
     await sendWhatsAppMessage(coachUser.whatsappNumber, message);
+
+    logAction({
+      managerId: session.userId,
+      action: `Notified coach "${coachUser.name || "Unknown"}" to add bank details via WhatsApp`,
+      category: "payments",
+      targetId: coachId,
+      targetName: coachUser.name,
+    });
 
     return NextResponse.json({
       success: true,

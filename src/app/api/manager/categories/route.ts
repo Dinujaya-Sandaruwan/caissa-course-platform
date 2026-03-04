@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Category from "@/models/Category";
 import Course from "@/models/Course";
+import { logAction } from "@/lib/auditLog";
 
 export async function GET() {
   try {
@@ -80,6 +81,14 @@ export async function POST(req: NextRequest) {
 
     const category = await Category.create({ name: name.trim() });
 
+    logAction({
+      managerId: session.userId,
+      action: `Created category "${name.trim()}"`,
+      category: "categories",
+      targetId: category._id.toString(),
+      targetName: name.trim(),
+    });
+
     return NextResponse.json(category, { status: 201 });
   } catch (error) {
     console.error("Error creating category:", error);
@@ -132,6 +141,14 @@ export async function DELETE(req: NextRequest) {
         { status: 404 },
       );
     }
+
+    logAction({
+      managerId: session.userId,
+      action: `Deleted category "${(deleted as any).name}"`,
+      category: "categories",
+      targetId: id,
+      targetName: (deleted as any).name,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

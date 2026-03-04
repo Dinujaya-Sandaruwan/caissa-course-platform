@@ -5,6 +5,7 @@ import crypto from "crypto";
 import { connectDB } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import User from "@/models/User";
+import { logAction } from "@/lib/auditLog";
 
 export async function POST(
   request: NextRequest,
@@ -72,6 +73,14 @@ export async function POST(
     if (!updatedUser) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
+
+    logAction({
+      managerId: session.userId,
+      action: `Updated photo for student "${updatedUser.name || "Unknown"}"`,
+      category: "students",
+      targetId: studentId,
+      targetName: updatedUser.name,
+    });
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
+import { logAction } from "@/lib/auditLog";
 
 export async function PATCH(
   req: NextRequest,
@@ -42,6 +43,14 @@ export async function PATCH(
     if (!updatedUser) {
       return NextResponse.json({ error: "Manager not found" }, { status: 404 });
     }
+
+    logAction({
+      managerId: session.userId,
+      action: `Changed manager status to "${action === "suspend" ? "suspended" : "active"}"`,
+      category: "managers",
+      targetId: id,
+      targetName: updatedUser.name,
+    });
 
     return NextResponse.json(updatedUser);
   } catch (error) {
