@@ -80,11 +80,11 @@ function useStockfish() {
 
 // ─── Custom Board Styles ─────────────────────────────────────────────────────
 const customDarkSquareStyle: React.CSSProperties = {
-  backgroundColor: "#991b1b",
+  backgroundColor: "#ef4444",
 };
 
 const customLightSquareStyle: React.CSSProperties = {
-  backgroundColor: "#fef2f2",
+  backgroundColor: "#fee2e2",
 };
 
 // ─── Main ChessGame Component ────────────────────────────────────────────────
