@@ -14,6 +14,7 @@ import {
   Copy,
   Building2,
   User,
+  ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -158,7 +159,10 @@ export default function ManagerPaymentsPage() {
           </p>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 p-6 rounded-2xl shadow-sm relative overflow-hidden group">
+        <Link
+          href="/manager/payments/revenue"
+          className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 p-6 rounded-2xl shadow-sm relative overflow-hidden group cursor-pointer hover:ring-2 hover:ring-emerald-200 transition-all"
+        >
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm font-medium text-emerald-600 mb-1">
@@ -176,10 +180,10 @@ export default function ManagerPaymentsPage() {
             </div>
           </div>
           <p className="text-xs text-emerald-500 mt-4 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" />
-            Lifetime Company Gross
+            <ArrowRight className="w-3 h-3" />
+            View Full Financial Ledger
           </p>
-        </div>
+        </Link>
 
         <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-100 p-6 rounded-2xl shadow-sm relative overflow-hidden group">
           <div className="flex justify-between items-start">
