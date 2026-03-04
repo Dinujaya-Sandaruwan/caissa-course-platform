@@ -18,7 +18,7 @@ interface CourseOption {
 interface Student {
   _id: string;
   name: string;
-  phone: string;
+  revenue?: number;
   enrolledAt: string;
 }
 
@@ -186,7 +186,7 @@ export default function CoachStudentsPage() {
                     Student Name
                   </span>
                   <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                    WhatsApp
+                    Revenue
                   </span>
                   <span className="text-xs font-bold text-gray-400 uppercase tracking-wider text-right">
                     Enrolled
@@ -211,8 +211,10 @@ export default function CoachStudentsPage() {
                           {student.name}
                         </span>
                       </div>
-                      <span className="text-xs text-gray-500 font-mono">
-                        {student.phone || "—"}
+                      <span className="text-sm font-bold text-gray-700">
+                        {student.revenue !== undefined
+                          ? `Rs. ${student.revenue.toLocaleString()}`
+                          : "—"}
                       </span>
                       <span className="text-xs text-gray-400 sm:text-right">
                         {student.enrolledAt

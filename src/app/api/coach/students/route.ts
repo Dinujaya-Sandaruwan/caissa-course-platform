@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       coach: session.userId,
       status: "published",
     })
-      .select("title enrollmentCount")
+      .select("title enrollmentCount platformFee price")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -35,17 +35,24 @@ export async function GET(request: NextRequest) {
           courseId,
           paymentStatus: "approved",
         })
-          .populate("studentId", "name phone")
+          .populate("studentId", "name")
           .sort({ enrolledAt: -1 })
           .lean();
 
-        students = enrollments.map((e) => ({
-          _id: e._id,
-          name:
-            (e.studentId as unknown as { name?: string })?.name || "Student",
-          phone: (e.studentId as unknown as { phone?: string })?.phone || "",
-          enrolledAt: e.enrolledAt,
-        }));
+        students = enrollments.map((e) => {
+          const amountPaid = e.amountPaid || course.price || 0;
+          const platformFeePercent = course.platformFee || 0;
+          const platformCut = amountPaid * (platformFeePercent / 100);
+          const revenue = amountPaid - platformCut;
+
+          return {
+            _id: e._id,
+            name:
+              (e.studentId as unknown as { name?: string })?.name || "Student",
+            revenue,
+            enrolledAt: e.enrolledAt,
+          };
+        });
       }
     }
 
