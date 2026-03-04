@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Crown, Mail, Phone, MapPin, ChevronRight, Heart } from "lucide-react";
+import NewsletterForm from "./NewsletterForm";
 
 const footerLinks = {
   platform: {
@@ -124,16 +125,7 @@ export default function Footer() {
             <p className="text-sm text-gray-400 mb-4 leading-relaxed">
               Get notified about new courses, tournaments, and chess tips.
             </p>
-            <div className="flex flex-col gap-3">
-              <input
-                type="email"
-                placeholder="Your email"
-                className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-red/50 focus:ring-1 focus:ring-primary-red/30 transition-all"
-              />
-              <button className="w-full px-4 py-2.5 rounded-xl bg-primary-red hover:bg-accent-red text-white text-sm font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-primary-red/20">
-                Subscribe
-              </button>
-            </div>
+            <NewsletterForm />
           </div>
         </div>
 
