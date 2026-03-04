@@ -231,46 +231,32 @@ export default function ManagerActivityLogPage() {
             {filteredLogs.map((log) => (
               <div
                 key={log._id}
-                className="px-6 py-4 hover:bg-gray-50/50 transition-colors flex items-start gap-4"
+                className="px-6 py-4 hover:bg-gray-50/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
-                {/* Manager initials avatar */}
-                <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-bold shrink-0 mt-0.5">
-                  {log.managerName
-                    .split(" ")
-                    .map((w) => w[0])
-                    .join("")
-                    .substring(0, 2)
-                    .toUpperCase()}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-gray-900">
+                    <span className="font-bold">{log.managerName}</span>{" "}
+                    <span className="text-gray-600">{log.action}</span>
+                  </p>
+                  {log.details && (
+                    <p className="text-xs text-gray-400 mt-1 truncate">
+                      {log.details}
+                    </p>
+                  )}
                 </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="text-sm text-gray-900">
-                        <span className="font-bold">{log.managerName}</span>{" "}
-                        <span className="text-gray-600">{log.action}</span>
-                      </p>
-                      {log.details && (
-                        <p className="text-xs text-gray-400 mt-1 truncate">
-                          {log.details}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span
-                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest ${CATEGORY_COLORS[log.category] || "bg-gray-100 text-gray-600"}`}
-                      >
-                        {log.category}
-                      </span>
-                      <span
-                        className="text-xs text-gray-400 whitespace-nowrap flex items-center gap-1"
-                        title={formatFullTime(log.createdAt)}
-                      >
-                        <Clock className="w-3 h-3" />
-                        {formatTime(log.createdAt)}
-                      </span>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span
+                    className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest ${CATEGORY_COLORS[log.category] || "bg-gray-100 text-gray-600"}`}
+                  >
+                    {log.category}
+                  </span>
+                  <span
+                    className="text-xs text-gray-400 whitespace-nowrap flex items-center gap-1.5"
+                    title={formatFullTime(log.createdAt)}
+                  >
+                    <Clock className="w-3.5 h-3.5" />
+                    {formatTime(log.createdAt)}
+                  </span>
                 </div>
               </div>
             ))}
