@@ -17,9 +17,9 @@ const footerLinks = {
     title: "For Coaches",
     links: [
       { label: "Become a Coach", href: "/become-a-coach" },
-      { label: "How It Works", href: "#" },
-      { label: "Coach Dashboard", href: "#" },
-      { label: "Coach Resources", href: "#" },
+      { label: "How It Works", href: "/how-it-works" },
+      { label: "Coach Dashboard", href: "/coach/dashboard" },
+      { label: "Coach Resources", href: "/coach/dashboard" },
     ],
   },
   support: {
