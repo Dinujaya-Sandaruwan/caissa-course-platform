@@ -49,12 +49,9 @@ export default function ManagerPaymentsPage() {
   const [data, setData] = useState<PaymentsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [processingId, setProcessingId] = useState<string | null>(null);
   const [isPayingDeveloper, setIsPayingDeveloper] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  const [coachPayoutModal, setCoachPayoutModal] =
-    useState<CoachBreakdown | null>(null);
   const [developerPayoutModalOpen, setDeveloperPayoutModalOpen] =
     useState(false);
 
@@ -82,33 +79,6 @@ export default function ManagerPaymentsPage() {
   useEffect(() => {
     fetchPaymentsData();
   }, []);
-
-  const executeCoachPayout = async () => {
-    if (!coachPayoutModal) return;
-    try {
-      setProcessingId(coachPayoutModal.coachId);
-      const res = await fetch("/api/manager/payments/payout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coachId: coachPayoutModal.coachId }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Payout transaction failed");
-      }
-
-      toast.success(
-        `Successfully processed payout for ${coachPayoutModal.name}`,
-      );
-      setCoachPayoutModal(null);
-      await fetchPaymentsData();
-    } catch (error) {
-      console.error(error);
-      toast.error(`Failed to process payout for ${coachPayoutModal.name}`);
-    } finally {
-      setProcessingId(null);
-    }
-  };
 
   const handleDeveloperPayout = () => {
     setDeveloperPayoutModalOpen(true);
@@ -293,9 +263,6 @@ export default function ManagerPaymentsPage() {
                 <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Owed Amount
                 </th>
-                <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">
-                  Details
-                </th>
                 <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
                   Actions
                 </th>
@@ -371,35 +338,20 @@ export default function ManagerPaymentsPage() {
                       })}
                     </p>
                   </td>
-                  <td className="py-4 px-6 text-center">
+                  <td className="py-4 px-6 text-right">
                     <Link
                       href={`/manager/payments/${row.coachId}`}
-                      className="inline-flex items-center justify-center px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 font-semibold text-xs rounded-lg transition-colors border border-red-100 shadow-sm"
+                      className="inline-flex items-center justify-center px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold text-xs rounded-lg transition-colors shadow-sm"
                     >
                       View Details
                     </Link>
-                  </td>
-                  <td className="py-4 px-6 text-right">
-                    <button
-                      onClick={() => setCoachPayoutModal(row)}
-                      disabled={
-                        row.pendingAmount === 0 || processingId === row.coachId
-                      }
-                      className="inline-flex items-center justify-center px-4 py-2 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-100 disabled:text-gray-400 text-white text-sm font-semibold rounded-xl transition-all shadow-sm active:scale-95"
-                    >
-                      {processingId === row.coachId ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        "Mark as Paid"
-                      )}
-                    </button>
                   </td>
                 </tr>
               ))}
 
               {filteredCoaches.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-500">
+                  <td colSpan={4} className="py-8 text-center text-gray-500">
                     No matching coaches found.
                   </td>
                 </tr>
@@ -589,197 +541,6 @@ export default function ManagerPaymentsPage() {
                 className="flex-1 py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors flex justify-center items-center shadow-sm"
               >
                 {isPayingDeveloper ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  "Confirm Paid"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Coach Payout Modal */}
-      {coachPayoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl ring-1 ring-gray-900/10 p-6 sm:p-8">
-            <div className="flex justify-between items-start mb-6 border-b border-gray-100 pb-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-red-100 shrink-0">
-                  {coachPayoutModal.profilePictureThumbnail ||
-                  coachPayoutModal.profilePicture ? (
-                    <img
-                      src={
-                        coachPayoutModal.profilePictureThumbnail ||
-                        coachPayoutModal.profilePicture
-                      }
-                      alt="Avatar"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-red-100 flex items-center justify-center text-red-600 font-bold text-xl">
-                      {coachPayoutModal.name.charAt(0)}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">
-                    Payout: {coachPayoutModal.name}
-                  </h3>
-                  <p className="text-sm font-medium text-gray-500">
-                    {coachPayoutModal.unpaidEnrollments} Pending Enrollments
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setCoachPayoutModal(null)}
-                className="text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-full p-2 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {coachPayoutModal.bankDetails ? (
-              <div className="space-y-4 mb-8 bg-gray-50/50 p-5 rounded-2xl border border-gray-100">
-                <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                      Account Owner
-                    </p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {coachPayoutModal.bankDetails.accountOwnerName}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() =>
-                      handleCopy(
-                        coachPayoutModal.bankDetails?.accountOwnerName || "",
-                        "Account Owner",
-                      )
-                    }
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Copy Name"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                      Bank Name
-                    </p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {coachPayoutModal.bankDetails.bankName}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() =>
-                      handleCopy(
-                        coachPayoutModal.bankDetails?.bankName || "",
-                        "Bank Name",
-                      )
-                    }
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Copy Bank Name"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                      Branch
-                    </p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {coachPayoutModal.bankDetails.bankLocation}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() =>
-                      handleCopy(
-                        coachPayoutModal.bankDetails?.bankLocation || "",
-                        "Branch",
-                      )
-                    }
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Copy Branch"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                      Account Number
-                    </p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {coachPayoutModal.bankDetails.accountNumber}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() =>
-                      handleCopy(
-                        coachPayoutModal.bankDetails?.accountNumber || "",
-                        "Account Number",
-                      )
-                    }
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Copy Account Number"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="pt-2 text-center">
-                  <button
-                    onClick={() =>
-                      handleCopy(
-                        `Payment Details for ${coachPayoutModal.name}:\nAccount Owner: ${coachPayoutModal.bankDetails?.accountOwnerName}\nBank Name: ${coachPayoutModal.bankDetails?.bankName}\nBranch: ${coachPayoutModal.bankDetails?.bankLocation}\nAccount Number: ${coachPayoutModal.bankDetails?.accountNumber}\nAmount: Rs. ${coachPayoutModal.pendingAmount}`,
-                        "All Coach Bank Details",
-                      )
-                    }
-                    className="inline-flex justify-center items-center py-2 px-4 text-xs font-bold text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-colors w-full"
-                  >
-                    <Copy className="w-3.5 h-3.5 mr-2" /> Copy All Details
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="mb-8 p-6 text-center bg-gray-50 rounded-2xl border border-gray-100">
-                <Building2 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-900 font-bold mb-1">
-                  No Bank Details Provided
-                </p>
-                <p className="text-sm text-gray-500">
-                  This coach has not updated their bank account on the billing
-                  portal. Please contact them outside the platform.
-                </p>
-              </div>
-            )}
-
-            <div className="bg-red-50 p-4 rounded-2xl mb-6">
-              <p className="text-sm text-red-700 text-center font-medium">
-                Please transfer{" "}
-                <strong className="font-extrabold text-red-900">
-                  Rs. {coachPayoutModal.pendingAmount.toLocaleString()}
-                </strong>{" "}
-                before confirming.
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setCoachPayoutModal(null)}
-                className="flex-1 py-3 text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={executeCoachPayout}
-                disabled={processingId === coachPayoutModal.coachId}
-                className="flex-1 py-3 text-sm font-bold text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 rounded-xl transition-colors flex justify-center items-center shadow-sm"
-              >
-                {processingId === coachPayoutModal.coachId ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   "Confirm Paid"
