@@ -10,6 +10,7 @@ import {
   CreditCard,
   ShieldCheck,
   FolderOpen,
+  Mail,
 } from "lucide-react";
 
 const navLinks = [
@@ -22,6 +23,7 @@ const navLinks = [
   { name: "Enrollments", href: "/manager/enrollments", icon: BookOpen },
   { name: "Platform Fees", href: "/manager/platform-fees", icon: CreditCard },
   { name: "Managers", href: "/manager/managers", icon: ShieldCheck },
+  { name: "Messages", href: "/manager/messages", icon: Mail },
 ];
 
 export default function ManagerNavLinks() {
