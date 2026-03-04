@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Enrollment from "@/models/Enrollment";
-import Course from "@/models/Course";
+import PayoutRequest from "@/models/PayoutRequest";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import User from "@/models/User";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,82 +14,40 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { coachId } = await req.json();
+    const { coachId, payoutRequestId } = await req.json();
 
-    if (!coachId) {
+    if (!coachId || !payoutRequestId) {
       return NextResponse.json(
-        { error: "Coach ID is required" },
+        { error: "Coach ID and Payout Request ID are required" },
         { status: 400 },
       );
     }
 
     await connectDB();
 
-    // Find all courses by this coach
-    const coachCourses = await Course.find({ coach: coachId })
-      .select(
-        "_id title price platformFee coach allowDiscounts discountedPrice",
-      )
-      .populate("coach");
-
-    if (coachCourses.length === 0) {
-      return NextResponse.json(
-        { error: "No courses found for this coach" },
-        { status: 404 },
-      );
-    }
-
-    const courseIds = coachCourses.map((c) => c._id);
-    const coachData = coachCourses[0].coach as any;
-
-    if (!coachData || !coachData.whatsappNumber) {
-      return NextResponse.json(
-        { error: "Coach contact information not found" },
-        { status: 404 },
-      );
-    }
-
-    // Find all pending payout enrollments for these courses
-    const pendingEnrollments = await Enrollment.find({
-      courseId: { $in: courseIds },
-      paymentStatus: "approved",
-      coachPayoutStatus: "pending",
+    // Find the approved payout request
+    const payoutRequest = await PayoutRequest.findOne({
+      _id: payoutRequestId,
+      coachId,
+      status: "coach_approved",
     });
 
-    if (pendingEnrollments.length === 0) {
+    if (!payoutRequest) {
       return NextResponse.json(
-        { error: "No pending payouts found for this coach" },
+        {
+          error:
+            "No approved payout request found. The coach must approve the request before payment can be processed.",
+        },
         { status: 400 },
       );
     }
 
-    let totalPayout = 0;
+    // Get coach data for WhatsApp notification
+    const coach = await User.findById(coachId);
 
-    // Calculate total layout amount to include in WhatsApp message
-    for (const enrollment of pendingEnrollments) {
-      // Find matching course object
-      const course = coachCourses.find(
-        (c) => c._id.toString() === enrollment.courseId.toString(),
-      );
-      if (!course) continue;
-
-      const actualCoursePrice =
-        course.allowDiscounts && course.discountedPrice
-          ? course.discountedPrice
-          : course.price;
-      const amountPaid = enrollment.amountPaid || actualCoursePrice;
-      const platformFeePercent = course.platformFee || 0;
-
-      const platformCut = amountPaid * (platformFeePercent / 100);
-      const coachCut = amountPaid - platformCut;
-
-      totalPayout += coachCut;
-    }
-
-    // Execute Database Updates
-    const enrollmentIds = pendingEnrollments.map((e) => e._id);
+    // Execute Database Updates — mark enrollments as paid
     await Enrollment.updateMany(
-      { _id: { $in: enrollmentIds } },
+      { _id: { $in: payoutRequest.enrollmentIds } },
       {
         $set: {
           coachPayoutStatus: "paid",
@@ -97,23 +56,26 @@ export async function POST(req: NextRequest) {
       },
     );
 
+    // Update payout request status to paid
+    payoutRequest.status = "paid";
+    await payoutRequest.save();
+
     // Send WhatsApp Notification to Coach
-    if (totalPayout > 0) {
-      const message = `Hello ${coachData.name || "Coach"}!\n\nGreat news! Your payout of *Rs. ${totalPayout.toLocaleString()}* for your recent course enrollments has been successfully processed via bank transfer.\n\nThank you for teaching on Caissa Chess Academy.`;
+    if (coach?.whatsappNumber && payoutRequest.totalAmount > 0) {
+      const message = `Hello ${coach.name || "Coach"}!\n\nGreat news! Your payout of *Rs. ${payoutRequest.totalAmount.toLocaleString()}* has been successfully processed via bank transfer.\n\nThank you for teaching on Caissa Chess Academy.`;
 
       try {
-        await sendWhatsAppMessage(coachData.whatsappNumber, message);
+        await sendWhatsAppMessage(coach.whatsappNumber, message);
       } catch (waError) {
         console.error("Failed to send WhatsApp payout notification:", waError);
-        // We still return 200 because the payment *did* process successfully in the DB
       }
     }
 
     return NextResponse.json({
       success: true,
       message: "Payout completed successfully.",
-      enrollmentsUpdated: enrollmentIds.length,
-      payoutAmount: totalPayout,
+      enrollmentsUpdated: payoutRequest.enrollmentIds.length,
+      payoutAmount: payoutRequest.totalAmount,
     });
   } catch (error) {
     console.error("Error executing coach payout:", error);

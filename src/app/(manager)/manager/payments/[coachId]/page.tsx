@@ -12,6 +12,11 @@ import {
   ExternalLink,
   MessageCircle,
   X,
+  Send,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -52,6 +57,24 @@ interface BreakdownData {
   breakdown: PayoutBreakdownItem[];
 }
 
+interface ActivePayoutRequest {
+  _id: string;
+  status: "pending_coach" | "coach_approved" | "coach_rejected" | "paid";
+  totalAmount: number;
+  breakdown: {
+    courseId: string;
+    courseTitle: string;
+    enrollmentCount: number;
+    grossRevenue: number;
+    platformFeePercent: number;
+    platformCut: number;
+    coachCut: number;
+  }[];
+  coachNote?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function ManagerCoachPayoutBreakdownPage() {
   const params = useParams();
   const router = useRouter();
@@ -60,8 +83,11 @@ export default function ManagerCoachPayoutBreakdownPage() {
   const [data, setData] = useState<BreakdownData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isNotifying, setIsNotifying] = useState(false);
-  const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
+  const [isSendingRequest, setIsSendingRequest] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isProcessingPayout, setIsProcessingPayout] = useState(false);
+  const [activeRequest, setActiveRequest] =
+    useState<ActivePayoutRequest | null>(null);
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
 
@@ -87,9 +113,24 @@ export default function ManagerCoachPayoutBreakdownPage() {
     }
   }, [coachId, router]);
 
+  const fetchPayoutStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/manager/payments/${coachId}/payout-status`);
+      if (res.ok) {
+        const json = await res.json();
+        setActiveRequest(json.activeRequest);
+      }
+    } catch (error) {
+      console.error("Error fetching payout status:", error);
+    }
+  }, [coachId]);
+
   useEffect(() => {
-    if (coachId) fetchBreakdown();
-  }, [coachId, fetchBreakdown]);
+    if (coachId) {
+      fetchBreakdown();
+      fetchPayoutStatus();
+    }
+  }, [coachId, fetchBreakdown, fetchPayoutStatus]);
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -101,18 +142,12 @@ export default function ManagerCoachPayoutBreakdownPage() {
       setIsNotifying(true);
       const res = await fetch(`/api/manager/payments/${coachId}/notify-bank`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           pendingAmount: data?.summary.totalPendingAmount,
         }),
       });
-
-      if (!res.ok) {
-        throw new Error("Failed to send notification");
-      }
-
+      if (!res.ok) throw new Error("Failed to send notification");
       toast.success("WhatsApp notification sent to the coach");
     } catch (error) {
       console.error(error);
@@ -122,28 +157,55 @@ export default function ManagerCoachPayoutBreakdownPage() {
     }
   };
 
+  const handleSendPayoutRequest = async () => {
+    try {
+      setIsSendingRequest(true);
+      const res = await fetch(
+        `/api/manager/payments/${coachId}/request-payout`,
+        {
+          method: "POST",
+        },
+      );
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to send request");
+      toast.success("Payout request sent to coach for approval!");
+      await fetchPayoutStatus();
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Failed to send payout request");
+    } finally {
+      setIsSendingRequest(false);
+    }
+  };
+
   const executeCoachPayout = async () => {
+    if (!activeRequest) return;
     try {
       setIsProcessingPayout(true);
       const res = await fetch("/api/manager/payments/payout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coachId }),
+        body: JSON.stringify({
+          coachId,
+          payoutRequestId: activeRequest._id,
+        }),
       });
-
-      if (!res.ok) {
-        throw new Error("Payout transaction failed");
-      }
-
+      if (!res.ok) throw new Error("Payout transaction failed");
       toast.success(`Successfully processed payout for ${data?.coach.name}`);
-      setIsPayoutModalOpen(false);
+      setIsConfirmModalOpen(false);
       await fetchBreakdown();
+      await fetchPayoutStatus();
     } catch (error) {
       console.error(error);
       toast.error(`Failed to process payout for ${data?.coach.name}`);
     } finally {
       setIsProcessingPayout(false);
     }
+  };
+
+  const handleResubmit = async () => {
+    // For rejected requests, send a new payout request
+    handleSendPayoutRequest();
   };
 
   if (loading) {
@@ -155,6 +217,159 @@ export default function ManagerCoachPayoutBreakdownPage() {
   }
 
   if (!data) return null;
+
+  // Determine the action section based on payout request status
+  const renderPayoutAction = () => {
+    if (data.summary.totalPendingAmount === 0 && !activeRequest) {
+      return (
+        <div className="mt-6 pt-6 border-t border-gray-100 w-full flex flex-col gap-1">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest text-center">
+            Total Owed Amount
+          </p>
+          <h3 className="text-3xl font-extrabold text-gray-400 mb-2 text-center">
+            Rs. 0
+          </h3>
+          <p className="text-xs text-gray-400 text-center">
+            No pending payouts
+          </p>
+        </div>
+      );
+    }
+
+    if (!activeRequest || activeRequest.status === "paid") {
+      // No active request — show "Send Payout Request" button
+      return (
+        <div className="mt-6 pt-6 border-t border-gray-100 w-full flex flex-col gap-1">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest text-center">
+            Total Owed Amount
+          </p>
+          <h3 className="text-3xl font-extrabold text-red-600 mb-2 text-center">
+            Rs. {data.summary.totalPendingAmount.toLocaleString()}
+          </h3>
+          <button
+            onClick={handleSendPayoutRequest}
+            disabled={isSendingRequest || data.summary.totalPendingAmount === 0}
+            className="w-full inline-flex items-center justify-center px-4 py-3 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-100 disabled:text-gray-400 text-white text-sm font-bold rounded-xl transition-all shadow-sm active:scale-95 mt-2"
+          >
+            {isSendingRequest ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <Send className="w-4 h-4 mr-2" />
+            )}
+            {isSendingRequest ? "Sending..." : "Send Payout Request"}
+          </button>
+          <p className="text-[10px] text-gray-400 mt-1 text-center">
+            Coach must approve before payment can be finalized
+          </p>
+        </div>
+      );
+    }
+
+    if (activeRequest.status === "pending_coach") {
+      // Waiting for coach response
+      return (
+        <div className="mt-6 pt-6 border-t border-gray-100 w-full flex flex-col gap-2">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest text-center">
+            Total Owed Amount
+          </p>
+          <h3 className="text-3xl font-extrabold text-red-600 mb-1 text-center">
+            Rs. {activeRequest.totalAmount.toLocaleString()}
+          </h3>
+          <div className="w-full bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center gap-3">
+            <Clock className="w-5 h-5 text-amber-500 shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-amber-800">
+                Awaiting Coach Confirmation
+              </p>
+              <p className="text-[10px] text-amber-600 mt-0.5">
+                Sent{" "}
+                {new Date(activeRequest.createdAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeRequest.status === "coach_approved") {
+      // Coach approved — show "Confirm Bank Transfer" button
+      return (
+        <div className="mt-6 pt-6 border-t border-gray-100 w-full flex flex-col gap-2">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest text-center">
+            Total Owed Amount
+          </p>
+          <h3 className="text-3xl font-extrabold text-red-600 mb-1 text-center">
+            Rs. {activeRequest.totalAmount.toLocaleString()}
+          </h3>
+          <div className="w-full bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center gap-3 mb-2">
+            <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-emerald-800">
+                Coach Approved
+              </p>
+              <p className="text-[10px] text-emerald-600 mt-0.5">
+                Ready for bank transfer
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsConfirmModalOpen(true)}
+            className="w-full inline-flex items-center justify-center px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all shadow-sm active:scale-95"
+          >
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            Confirm Bank Transfer
+          </button>
+        </div>
+      );
+    }
+
+    if (activeRequest.status === "coach_rejected") {
+      // Coach rejected — show rejection info and resubmit button
+      return (
+        <div className="mt-6 pt-6 border-t border-gray-100 w-full flex flex-col gap-2">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest text-center">
+            Payout Request
+          </p>
+          <h3 className="text-3xl font-extrabold text-red-600 mb-1 text-center">
+            Rs. {activeRequest.totalAmount.toLocaleString()}
+          </h3>
+          <div className="w-full bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-3 mb-2">
+            <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-red-800">Coach Rejected</p>
+              {activeRequest.coachNote && (
+                <p className="text-xs text-red-600 mt-1">
+                  &quot;{activeRequest.coachNote}&quot;
+                </p>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={handleResubmit}
+            disabled={isSendingRequest || data.summary.totalPendingAmount === 0}
+            className="w-full inline-flex items-center justify-center px-4 py-3 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-100 disabled:text-gray-400 text-white text-sm font-bold rounded-xl transition-all shadow-sm active:scale-95"
+          >
+            {isSendingRequest ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <Send className="w-4 h-4 mr-2" />
+            )}
+            {isSendingRequest ? "Sending..." : "Resubmit Payout Request"}
+          </button>
+          <p className="text-[10px] text-gray-400 mt-1 text-center">
+            Review the amounts below, then resubmit for coach approval
+          </p>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
@@ -198,21 +413,9 @@ export default function ManagerCoachPayoutBreakdownPage() {
               <Phone className="w-4 h-4" />
               <span>{data.coach.whatsappNumber}</span>
             </div>
-            <div className="mt-6 pt-6 border-t border-gray-100 w-full flex flex-col gap-1">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest text-center">
-                Total Owed Amount
-              </p>
-              <h3 className="text-3xl font-extrabold text-red-600 mb-2">
-                Rs. {data.summary.totalPendingAmount.toLocaleString()}
-              </h3>
-              <button
-                onClick={() => setIsPayoutModalOpen(true)}
-                disabled={data.summary.totalPendingAmount === 0}
-                className="w-full inline-flex items-center justify-center px-4 py-3 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-100 disabled:text-gray-400 text-white text-sm font-bold rounded-xl transition-all shadow-sm active:scale-95 mt-2"
-              >
-                Mark as Paid
-              </button>
-            </div>
+
+            {/* Dynamic Payout Action Section */}
+            {renderPayoutAction()}
           </div>
 
           {/* Bank Details Card */}
@@ -453,13 +656,13 @@ export default function ManagerCoachPayoutBreakdownPage() {
         </div>
       </div>
 
-      {/* Coach Payout Modal */}
-      {isPayoutModalOpen && data && (
+      {/* Confirm Bank Transfer Modal (for coach_approved requests) */}
+      {isConfirmModalOpen && activeRequest && data && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl ring-1 ring-gray-900/10 p-6 sm:p-8">
             <div className="flex justify-between items-start mb-6 border-b border-gray-100 pb-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-red-100 shrink-0">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-emerald-100 shrink-0">
                   {data.coach.profilePictureThumbnail ||
                   data.coach.profilePicture ? (
                     <img
@@ -471,22 +674,23 @@ export default function ManagerCoachPayoutBreakdownPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-red-100 flex items-center justify-center text-red-600 font-bold text-xl">
+                    <div className="w-full h-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-xl">
                       {data.coach.name.charAt(0)}
                     </div>
                   )}
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900">
-                    Payout: {data.coach.name}
+                    Confirm Payment
                   </h3>
-                  <p className="text-sm font-medium text-gray-500">
-                    {data.summary.totalEnrollments} Pending Enrollments
+                  <p className="text-sm font-medium text-emerald-600 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Coach Approved
                   </p>
                 </div>
               </div>
               <button
-                onClick={() => setIsPayoutModalOpen(false)}
+                onClick={() => setIsConfirmModalOpen(false)}
                 className="text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-full p-2 transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -512,7 +716,6 @@ export default function ManagerCoachPayoutBreakdownPage() {
                       )
                     }
                     className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Copy Name"
                   >
                     <Copy className="w-4 h-4" />
                   </button>
@@ -520,46 +723,12 @@ export default function ManagerCoachPayoutBreakdownPage() {
                 <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
                   <div>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                      Bank Name
-                    </p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {data.coach.bankDetails.bankName}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() =>
-                      handleCopy(
-                        data.coach.bankDetails?.bankName || "",
-                        "Bank Name",
-                      )
-                    }
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Copy Bank Name"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                      Branch
+                      Bank — {data.coach.bankDetails.bankName}
                     </p>
                     <p className="text-sm font-semibold text-gray-900">
                       {data.coach.bankDetails.bankLocation}
                     </p>
                   </div>
-                  <button
-                    onClick={() =>
-                      handleCopy(
-                        data.coach.bankDetails?.bankLocation || "",
-                        "Branch",
-                      )
-                    }
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Copy Branch"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
                 </div>
                 <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
                   <div>
@@ -578,23 +747,8 @@ export default function ManagerCoachPayoutBreakdownPage() {
                       )
                     }
                     className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Copy Account Number"
                   >
                     <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="pt-2 text-center">
-                  <button
-                    onClick={() =>
-                      handleCopy(
-                        `Payment Details for ${data.coach.name}:\nAccount Owner: ${data.coach.bankDetails?.accountOwnerName}\nBank Name: ${data.coach.bankDetails?.bankName}\nBranch: ${data.coach.bankDetails?.bankLocation}\nAccount Number: ${data.coach.bankDetails?.accountNumber}\nAmount: Rs. ${data.summary.totalPendingAmount}`,
-                        "All Coach Bank Details",
-                      )
-                    }
-                    className="inline-flex justify-center items-center py-2 px-4 text-xs font-bold text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-colors w-full"
-                  >
-                    <Copy className="w-3.5 h-3.5 mr-2" /> Copy All Details
                   </button>
                 </div>
               </div>
@@ -604,18 +758,14 @@ export default function ManagerCoachPayoutBreakdownPage() {
                 <p className="text-gray-900 font-bold mb-1">
                   No Bank Details Provided
                 </p>
-                <p className="text-sm text-gray-500">
-                  This coach has not updated their bank account on the billing
-                  portal. Please use the WhatsApp button to contact them.
-                </p>
               </div>
             )}
 
-            <div className="bg-red-50 p-4 rounded-2xl mb-6">
-              <p className="text-sm text-red-700 text-center font-medium">
+            <div className="bg-emerald-50 p-4 rounded-2xl mb-6">
+              <p className="text-sm text-emerald-700 text-center font-medium">
                 Please transfer{" "}
-                <strong className="font-extrabold text-red-900">
-                  Rs. {data.summary.totalPendingAmount.toLocaleString()}
+                <strong className="font-extrabold text-emerald-900">
+                  Rs. {activeRequest.totalAmount.toLocaleString()}
                 </strong>{" "}
                 before confirming.
               </p>
@@ -623,7 +773,7 @@ export default function ManagerCoachPayoutBreakdownPage() {
 
             <div className="flex gap-3">
               <button
-                onClick={() => setIsPayoutModalOpen(false)}
+                onClick={() => setIsConfirmModalOpen(false)}
                 className="flex-1 py-3 text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
               >
                 Cancel
@@ -631,7 +781,7 @@ export default function ManagerCoachPayoutBreakdownPage() {
               <button
                 onClick={executeCoachPayout}
                 disabled={isProcessingPayout}
-                className="flex-1 py-3 text-sm font-bold text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 rounded-xl transition-colors flex justify-center items-center shadow-sm"
+                className="flex-1 py-3 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 rounded-xl transition-colors flex justify-center items-center shadow-sm"
               >
                 {isProcessingPayout ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

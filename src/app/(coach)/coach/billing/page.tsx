@@ -11,7 +11,9 @@ import {
   Loader2,
   Save,
   Building2,
+  ArrowRight,
 } from "lucide-react";
+import Link from "next/link";
 import toast from "react-hot-toast";
 
 interface CourseBreakdown {
@@ -42,6 +44,7 @@ export default function CoachBillingPage() {
     accountNumber: "",
   });
   const [isSavingBank, setIsSavingBank] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
 
   const fetchBillingData = async () => {
     try {
@@ -64,6 +67,19 @@ export default function CoachBillingPage() {
 
   useEffect(() => {
     fetchBillingData();
+    // Fetch pending payout requests
+    const fetchPayoutRequests = async () => {
+      try {
+        const res = await fetch("/api/coach/payout-requests");
+        if (res.ok) {
+          const json = await res.json();
+          setPendingRequests(json.requests || []);
+        }
+      } catch (error) {
+        console.error("Error fetching payout requests:", error);
+      }
+    };
+    fetchPayoutRequests();
   }, []);
 
   const handleSaveBankDetails = async (e: React.FormEvent) => {
@@ -96,6 +112,46 @@ export default function CoachBillingPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+      {/* Payout Request Notification Banner */}
+      {pendingRequests.filter((r) => r.status === "pending_coach").length >
+        0 && (
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvc3ZnPg==')] opacity-30" />
+          <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shrink-0 animate-pulse">
+                <Banknote className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">
+                  Payout Ready for Review!
+                </h3>
+                <p className="text-emerald-100 text-sm mt-0.5">
+                  Rs.{" "}
+                  {pendingRequests
+                    .filter((r) => r.status === "pending_coach")
+                    .reduce((sum: number, r: any) => sum + r.totalAmount, 0)
+                    .toLocaleString()}{" "}
+                  is pending your approval.
+                </p>
+              </div>
+            </div>
+            {pendingRequests
+              .filter((r) => r.status === "pending_coach")
+              .map((req) => (
+                <Link
+                  key={req._id}
+                  href={`/coach/billing/payout-review/${req._id}`}
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-white text-emerald-700 font-bold text-sm rounded-xl hover:bg-emerald-50 transition-colors shadow-sm shrink-0"
+                >
+                  Review & Confirm
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              ))}
+          </div>
+        </div>
+      )}
+
       {/* Header section */}
       <div>
         <h1 className="text-3xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)]">
