@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
       thumbnailUrl,
       thumbnailOriginalUrl,
       status: "draft",
-      platformFee: 30, // Default to 30% for new courses
+      platformFee: 40, // Default to 40% for new courses
       allowDiscounts: !!allowDiscounts,
       maxDiscountPercent: allowDiscounts
         ? Math.min(Math.max(Number(maxDiscountPercent) || 0, 1), 100)
