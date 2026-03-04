@@ -1,0 +1,70 @@
+[
+  {
+    "category": "General",
+    "items": [
+      {
+        "question": "What is Caissa Academy?",
+        "answer": "Caissa Academy is an exclusive platform in Sri Lanka that connects passionate chess students with titled players and experienced coaches. We provide high-quality video courses covering openings, middle games, endgames, and general strategy."
+      },
+      {
+        "question": "How do I create an account?",
+        "answer": "You can sign up instantly using just your WhatsApp number. There are no lengthy email forms or passwords to remember. Simply enter your number, verify the OTP, and you're in!"
+      },
+      {
+        "question": "Is the platform available on mobile devices?",
+        "answer": "Yes! Caissa Academy is fully responsive and optimized for both desktop and mobile devices, allowing you to learn chess anywhere, anytime."
+      }
+    ]
+  },
+  {
+    "category": "Billing & Payments",
+    "items": [
+      {
+        "question": "How do I pay for a course?",
+        "answer": "Currently, we accept direct bank transfers. Once you find a course you like, proceed to enrollment, transfer the fee to the provided bank details, and upload the payment receipt on the platform. Our team will verify and grant you instant access."
+      },
+      {
+        "question": "Are there any hidden fees?",
+        "answer": "No, there are absolutely no hidden fees. The price you see on the course page is the final price you pay."
+      },
+      {
+        "question": "Can I get a refund if I don't like a course?",
+        "answer": "Since our courses consist of digital video content which you get immediate access to, we generally do not offer refunds. However, if you experience technical issues or accidental duplicate purchases, please reach out to our support team."
+      }
+    ]
+  },
+  {
+    "category": "For Students",
+    "items": [
+      {
+        "question": "How long do I have access to a purchased course?",
+        "answer": "Once you purchase and enroll in a course, you have lifetime access to that specific course and all its materials. You can review the lessons as many times as you want."
+      },
+      {
+        "question": "Can I preview a course before buying?",
+        "answer": "Yes! Coaches usually provide free preview videos for the introduction or the first lesson so you can gauge their teaching style before making a purchase."
+      },
+      {
+        "question": "How do I ask questions if I am stuck on a topic?",
+        "answer": "You can use the 'Contact Us' page to reach out. In the future, we will be rolling out dedicated discussion boards directly inside the course player."
+      }
+    ]
+  },
+  {
+    "category": "For Coaches",
+    "items": [
+      {
+        "question": "How do I become a coach on Caissa?",
+        "answer": "Navigate to the 'Become a Coach' page and apply using your WhatsApp number. Our management team will verify your credentials (such as FIDE rating or title) and approve your dashboard access."
+      },
+      {
+        "question": "Who controls the pricing of my courses?",
+        "answer": "You do! As a coach, you have full control over deciding the base price of your courses. You can also offer custom discounts dynamically from your dashboard."
+      },
+      {
+        "question": "How do I get paid?",
+        "answer": "We collect the funds on your behalf and minus a standard platform hosting fee, remitting the rest directly to your registered bank account on a scheduled payout cycle. You can track all earnings strictly from your Coach Dashboard."
+      }
+    ]
+  }
+]
