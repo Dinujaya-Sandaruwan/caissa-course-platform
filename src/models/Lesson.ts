@@ -9,9 +9,8 @@ export interface ILesson extends Document {
   description?: string;
   links?: string[];
   materials?: { title: string; url: string }[];
-  tempVideoPath?: string;
-  videoUrl?: string;
-  videoStatus: "pending" | "uploaded" | "ready";
+  bunnyVideoId?: string;
+  videoStatus: "pending" | "processing" | "ready";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -58,15 +57,13 @@ const LessonSchema = new Schema<ILesson>(
         url: { type: String, required: true },
       },
     ],
-    tempVideoPath: {
+    bunnyVideoId: {
       type: String,
-    },
-    videoUrl: {
-      type: String,
+      default: null,
     },
     videoStatus: {
       type: String,
-      enum: ["pending", "uploaded", "ready"],
+      enum: ["pending", "processing", "ready"],
       default: "pending",
     },
   },

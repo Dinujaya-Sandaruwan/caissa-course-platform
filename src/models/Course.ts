@@ -7,8 +7,7 @@ export interface ICourse extends Document {
   price: number;
   thumbnailUrl?: string;
   thumbnailOriginalUrl?: string;
-  previewVideoUrl?: string;
-  tempPreviewVideoPath?: string;
+  bunnyPreviewVideoId?: string;
   allowDiscounts: boolean;
   maxDiscountPercent: number;
   discountedPrice?: number;
@@ -63,11 +62,9 @@ const CourseSchema = new Schema<ICourse>(
     thumbnailOriginalUrl: {
       type: String,
     },
-    previewVideoUrl: {
+    bunnyPreviewVideoId: {
       type: String,
-    },
-    tempPreviewVideoPath: {
-      type: String,
+      default: null,
     },
     allowDiscounts: {
       type: Boolean,
