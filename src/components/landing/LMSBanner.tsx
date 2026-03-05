@@ -36,9 +36,9 @@ const features = [
 
 const highlights = [
   "Real-time game analysis & review",
-  "Structured study plans by GMs",
-  "Weekly tournaments & challenges",
-  "Certificate of completion",
+  "Structured study plans by Coaches",
+  "Daily tournaments & challenges",
+  "Win prizes & rewards",
 ];
 
 export default function LMSBanner() {
@@ -112,25 +112,43 @@ export default function LMSBanner() {
               ))}
             </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 mt-8">
               <Link
-                href="#"
+                href="https://lms.caissachess.org/"
+                target="_blank"
                 className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-primary-red hover:bg-accent-red text-white font-semibold transition-all duration-300 shadow-lg shadow-primary-red/20 hover:shadow-primary-red/40 hover:-translate-y-1"
               >
                 Explore the LMS
                 <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </Link>
-              <div className="flex items-center gap-3 text-sm text-gray-400">
+              <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
                 <div className="flex -space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white"></div>
-                  <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white"></div>
-                  <div className="w-8 h-8 rounded-full bg-gray-400 border-2 border-white"></div>
+                  <div className="relative w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-gray-200">
+                    <Image
+                      src="/images/students/student-1.jpg"
+                      alt="Student"
+                      fill
+                      className="object-cover grayscale-[50%] contrast-[90%]"
+                    />
+                  </div>
+                  <div className="relative w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-gray-300">
+                    <Image
+                      src="/images/students/student-2.jpg"
+                      alt="Student"
+                      fill
+                      className="object-cover grayscale-[50%] contrast-[90%]"
+                    />
+                  </div>
+                  <div className="relative w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-gray-400">
+                    <Image
+                      src="/images/students/student-3.webp"
+                      alt="Student"
+                      fill
+                      className="object-cover grayscale-[50%] contrast-[90%]"
+                    />
+                  </div>
                 </div>
-                <span>
-                  <Users className="w-3.5 h-3.5 inline mr-1" />
-                  1,000+ active students
-                </span>
+                <span>Trusted by 300+ students</span>
               </div>
             </div>
           </div>

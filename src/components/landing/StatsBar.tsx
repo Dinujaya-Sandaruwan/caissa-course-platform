@@ -21,7 +21,7 @@ const stats = [
   },
   {
     icon: Users,
-    value: "1,000+",
+    value: "300+",
     label: "Students",
     description: "Across Sri Lanka",
     color: "text-info-blue",

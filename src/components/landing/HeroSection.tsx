@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, PlayCircle, Trophy, Star } from "lucide-react";
 import ChessGame from "./ChessGame";
 
@@ -33,8 +34,7 @@ export default function HeroSection() {
           <p className="font-sans text-lg sm:text-xl text-gray-600 mb-10 max-w-2xl leading-relaxed animate-[fade-in-up_1.2s_ease-out]">
             Elevate your game with structured, high-quality video courses.
             Whether you&apos;re a beginner learning the rules or an advanced
-            player mastering opening theory, our Grandmasters have a course for
-            you.
+            player mastering opening theory, our masters have a course for you.
           </p>
 
           <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-4 animate-[fade-in-up_1.4s_ease-out]">
@@ -58,11 +58,32 @@ export default function HeroSection() {
           {/* Trust Indicators */}
           <div className="mt-12 flex items-center gap-6 animate-[fade-in-up_1.6s_ease-out] text-gray-500 text-sm font-medium">
             <div className="flex -space-x-3">
-              <div className="w-10 h-10 rounded-full bg-gray-200 border-2 border-white"></div>
-              <div className="w-10 h-10 rounded-full bg-gray-300 border-2 border-white"></div>
-              <div className="w-10 h-10 rounded-full bg-gray-400 border-2 border-white"></div>
-              <div className="w-10 h-10 rounded-full bg-primary-red flex items-center justify-center text-white border-2 border-white text-xs">
-                +1K
+              <div className="relative w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-gray-200">
+                <Image
+                  src="/images/students/student-1.jpg"
+                  alt="Student"
+                  fill
+                  className="object-cover grayscale-[50%] contrast-[90%]"
+                />
+              </div>
+              <div className="relative w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-gray-300">
+                <Image
+                  src="/images/students/student-2.jpg"
+                  alt="Student"
+                  fill
+                  className="object-cover grayscale-[50%] contrast-[90%]"
+                />
+              </div>
+              <div className="relative w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-gray-400">
+                <Image
+                  src="/images/students/student-3.webp"
+                  alt="Student"
+                  fill
+                  className="object-cover grayscale-[50%] contrast-[90%]"
+                />
+              </div>
+              <div className="relative z-10 w-10 h-10 rounded-full bg-primary-red flex items-center justify-center text-white border-2 border-white text-xs">
+                +0.3K
               </div>
             </div>
             <div>
@@ -71,7 +92,7 @@ export default function HeroSection() {
                   <Star key={i} className="w-4 h-4 fill-current" />
                 ))}
               </div>
-              Trusted by 1000+ Students
+              Trusted by 300+ Students
             </div>
           </div>
         </div>
