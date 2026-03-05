@@ -18,15 +18,19 @@ export async function GET() {
 
     // Get course counts for each category
     const courseCounts = await Course.aggregate([
-      { $match: { category: { $exists: true }, status: { $ne: "trashed" } } },
+      {
+        $match: {
+          category: { $exists: true, $ne: null },
+          status: { $ne: "trashed" },
+        },
+      },
       { $group: { _id: "$category", count: { $sum: 1 } } },
     ]);
 
     const countMap = new Map(
-      courseCounts.map((c: { _id: string; count: number }) => [
-        c._id.toString(),
-        c.count,
-      ]),
+      courseCounts
+        .filter((c: any) => c._id != null)
+        .map((c: { _id: any; count: number }) => [c._id.toString(), c.count]),
     );
 
     const result = categories.map((cat) => ({
