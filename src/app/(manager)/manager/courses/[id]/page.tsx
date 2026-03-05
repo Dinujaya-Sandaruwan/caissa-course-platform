@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   XCircle,
   PauseCircle,
+  Play,
   Loader2,
   Save,
   Globe,
@@ -162,6 +163,9 @@ export default function ManagerCourseDetailPage() {
   const [discountPriceInput, setDiscountPriceInput] = useState("");
   const [savingDiscount, setSavingDiscount] = useState(false);
   const [discountError, setDiscountError] = useState("");
+
+  // Video Playing State
+  const [playingLessonId, setPlayingLessonId] = useState<string | null>(null);
 
   // Review Modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -640,9 +644,21 @@ export default function ManagerCourseDetailPage() {
                         {lesson.title}
                       </span>
                       {lesson.videoStatus === "ready" ? (
-                        <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Ready
-                        </span>
+                        <button
+                          onClick={() =>
+                            setPlayingLessonId(
+                              playingLessonId === lesson._id
+                                ? null
+                                : lesson._id,
+                            )
+                          }
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-all"
+                        >
+                          <Play className="w-3.5 h-3.5" />
+                          {playingLessonId === lesson._id
+                            ? "Close Video"
+                            : "Watch Video"}
+                        </button>
                       ) : lesson.videoStatus === "processing" ? (
                         <span className="flex items-center gap-1 text-xs font-semibold text-amber-600">
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />{" "}
@@ -654,6 +670,30 @@ export default function ManagerCourseDetailPage() {
                         </span>
                       )}
                     </div>
+                    {/* Expandable Video Player inline */}
+                    {playingLessonId === lesson._id &&
+                      lesson.signedIframeUrl && (
+                        <div className="mt-3 aspect-video bg-gray-900 rounded-xl overflow-hidden relative shadow-inner ring-1 ring-gray-900/10">
+                          <iframe
+                            src={lesson.signedIframeUrl}
+                            loading="lazy"
+                            className="w-full h-full border-0 absolute inset-0"
+                            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+                            allowFullScreen
+                            title={lesson.title}
+                          />
+                        </div>
+                      )}
+                    {playingLessonId === lesson._id &&
+                      lesson.videoStatus === "ready" &&
+                      !lesson.signedIframeUrl && (
+                        <div className="mt-3 p-4 bg-gray-50 rounded-xl border border-gray-100 text-center">
+                          <p className="text-sm text-gray-500 font-medium">
+                            Video URL not found. It may be missing from
+                            Bunny.net.
+                          </p>
+                        </div>
+                      )}
                   </div>
                 ))}
               </div>
