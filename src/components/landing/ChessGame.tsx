@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Chess, Square, Move } from "chess.js";
 import { Chessboard } from "react-chessboard";
-import { RotateCcw, Trophy, Flame } from "lucide-react";
+import { RotateCcw, Trophy } from "lucide-react";
 import Image from "next/image";
 import coachesData from "@/data/coaches.json";
 
@@ -20,6 +20,15 @@ interface Coach {
 function useStockfish() {
   const workerRef = useRef<Worker | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [evaluation, setEvaluation] = useState<{
+    type: "cp" | "mate";
+    value: number;
+    turn: "w" | "b";
+  } | null>(null);
+
+  // We need a ref to track the current turn we asked Stockfish to evaluate
+  // so we can normalize the score correctly (Stockfish gives score from perspective of player to move).
+  const currentEvalTurnRef = useRef<"w" | "b">("w");
 
   useEffect(() => {
     const worker = new Worker("/stockfish/stockfish-18-single.js");
@@ -59,6 +68,27 @@ function useStockfish() {
 
         const handleResponse = (e: MessageEvent) => {
           const msg = typeof e.data === "string" ? e.data : "";
+
+          // Parse evaluation info
+          if (msg.startsWith("info depth") && msg.includes("score")) {
+            const cpMatch = msg.match(/score cp (-?\d+)/);
+            const mateMatch = msg.match(/score mate (-?\d+)/);
+
+            if (mateMatch) {
+              setEvaluation({
+                type: "mate",
+                value: parseInt(mateMatch[1], 10),
+                turn: currentEvalTurnRef.current,
+              });
+            } else if (cpMatch) {
+              setEvaluation({
+                type: "cp",
+                value: parseInt(cpMatch[1], 10),
+                turn: currentEvalTurnRef.current,
+              });
+            }
+          }
+
           if (msg.startsWith("bestmove")) {
             worker.removeEventListener("message", handleResponse);
             const bestMove = msg.split(" ")[1];
@@ -66,6 +96,7 @@ function useStockfish() {
           }
         };
 
+        currentEvalTurnRef.current = fen.split(" ")[1] === "w" ? "w" : "b";
         worker.addEventListener("message", handleResponse);
         worker.postMessage("position fen " + fen);
         // depth 18 for strong play
@@ -75,7 +106,20 @@ function useStockfish() {
     [isReady],
   );
 
-  return { isReady, getBestMove };
+  const evaluatePosition = useCallback(
+    (fen: string) => {
+      if (!workerRef.current || !isReady) return;
+      currentEvalTurnRef.current = fen.split(" ")[1] === "w" ? "w" : "b";
+      // Clear previous specific event listeners if any (hard to do cleanly without tracking them,
+      // but for simple evaluation we just send position and wait for 'info' which is captured by the global listener or next bestmove)
+      // We will actually just run a shorter depth search to get the evaluation fast without blocking a full move search.
+      workerRef.current.postMessage("position fen " + fen);
+      workerRef.current.postMessage("go depth 14");
+    },
+    [isReady],
+  );
+
+  return { isReady, getBestMove, evaluatePosition, evaluation };
 }
 
 // ─── Custom Board Styles ─────────────────────────────────────────────────────
@@ -121,7 +165,8 @@ export default function ChessGame() {
   const [rightClickedSquares, setRightClickedSquares] = useState<
     Record<string, React.CSSProperties>
   >({});
-  const { isReady, getBestMove } = useStockfish();
+  const { isReady, getBestMove, evaluatePosition, evaluation } = useStockfish();
+  const [showEvalBar, setShowEvalBar] = useState(true);
   const isThinkingRef = useRef(false);
 
   const game = gameRef.current;
@@ -189,10 +234,15 @@ export default function ChessGame() {
 
   // ─── Trigger bot move when it's black's turn ─────────────────────────────
   useEffect(() => {
-    if (game.turn() === "b" && !game.isGameOver() && isReady) {
+    if (!isReady || game.isGameOver()) return;
+
+    if (game.turn() === "b") {
       makeBotMove();
+    } else {
+      // It's white's turn, get a quick evaluation for the bar
+      evaluatePosition(gameFen);
     }
-  }, [gameFen, isReady, game, makeBotMove]);
+  }, [gameFen, isReady, game, makeBotMove, evaluatePosition]);
 
   // ─── Get valid moves for a square (for click-to-move) ────────────────────
   const getMoveOptions = useCallback(
@@ -403,6 +453,44 @@ export default function ChessGame() {
     }
   }, [gameStatus, coach.name]);
 
+  // ─── Evaluation Bar Math ─────────────────────────────────────────────────
+  const evalValue = useMemo(() => {
+    if (!evaluation) return { percentage: 50, text: "0.0" };
+
+    let score = evaluation.value;
+    // Normalize score to be from White's perspective
+    if (evaluation.turn === "b") {
+      score = -score;
+    }
+
+    if (evaluation.type === "mate") {
+      const isWhiteWinning = score > 0;
+      return {
+        percentage: isWhiteWinning ? 100 : 0,
+        text: `M${Math.abs(score)}`,
+        isMate: true,
+        isWhiteWinning,
+      };
+    }
+
+    // Convert centipawns to pawns
+    const pawns = score / 100;
+
+    // Clamp pawns between -10 and +10, then map to 5% - 95%
+    // We use a sigmoid-like clamping so small advantages are visible but large advantages don't just snap to 100%
+    const clampedPawns = Math.max(-10, Math.min(10, pawns));
+    const percentage = 50 + (clampedPawns / 10) * 45;
+
+    const formattedText = pawns > 0 ? `+${pawns.toFixed(1)}` : pawns.toFixed(1);
+
+    return {
+      percentage,
+      text: formattedText,
+      isMate: false,
+      isWhiteWinning: pawns > 0,
+    };
+  }, [evaluation]);
+
   return (
     <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-4 py-4 lg:py-0 animate-[fade-in-up_1.2s_ease-out]">
       {/* Bot Profile Card */}
@@ -428,46 +516,84 @@ export default function ChessGame() {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <Flame className="w-4 h-4 text-primary-red" />
-          <span className="text-xs font-bold text-gray-700">{coach.elo}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-gray-500">Eval</span>
+          <button
+            onClick={() => setShowEvalBar(!showEvalBar)}
+            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-red/50 focus:ring-offset-2 ${showEvalBar ? "bg-primary-red" : "bg-gray-200"}`}
+            role="switch"
+            aria-checked={showEvalBar}
+          >
+            <span className="sr-only">Toggle evaluation bar</span>
+            <span
+              aria-hidden="true"
+              className={`pointer-events-none absolute left-0 inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${showEvalBar ? "translate-x-4.5" : "translate-x-0.5"}`}
+            />
+          </button>
         </div>
       </div>
 
-      {/* Chessboard */}
-      <div className="w-full max-w-[480px] aspect-square relative rounded-xl overflow-hidden shadow-2xl shadow-gray-900/20 border-2 border-gray-200">
-        <Chessboard
-          options={{
-            id: "caissa-chess-board",
-            position: gameFen,
-            onPieceDrop: onPieceDrop,
-            onSquareClick: onSquareClick,
-            onSquareRightClick: onSquareRightClick,
-            squareStyles: customSquareStyles,
-            darkSquareStyle: customDarkSquareStyle,
-            lightSquareStyle: customLightSquareStyle,
-            boardStyle: {
-              borderRadius: "0.625rem",
-            },
-            boardOrientation: "white",
-            animationDurationInMs: 200,
-            allowDragging: game.turn() === "w" && !game.isGameOver(),
-          }}
-        />
+      {/* Chessboard & Eval Bar Container */}
+      <div className="flex w-full max-w-[480px] gap-3">
+        {/* Chessboard */}
+        <div className="flex-1 aspect-square relative rounded-xl overflow-hidden shadow-2xl shadow-gray-900/20 border-2 border-gray-200">
+          <Chessboard
+            options={{
+              id: "caissa-chess-board",
+              position: gameFen,
+              onPieceDrop: onPieceDrop,
+              onSquareClick: onSquareClick,
+              onSquareRightClick: onSquareRightClick,
+              squareStyles: customSquareStyles,
+              darkSquareStyle: customDarkSquareStyle,
+              lightSquareStyle: customLightSquareStyle,
+              boardStyle: {
+                borderRadius: "0.625rem",
+              },
+              boardOrientation: "white",
+              animationDurationInMs: 200,
+              allowDragging: game.turn() === "w" && !game.isGameOver(),
+            }}
+          />
 
-        {/* Thinking overlay */}
-        {gameStatus === "thinking" && (
-          <div className="absolute inset-0 bg-black/5 flex items-center justify-center pointer-events-none z-10">
-            <div className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg border border-gray-200 flex items-center gap-2">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-primary-red rounded-full animate-bounce [animation-delay:-0.3s]" />
-                <div className="w-2 h-2 bg-primary-red rounded-full animate-bounce [animation-delay:-0.15s]" />
-                <div className="w-2 h-2 bg-primary-red rounded-full animate-bounce" />
+          {/* Thinking overlay */}
+          {gameStatus === "thinking" && (
+            <div className="absolute inset-0 bg-black/5 flex items-center justify-center pointer-events-none z-10">
+              <div className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg border border-gray-200 flex items-center gap-2">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-primary-red rounded-full animate-bounce [animation-delay:-0.3s]" />
+                  <div className="w-2 h-2 bg-primary-red rounded-full animate-bounce [animation-delay:-0.15s]" />
+                  <div className="w-2 h-2 bg-primary-red rounded-full animate-bounce" />
+                </div>
+                <span className="text-sm font-medium text-gray-700">
+                  Thinking…
+                </span>
               </div>
-              <span className="text-sm font-medium text-gray-700">
-                Thinking…
-              </span>
             </div>
+          )}
+        </div>
+
+        {/* Evaluation Bar */}
+        {showEvalBar && (
+          <div className="w-6 shrink-0 bg-[#333333] rounded-md overflow-hidden flex flex-col justify-end border-2 border-gray-200 relative shadow-inner">
+            {/* White advantage bar (grows from bottom) */}
+            <div
+              className="w-full bg-white transition-[height] duration-500 ease-out relative"
+              style={{ height: `${evalValue.percentage}%` }}
+            >
+              {evalValue.isWhiteWinning && (
+                <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-800 z-10 leading-none">
+                  {evalValue.text}
+                </span>
+              )}
+            </div>
+
+            {/* Black advantage text (shown in the black/dark area) */}
+            {!evalValue.isWhiteWinning && (
+              <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white z-10 leading-none">
+                {evalValue.text}
+              </span>
+            )}
           </div>
         )}
       </div>
