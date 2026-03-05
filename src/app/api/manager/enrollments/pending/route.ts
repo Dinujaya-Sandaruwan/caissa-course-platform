@@ -17,7 +17,7 @@ export async function GET() {
     })
       .populate("studentId", "name whatsappNumber profilePhotoThumbnail")
       .populate("courseId", "title price allowDiscounts discountedPrice")
-      .sort({ createdAt: 1 })
+      .sort({ createdAt: -1 })
       .lean();
 
     return NextResponse.json(enrollments);

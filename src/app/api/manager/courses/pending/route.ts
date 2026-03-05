@@ -15,7 +15,7 @@ export async function GET() {
     const courses = await Course.find({ status: "pending_review" })
       .populate("coach", "name phone")
       .select("title price level createdAt coach")
-      .sort({ createdAt: 1 })
+      .sort({ createdAt: -1 })
       .lean();
 
     return NextResponse.json(courses);

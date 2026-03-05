@@ -14,7 +14,7 @@ export async function GET() {
 
     await connectDB();
 
-    const categories = await Category.find().sort({ name: 1 }).lean();
+    const categories = await Category.find().sort({ createdAt: -1 }).lean();
 
     // Get course counts for each category
     const courseCounts = await Course.aggregate([

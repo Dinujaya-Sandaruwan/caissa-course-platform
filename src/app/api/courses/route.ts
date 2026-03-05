@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       .populate("coach", "name profilePhotoThumbnail")
       .populate("category", "name")
       .select(
-        "title thumbnailUrl previewVideoUrl price discountedPrice level enrollmentCount tags createdAt coach category durationHours durationMinutes",
+        "title thumbnailUrl bunnyPreviewVideoId price discountedPrice level enrollmentCount tags createdAt coach category durationHours durationMinutes",
       )
       .sort(sortObj)
       .limit(limit + 1)
