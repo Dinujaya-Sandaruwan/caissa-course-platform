@@ -143,6 +143,18 @@
       background-position: 4rem 4rem;
     }
   }
+
+  @keyframes loading-bar {
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
 }
 
 @media (prefers-color-scheme: dark) {
