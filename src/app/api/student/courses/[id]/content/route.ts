@@ -6,6 +6,7 @@ import Chapter from "@/models/Chapter";
 import Lesson from "@/models/Lesson";
 import Enrollment from "@/models/Enrollment";
 import Progress from "@/models/Progress";
+import { generateSignedEmbedUrl } from "@/lib/bunny";
 
 export async function GET(
   request: NextRequest,
@@ -44,13 +45,13 @@ export async function GET(
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    // Fetch chapters and lessons with videoUrl
+    // Fetch chapters and lessons with bunnyVideoId
     const chapters = await Chapter.find({ courseId }).sort({ order: 1 }).lean();
 
     const chapterIds = chapters.map((ch) => ch._id);
     const lessons = await Lesson.find({ chapterId: { $in: chapterIds } })
       .select(
-        "title chapterId videoUrl duration order description links materials",
+        "title chapterId bunnyVideoId duration order description links materials",
       )
       .sort({ order: 1 })
       .lean();
@@ -60,9 +61,14 @@ export async function GET(
       _id: ch._id,
       title: ch.title,
       order: ch.order,
-      lessons: lessons.filter(
-        (l) => l.chapterId.toString() === ch._id.toString(),
-      ),
+      lessons: lessons
+        .filter((l) => l.chapterId.toString() === ch._id.toString())
+        .map((l) => ({
+          ...l,
+          signedIframeUrl: l.bunnyVideoId
+            ? generateSignedEmbedUrl(l.bunnyVideoId)
+            : undefined,
+        })),
     }));
 
     // Fetch progress records
@@ -82,6 +88,7 @@ export async function GET(
         description: course.description,
         level: course.level,
         coach: course.coach,
+        bunnyLibraryId: process.env.BUNNY_LIBRARY_ID,
       },
       chapters: chaptersWithLessons,
       completedLessonIds,

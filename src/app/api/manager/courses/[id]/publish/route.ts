@@ -55,7 +55,7 @@ export async function PATCH(
     }
 
     // Check previewVideoUrl
-    if (!course.previewVideoUrl) {
+    if (!course.bunnyPreviewVideoId) {
       return NextResponse.json(
         { error: "Course must have a preview video URL before publishing" },
         { status: 400 },

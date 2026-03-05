@@ -54,7 +54,7 @@ export async function POST(
       );
     }
 
-    const { title, description, links, tempVideoPath, tempMaterials } =
+    const { title, description, links, bunnyVideoId, tempMaterials } =
       await request.json();
 
     if (!title || !title.trim()) {
@@ -77,44 +77,14 @@ export async function POST(
         ? links.map((l: string) => l.trim()).filter(Boolean)
         : [],
       order,
-      videoStatus: tempVideoPath ? "uploaded" : "pending",
+      videoStatus: bunnyVideoId ? "processing" : "pending",
+      bunnyVideoId: bunnyVideoId || undefined,
       materials: [],
     });
 
     const uploadDir = process.env.UPLOAD_DIR || "public/uploads";
 
-    // If a temp video was pre-uploaded, move it to the course directory
-    if (tempVideoPath && typeof tempVideoPath === "string") {
-      try {
-        const tempFileName = tempVideoPath.split("/").pop();
-        if (tempFileName) {
-          const tempFilePath = path.join(
-            process.cwd(),
-            uploadDir,
-            "temp",
-            tempFileName,
-          );
-          const courseUploadPath = path.join(
-            process.cwd(),
-            uploadDir,
-            "courses",
-            courseId,
-          );
-          await mkdir(courseUploadPath, { recursive: true });
-
-          const finalFileName = `${newLesson._id}-${tempFileName}`;
-          const finalFilePath = path.join(courseUploadPath, finalFileName);
-
-          await rename(tempFilePath, finalFilePath);
-
-          const relativeUrl = `/api/files/courses/${courseId}/${finalFileName}`;
-          newLesson.tempVideoPath = relativeUrl;
-          newLesson.videoStatus = "uploaded";
-        }
-      } catch (moveError) {
-        console.error("Error moving temp video:", moveError);
-      }
-    }
+    // Video storage is now handled directly by Bunny.net SDK via VideoUploader component
 
     // If temp materials (PDFs/Images) were pre-uploaded, move them
     if (Array.isArray(tempMaterials) && tempMaterials.length > 0) {

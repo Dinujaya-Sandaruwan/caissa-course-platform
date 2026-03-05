@@ -27,8 +27,9 @@ import {
 interface Lesson {
   _id: string;
   title: string;
-  videoUrl?: string;
-  duration?: number;
+  bunnyVideoId?: string;
+  signedIframeUrl?: string;
+  duration: number;
   order: number;
   description?: string;
   links?: string[];
@@ -463,12 +464,13 @@ export default function StudentCourseViewerPage() {
             <>
               {/* Video Player */}
               <div className="relative bg-black rounded-[1.5rem] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.15)] aspect-video ring-1 ring-black/5">
-                {currentLesson.videoUrl ? (
+                {currentLesson.signedIframeUrl ? (
                   <iframe
                     key={currentLesson._id}
-                    src={currentLesson.videoUrl}
-                    className="w-full h-full"
-                    allow="autoplay; encrypted-media; fullscreen"
+                    src={currentLesson.signedIframeUrl}
+                    loading="lazy"
+                    className="w-full h-full border-0"
+                    allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
                     allowFullScreen
                     title={currentLesson.title}
                   />

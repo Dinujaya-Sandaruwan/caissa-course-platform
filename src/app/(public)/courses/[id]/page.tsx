@@ -46,7 +46,7 @@ interface CourseDetail {
   durationHours?: number;
   durationMinutes?: number;
   thumbnailUrl?: string;
-  previewVideoUrl?: string;
+  bunnyPreviewVideoUrl?: string;
   enrollmentCount: number;
   createdAt: string;
   coach?: {
@@ -311,12 +311,13 @@ export default function PublicCourseDetailPage() {
             <div className="lg:col-span-2 space-y-5">
               {/* Preview Video */}
               <div className="bg-white rounded-3xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-gray-100">
-                {course.previewVideoUrl ? (
+                {course.bunnyPreviewVideoUrl ? (
                   <div className="aspect-video bg-gray-900 relative">
                     <iframe
-                      src={course.previewVideoUrl}
-                      className="w-full h-full"
-                      allow="autoplay; encrypted-media"
+                      src={course.bunnyPreviewVideoUrl}
+                      loading="lazy"
+                      className="w-full h-full border-0"
+                      allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
                       allowFullScreen
                       title="Course Preview"
                     />

@@ -5,6 +5,7 @@ import Course from "@/models/Course";
 import Lesson from "@/models/Lesson";
 import fs from "fs/promises";
 import path from "path";
+import { deleteBunnyVideo } from "@/lib/bunny";
 
 export async function PATCH(
   request: NextRequest,
@@ -46,7 +47,7 @@ export async function PATCH(
       title,
       description,
       links,
-      tempVideoPath,
+      bunnyVideoId,
       tempMaterials,
       existingMaterials,
     } = await request.json();
@@ -79,50 +80,14 @@ export async function PATCH(
 
     const uploadDir = process.env.UPLOAD_DIR || "public/uploads";
 
-    if (tempVideoPath && typeof tempVideoPath === "string") {
-      try {
-        const tempFileName = tempVideoPath.split("/").pop();
-        if (tempFileName) {
-          const tempFilePath = path.join(
-            process.cwd(),
-            uploadDir,
-            "temp",
-            tempFileName,
-          );
-          const courseUploadPath = path.join(
-            process.cwd(),
-            uploadDir,
-            "courses",
-            courseId,
-          );
-          await fs.mkdir(courseUploadPath, { recursive: true });
-
-          const finalFileName = `${lesson._id}-${tempFileName}`;
-          const finalFilePath = path.join(courseUploadPath, finalFileName);
-
-          await fs.rename(tempFilePath, finalFilePath);
-
-          // If there was an old video, delete it
-          if (lesson.tempVideoPath) {
-            try {
-              const oldPath = path.join(
-                process.cwd(),
-                "public",
-                lesson.tempVideoPath,
-              );
-              await fs.unlink(oldPath);
-            } catch (e) {
-              console.warn("Could not delete old video file:", e);
-            }
-          }
-
-          const relativeUrl = `/api/files/courses/${courseId}/${finalFileName}`;
-          lesson.tempVideoPath = relativeUrl;
-          lesson.videoStatus = "uploaded";
-        }
-      } catch (moveError) {
-        console.error("Error moving temp video:", moveError);
+    if (bunnyVideoId && typeof bunnyVideoId === "string") {
+      if (lesson.bunnyVideoId && lesson.bunnyVideoId !== bunnyVideoId) {
+        deleteBunnyVideo(lesson.bunnyVideoId).catch((err) =>
+          console.warn("Could not delete old Bunny video:", err),
+        );
       }
+      lesson.bunnyVideoId = bunnyVideoId;
+      lesson.videoStatus = "processing";
     }
 
     // Handle materials combining existing ones and processing new ones
@@ -231,22 +196,14 @@ export async function DELETE(
       return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
     }
 
-    // Always delete the temp file from VPS if it exists to strictly limit storage bloat
-    if (lesson.tempVideoPath) {
-      try {
-        const fullPath = path.join(
-          process.cwd(),
-          "public",
-          lesson.tempVideoPath,
-        );
-        await fs.unlink(fullPath);
-      } catch (fsError) {
+    // Always delete the video from Bunny if it exists to strictly limit storage bloat
+    if (lesson.bunnyVideoId) {
+      deleteBunnyVideo(lesson.bunnyVideoId).catch((err) =>
         console.warn(
-          `Could not delete video file for lesson ${lessonId}:`,
-          fsError,
-        );
-        // We log it as a warning but continue because DB deletion is more critical to complete
-      }
+          `Could not delete Bunny video for lesson ${lessonId}:`,
+          err,
+        ),
+      );
     }
 
     // Delete the lesson

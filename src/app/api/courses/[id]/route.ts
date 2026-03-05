@@ -4,6 +4,7 @@ import Course from "@/models/Course";
 import "@/models/User";
 import Chapter from "@/models/Chapter";
 import Lesson from "@/models/Lesson";
+import { generateSignedEmbedUrl } from "@/lib/bunny";
 
 export async function GET(
   request: NextRequest,
@@ -62,7 +63,9 @@ export async function GET(
       durationHours: course.durationHours,
       durationMinutes: course.durationMinutes,
       thumbnailUrl: course.thumbnailUrl,
-      previewVideoUrl: course.previewVideoUrl,
+      bunnyPreviewVideoUrl: course.bunnyPreviewVideoId
+        ? generateSignedEmbedUrl(course.bunnyPreviewVideoId)
+        : undefined,
       enrollmentCount: course.enrollmentCount,
       createdAt: course.createdAt,
       coach: course.coach,

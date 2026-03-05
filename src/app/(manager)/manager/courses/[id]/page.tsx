@@ -38,8 +38,8 @@ import {
 interface Lesson {
   _id: string;
   title: string;
-  videoUrl?: string;
-  tempVideoPath?: string;
+  bunnyVideoId?: string;
+  signedIframeUrl?: string;
   videoStatus: string;
   order: number;
 }
@@ -59,8 +59,7 @@ interface CourseDetail {
   level: string;
   status: string;
   tags: string[];
-  previewVideoUrl?: string;
-  tempPreviewVideoPath?: string;
+  bunnyPreviewVideoUrl?: string;
   allowDiscounts?: boolean;
   maxDiscountPercent?: number;
   discountedPrice?: number;
@@ -155,10 +154,7 @@ export default function ManagerCourseDetailPage() {
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [previewUrl, setPreviewUrl] = useState("");
-  const [savingPreview, setSavingPreview] = useState(false);
-  const [videoUrls, setVideoUrls] = useState<Record<string, string>>({});
-  const [savingVideo, setSavingVideo] = useState<string | null>(null);
+
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
 
@@ -203,15 +199,6 @@ export default function ManagerCourseDetailPage() {
       if (res.ok) {
         const data = await res.json();
         setCourse(data);
-        setPreviewUrl(data.previewVideoUrl || "");
-        // Initialize video URLs
-        const urls: Record<string, string> = {};
-        data.chapters?.forEach((ch: Chapter) => {
-          ch.lessons?.forEach((l: Lesson) => {
-            urls[l._id] = l.videoUrl || "";
-          });
-        });
-        setVideoUrls(urls);
       }
     } catch (error) {
       console.error("Failed to fetch course:", error);
@@ -274,50 +261,6 @@ export default function ManagerCourseDetailPage() {
       setSavingDiscount(false);
     }
   };
-  // Save preview video URL
-  const handleSavePreview = async () => {
-    setSavingPreview(true);
-    try {
-      const res = await fetch(`/api/manager/courses/${courseId}/preview-url`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ previewVideoUrl: previewUrl }),
-      });
-      if (res.ok) {
-        await fetchCourse();
-        setActionMessage("Preview URL saved!");
-        setTimeout(() => setActionMessage(""), 3000);
-      }
-    } catch (error) {
-      console.error("Failed to save preview URL:", error);
-    } finally {
-      setSavingPreview(false);
-    }
-  };
-
-  // Save video URL for a lesson
-  async function handleSaveVideoUrl(lessonId: string) {
-    setSavingVideo(lessonId);
-    try {
-      const res = await fetch(
-        `/api/manager/courses/${courseId}/lessons/${lessonId}/video-url`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ videoUrl: videoUrls[lessonId] }),
-        },
-      );
-      if (res.ok) {
-        await fetchCourse();
-        setActionMessage("Video URL saved!");
-        setTimeout(() => setActionMessage(""), 3000);
-      }
-    } catch (error) {
-      console.error("Failed to save video URL:", error);
-    } finally {
-      setSavingVideo(null);
-    }
-  }
 
   // Review actions
   async function handleReview(action: string, notes = "") {
@@ -419,7 +362,7 @@ export default function ManagerCourseDetailPage() {
   const canPublish =
     (course.status === "approved" || course.status === "unpublished") &&
     allReady &&
-    !!course.previewVideoUrl;
+    !!course.bunnyPreviewVideoUrl;
 
   return (
     <div className="space-y-8 animate-[fade-in-up_0.4s_ease-out]">
@@ -632,64 +575,25 @@ export default function ManagerCourseDetailPage() {
         </div>
       )}
 
-      {/* Preview Video URL */}
-      <div className="bg-white rounded-[2rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5">
-        <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Globe className="w-4 h-4 text-red-500" />
-          Preview Video URL
-        </h2>
-
-        {/* Download link for coach-uploaded preview video */}
-        {course.tempPreviewVideoPath && (
-          <div className="flex items-center gap-3 p-4 bg-blue-50/80 rounded-xl border border-blue-100 mb-4">
-            <Video className="w-5 h-5 text-blue-500 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-blue-900">
-                Coach uploaded a preview video
-              </p>
-              <p className="text-xs text-blue-600 mt-0.5">
-                Download it, upload to Google Drive, then paste the Drive URL
-                below.
-              </p>
-            </div>
-            <a
-              href={course.tempPreviewVideoPath}
-              download
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition-all shrink-0"
-            >
-              <Download className="w-3.5 h-3.5" />
-              Download
-            </a>
+      {/* Preview Video */}
+      {course.bunnyPreviewVideoUrl && (
+        <div className="bg-white rounded-[2rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5">
+          <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Globe className="w-4 h-4 text-red-500" />
+            Preview Video
+          </h2>
+          <div className="aspect-video bg-gray-900 relative rounded-xl overflow-hidden">
+            <iframe
+              src={course.bunnyPreviewVideoUrl}
+              loading="lazy"
+              className="w-full h-full border-0"
+              allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+              allowFullScreen
+              title="Course Preview"
+            />
           </div>
-        )}
-
-        <div className="flex gap-3">
-          <input
-            type="url"
-            value={previewUrl}
-            onChange={(e) => setPreviewUrl(e.target.value)}
-            placeholder="https://drive.google.com/file/d/..."
-            className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-          />
-          <button
-            onClick={handleSavePreview}
-            disabled={savingPreview || !previewUrl.trim()}
-            className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-600/20 transition-all disabled:opacity-50"
-          >
-            {savingPreview ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            Save
-          </button>
         </div>
-        {course.previewVideoUrl && (
-          <p className="mt-2 text-xs text-emerald-600 font-medium flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" /> Preview URL is set
-          </p>
-        )}
-      </div>
+      )}
 
       {/* Chapters & Lessons with Video URL Management */}
       <div className="bg-white rounded-[2rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-gray-900/5">
@@ -703,7 +607,7 @@ export default function ManagerCourseDetailPage() {
         {!allReady && totalLessons > 0 && (
           <p className="text-xs text-amber-600 font-medium flex items-center gap-1 mb-4">
             <AlertTriangle className="w-3 h-3" />
-            Set Google Drive URLs for all lessons before publishing
+            Ensure all lessons finish processing before publishing
           </p>
         )}
 
@@ -739,9 +643,10 @@ export default function ManagerCourseDetailPage() {
                         <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Ready
                         </span>
-                      ) : lesson.videoStatus === "uploaded" ? (
+                      ) : lesson.videoStatus === "processing" ? (
                         <span className="flex items-center gap-1 text-xs font-semibold text-amber-600">
-                          <AlertTriangle className="w-3.5 h-3.5" /> Needs URL
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />{" "}
+                          Processing
                         </span>
                       ) : (
                         <span className="flex items-center gap-1 text-xs font-semibold text-gray-400">
@@ -749,55 +654,6 @@ export default function ManagerCourseDetailPage() {
                         </span>
                       )}
                     </div>
-
-                    {/* Video URL Input */}
-                    <div className="flex gap-2 pl-8">
-                      <input
-                        type="url"
-                        value={videoUrls[lesson._id] || ""}
-                        onChange={(e) =>
-                          setVideoUrls({
-                            ...videoUrls,
-                            [lesson._id]: e.target.value,
-                          })
-                        }
-                        placeholder="Paste Google Drive URL..."
-                        className="flex-1 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 text-xs font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                      />
-                      <button
-                        onClick={() => handleSaveVideoUrl(lesson._id)}
-                        disabled={
-                          savingVideo === lesson._id ||
-                          !videoUrls[lesson._id]?.trim()
-                        }
-                        className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-all disabled:opacity-50"
-                      >
-                        {savingVideo === lesson._id ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <Save className="w-3 h-3" />
-                        )}
-                        Save URL
-                      </button>
-                    </div>
-
-                    {lesson.tempVideoPath && (
-                      <div className="flex items-center gap-2 pl-8 pt-1">
-                        <p className="text-[10px] text-gray-400 truncate flex-1 leading-relaxed">
-                          Temp file:{" "}
-                          {lesson.tempVideoPath.split("/").pop() ||
-                            lesson.tempVideoPath}
-                        </p>
-                        <a
-                          href={lesson.tempVideoPath}
-                          download
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 hover:bg-blue-100 rounded-md transition-colors shrink-0"
-                        >
-                          <Download className="w-3 h-3" />
-                          Download
-                        </a>
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>

@@ -20,6 +20,8 @@ interface VideoUploaderProps {
   existingVideoId?: string | null;
   /** Optional: current video status */
   videoStatus?: "pending" | "processing" | "ready";
+  /** Optional: securely signed iframe URL for Bunny.net */
+  signedIframeUrl?: string;
 }
 
 export default function VideoUploader({
@@ -27,6 +29,7 @@ export default function VideoUploader({
   onUploadComplete,
   existingVideoId,
   videoStatus,
+  signedIframeUrl,
 }: VideoUploaderProps) {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<"idle" | "uploading" | "done" | "error">(
@@ -124,7 +127,50 @@ export default function VideoUploader({
   // Show existing video status
   if (existingVideoId && status === "idle") {
     return (
-      <div className="space-y-2">
+      <div className="space-y-4">
+        {/* Secure Video Preview */}
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 overflow-hidden group">
+          <div className="aspect-video bg-black relative">
+            {videoStatus === "ready" && signedIframeUrl ? (
+              <iframe
+                src={signedIframeUrl}
+                loading="lazy"
+                className="w-full h-full border-0 absolute inset-0"
+                allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+                allowFullScreen
+              />
+            ) : videoStatus === "ready" && !signedIframeUrl ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-8 text-center bg-gray-900 border border-gray-800">
+                <Film className="w-12 h-12 mb-3 text-gray-700" />
+                <p className="text-sm font-medium text-gray-300">
+                  Video is Ready
+                </p>
+                <p className="text-xs mt-1 max-w-[250px] opacity-70">
+                  Please save and refresh to view the secure preview.
+                </p>
+              </div>
+            ) : videoStatus === "processing" ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-amber-500/80 p-8 text-center bg-amber-950/20 border border-amber-900/30">
+                <Loader2 className="w-10 h-10 mb-4 animate-spin" />
+                <p className="text-sm font-bold text-amber-500">
+                  Processing Video...
+                </p>
+                <p className="text-xs mt-1 max-w-[250px] text-amber-500/70">
+                  Bunny.net is encoding your video. This may take a few minutes.
+                </p>
+              </div>
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-8 text-center bg-gray-900">
+                <Film className="w-8 h-8 mb-2 opacity-50" />
+                <p className="text-sm font-medium">
+                  No secure preview available
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Status Bar */}
         <div
           className={`flex items-center gap-3 p-4 rounded-2xl border ${
             videoStatus === "ready"

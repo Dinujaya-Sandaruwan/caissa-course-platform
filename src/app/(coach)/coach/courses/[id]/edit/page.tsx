@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
+import VideoUploader from "@/components/VideoUploader";
 import {
   ArrowRight,
   ArrowLeft,
@@ -51,6 +52,7 @@ interface CourseMetadata {
   allowDiscounts: boolean;
   maxDiscountPercent: string;
   discountedPrice: string;
+  bunnyPreviewVideoUrl?: string;
 }
 
 export interface LessonMaterial {
@@ -72,13 +74,9 @@ interface LessonDraft {
   description: string;
   links: string[];
   materials: LessonMaterial[];
-  videoFile: File | null;
-  videoFileName: string;
-  videoFileSize: number;
-  videoStatus: "pending" | "selected" | "uploading" | "uploaded" | "error";
-  uploadProgress: number;
-  tempVideoPath: string;
-  uploadError: string;
+  bunnyVideoId: string;
+  signedIframeUrl?: string;
+  videoStatus: "pending" | "processing" | "ready";
 }
 
 interface ChapterDraft {
@@ -115,7 +113,6 @@ export default function EditCoursePage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [chapters, setChapters] = useState<ChapterDraft[]>([]);
   const [step2Error, setStep2Error] = useState("");
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const router = useRouter();
   const params = useParams();
   const courseId = params.id as string;
@@ -128,17 +125,8 @@ export default function EditCoursePage() {
     { chapterId: string; lessonId: string }[]
   >([]);
 
-  // Preview video state
-  const [previewVideoFile, setPreviewVideoFile] = useState<File | null>(null);
-  const [previewVideoFileName, setPreviewVideoFileName] = useState("");
-  const [previewVideoFileSize, setPreviewVideoFileSize] = useState(0);
-  const [previewVideoStatus, setPreviewVideoStatus] = useState<
-    "pending" | "selected" | "uploading" | "uploaded" | "error"
-  >("pending");
-  const [previewVideoProgress, setPreviewVideoProgress] = useState(0);
-  const [previewVideoTempPath, setPreviewVideoTempPath] = useState("");
-  const [previewVideoError, setPreviewVideoError] = useState("");
-  const previewVideoInputRef = useRef<HTMLInputElement | null>(null);
+  // Preview video state (Bunny.net)
+  const [bunnyPreviewVideoId, setBunnyPreviewVideoId] = useState("");
 
   // Fetch course on mount
   useEffect(() => {
@@ -170,11 +158,12 @@ export default function EditCoursePage() {
         });
 
         // Initialize preview video from existing data
-        if (data.tempPreviewVideoPath) {
-          setPreviewVideoTempPath(data.tempPreviewVideoPath);
-          setPreviewVideoFileName("Existing Preview Video");
-          setPreviewVideoStatus("uploaded");
-          setPreviewVideoProgress(100);
+        if (data.bunnyPreviewVideoId) {
+          setBunnyPreviewVideoId(data.bunnyPreviewVideoId);
+          setMetadata((prev) => ({
+            ...prev,
+            bunnyPreviewVideoUrl: data.bunnyPreviewVideoUrl,
+          }));
         }
 
         const mappedChapters: ChapterDraft[] = data.chapters.map((ch: any) => ({
@@ -197,17 +186,14 @@ export default function EditCoursePage() {
               url: m.url || "",
               error: "",
             })),
-            videoFile: null,
-            videoFileName: l.videoUrl ? "Existing Video" : "",
-            videoFileSize: 0,
-            videoStatus: ["uploaded", "ready"].includes(l.videoStatus)
-              ? "uploaded"
-              : l.videoStatus,
-            uploadProgress: ["uploaded", "ready"].includes(l.videoStatus)
-              ? 100
-              : 0,
-            tempVideoPath: l.videoUrl || l.tempVideoPath || "",
-            uploadError: "",
+            bunnyVideoId: l.bunnyVideoId || "",
+            signedIframeUrl: l.signedIframeUrl,
+            videoStatus:
+              l.videoStatus === "ready"
+                ? "ready"
+                : l.bunnyVideoId
+                  ? "processing"
+                  : "pending",
           })),
           isExpanded: true,
         }));
@@ -635,13 +621,8 @@ export default function EditCoursePage() {
                   description: "",
                   links: [],
                   materials: [],
-                  videoFile: null,
-                  videoFileName: "",
-                  videoFileSize: 0,
+                  bunnyVideoId: "",
                   videoStatus: "pending",
-                  uploadProgress: 0,
-                  tempVideoPath: "",
-                  uploadError: "",
                 },
               ],
               isExpanded: true,
@@ -687,24 +668,29 @@ export default function EditCoursePage() {
     chapterId: string;
     lessonId: string;
     file: File;
-    type: "video" | "material" | "previewVideo";
+    type: "material";
     materialId?: string;
   };
 
   const uploadQueueRef = useRef<QueueItem[]>([]);
   const isUploadingRef = useRef(false);
 
-  const updateLessonUploadState = (
+  const updateLessonField = (
+    chapterId: string,
     lessonId: string,
     updates: Partial<LessonDraft>,
   ) => {
     setChapters((prev) =>
-      prev.map((ch) => ({
-        ...ch,
-        lessons: ch.lessons.map((l) =>
-          l.id === lessonId ? { ...l, ...updates } : l,
-        ),
-      })),
+      prev.map((ch) =>
+        ch.id === chapterId
+          ? {
+              ...ch,
+              lessons: ch.lessons.map((l) =>
+                l.id === lessonId ? { ...l, ...updates } : l,
+              ),
+            }
+          : ch,
+      ),
     );
   };
 
@@ -736,22 +722,12 @@ export default function EditCoursePage() {
     while (uploadQueueRef.current.length > 0) {
       const item = uploadQueueRef.current[0];
 
-      if (item.type === "video") {
-        updateLessonUploadState(item.lessonId, {
-          videoStatus: "uploading",
-          uploadProgress: 0,
-          uploadError: "",
-        });
-      } else if (item.type === "material" && item.materialId) {
+      if (item.materialId) {
         updateMaterialUploadState(item.lessonId, item.materialId, {
           status: "uploading",
           progress: 0,
           error: "",
         });
-      } else if (item.type === "previewVideo") {
-        setPreviewVideoStatus("uploading");
-        setPreviewVideoProgress(0);
-        setPreviewVideoError("");
       }
 
       try {
@@ -759,21 +735,15 @@ export default function EditCoursePage() {
           (resolve, reject) => {
             const xhr = new XMLHttpRequest();
             const formData = new FormData();
-            formData.append("video", item.file); // temp API just expects 'video' field currently
+            formData.append("video", item.file);
 
             xhr.upload.addEventListener("progress", (e) => {
               if (e.lengthComputable) {
                 const percent = Math.round((e.loaded / e.total) * 100);
-                if (item.type === "video") {
-                  updateLessonUploadState(item.lessonId, {
-                    uploadProgress: percent,
-                  });
-                } else if (item.type === "material" && item.materialId) {
+                if (item.materialId) {
                   updateMaterialUploadState(item.lessonId, item.materialId, {
                     progress: percent,
                   });
-                } else if (item.type === "previewVideo") {
-                  setPreviewVideoProgress(percent);
                 }
               }
             });
@@ -805,42 +775,22 @@ export default function EditCoursePage() {
           },
         );
 
-        if (item.type === "video") {
-          updateLessonUploadState(item.lessonId, {
-            videoStatus: "uploaded",
-            uploadProgress: 100,
-            tempVideoPath: result.tempPath,
-          });
-        } else if (item.type === "material" && item.materialId) {
+        if (item.materialId) {
           updateMaterialUploadState(item.lessonId, item.materialId, {
             status: "uploaded",
             progress: 100,
             tempPath: result.tempPath,
           });
-        } else if (item.type === "previewVideo") {
-          setPreviewVideoStatus("uploaded");
-          setPreviewVideoProgress(100);
-          setPreviewVideoTempPath(result.tempPath);
         }
       } catch (error) {
         const errorMsg =
           error instanceof Error ? error.message : "Upload failed";
-        if (item.type === "video") {
-          updateLessonUploadState(item.lessonId, {
-            videoStatus: "error",
-            uploadProgress: 0,
-            uploadError: errorMsg,
-          });
-        } else if (item.type === "material" && item.materialId) {
+        if (item.materialId) {
           updateMaterialUploadState(item.lessonId, item.materialId, {
             status: "error",
             progress: 0,
             error: errorMsg,
           });
-        } else if (item.type === "previewVideo") {
-          setPreviewVideoStatus("error");
-          setPreviewVideoProgress(0);
-          setPreviewVideoError(errorMsg);
         }
       }
 
@@ -850,35 +800,21 @@ export default function EditCoursePage() {
     isUploadingRef.current = false;
   };
 
-  const handleVideoSelect = (
+  // handleVideoUploadComplete — called by VideoUploader when a lesson video upload finishes
+  const handleVideoUploadComplete = (
     chapterId: string,
     lessonId: string,
-    file: File,
+    videoId: string,
   ) => {
-    setChapters((prev) =>
-      prev.map((ch) =>
-        ch.id === chapterId
-          ? {
-              ...ch,
-              lessons: ch.lessons.map((l) =>
-                l.id === lessonId
-                  ? {
-                      ...l,
-                      videoFile: file,
-                      videoFileName: file.name,
-                      videoFileSize: file.size,
-                      videoStatus: "selected" as const,
-                    }
-                  : l,
-              ),
-            }
-          : ch,
-      ),
-    );
+    updateLessonField(chapterId, lessonId, {
+      bunnyVideoId: videoId,
+      videoStatus: "processing",
+    });
+  };
 
-    // Add to upload queue and start processing
-    uploadQueueRef.current.push({ chapterId, lessonId, file, type: "video" });
-    processUploadQueue();
+  // handlePreviewVideoUploadComplete — called by VideoUploader when preview video upload finishes
+  const handlePreviewVideoUploadComplete = (videoId: string) => {
+    setBunnyPreviewVideoId(videoId);
   };
 
   const handleMaterialSelect = (
@@ -927,20 +863,6 @@ export default function EditCoursePage() {
       materialId,
     });
     processUploadQueue();
-  };
-
-  const retryUpload = (chapterId: string, lessonId: string) => {
-    const chapter = chapters.find((ch) => ch.id === chapterId);
-    const lesson = chapter?.lessons.find((l) => l.id === lessonId);
-    if (lesson?.videoFile) {
-      uploadQueueRef.current.push({
-        chapterId,
-        lessonId,
-        file: lesson.videoFile,
-        type: "video",
-      });
-      processUploadQueue();
-    }
   };
 
   const retryMaterialUpload = (
@@ -1142,12 +1064,9 @@ export default function EditCoursePage() {
       ) {
         coursePayload.tempThumbnailPath = metadata.tempThumbnailPath;
       }
-      // Attach preview video if newly uploaded
-      if (
-        previewVideoTempPath &&
-        previewVideoTempPath.startsWith("/api/files/temp/")
-      ) {
-        coursePayload.tempPreviewVideoPath = previewVideoTempPath;
+      // Attach preview video if newly uploaded to Bunny
+      if (bunnyPreviewVideoId) {
+        coursePayload.bunnyPreviewVideoId = bunnyPreviewVideoId;
       }
 
       const courseRes = await fetch(`/api/coach/courses/${courseId}`, {
@@ -1222,11 +1141,8 @@ export default function EditCoursePage() {
             links: lesson.links.filter((link) => link.trim() !== ""),
           };
 
-          if (
-            lesson.tempVideoPath &&
-            !lesson.tempVideoPath.startsWith("/api/files/courses")
-          ) {
-            lessonPayload.tempVideoPath = lesson.tempVideoPath;
+          if (lesson.bunnyVideoId) {
+            lessonPayload.bunnyVideoId = lesson.bunnyVideoId;
           }
 
           const tempMats = lesson.materials.filter((m) => m.tempPath);
@@ -1317,7 +1233,8 @@ export default function EditCoursePage() {
       0,
     );
     const lessonsWithVideo = chapters.reduce(
-      (acc, ch) => acc + ch.lessons.filter((l) => l.videoFile).length,
+      (acc, ch) =>
+        acc + ch.lessons.filter((l) => l.videoStatus !== "pending").length,
       0,
     );
     const lessonsWithoutVideo = totalLessonsStep3 - lessonsWithVideo;
@@ -1504,7 +1421,7 @@ export default function EditCoursePage() {
                       <span className="text-sm text-gray-700 flex-1">
                         {lesson.title}
                       </span>
-                      {lesson.videoFile ? (
+                      {lesson.videoStatus !== "pending" ? (
                         <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Video
@@ -1694,137 +1611,13 @@ export default function EditCoursePage() {
             </div>
           </div>
 
-          {previewVideoStatus === "pending" && (
-            <label className="flex flex-col items-center justify-center gap-3 py-8 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:border-red-300 hover:bg-red-50/30 transition-all">
-              <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center">
-                <Upload className="w-5 h-5 text-red-400" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-semibold text-gray-700">
-                  Click to upload preview video
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  MP4, MOV, WebM • Max 2GB
-                </p>
-              </div>
-              <input
-                ref={previewVideoInputRef}
-                type="file"
-                accept="video/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setPreviewVideoFile(file);
-                  setPreviewVideoFileName(file.name);
-                  setPreviewVideoFileSize(file.size);
-                  setPreviewVideoStatus("selected");
-                  uploadQueueRef.current.push({
-                    chapterId: "",
-                    lessonId: "",
-                    file,
-                    type: "previewVideo",
-                  });
-                  processUploadQueue();
-                }}
-              />
-            </label>
-          )}
-
-          {previewVideoStatus === "selected" && (
-            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-              <Video className="w-5 h-5 text-gray-400 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-800 truncate">
-                  {previewVideoFileName}
-                </p>
-                <p className="text-xs text-gray-400">
-                  {(previewVideoFileSize / (1024 * 1024)).toFixed(1)} MB
-                </p>
-              </div>
-              <Loader2 className="w-4 h-4 text-red-500 animate-spin" />
-            </div>
-          )}
-
-          {previewVideoStatus === "uploading" && (
-            <div className="space-y-3 p-4 bg-gray-50 rounded-xl">
-              <div className="flex items-center gap-3">
-                <Video className="w-5 h-5 text-red-500 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 truncate">
-                    {previewVideoFileName}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {(previewVideoFileSize / (1024 * 1024)).toFixed(1)} MB
-                  </p>
-                </div>
-                <span className="text-xs font-bold text-red-600">
-                  {previewVideoProgress}%
-                </span>
-              </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-300"
-                  style={{ width: `${previewVideoProgress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {previewVideoStatus === "uploaded" && (
-            <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-              <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-emerald-800 truncate">
-                  {previewVideoFileName}
-                </p>
-                <p className="text-xs text-emerald-600">
-                  {previewVideoFileSize > 0
-                    ? `${(previewVideoFileSize / (1024 * 1024)).toFixed(1)} MB • `
-                    : ""}
-                  Uploaded
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setPreviewVideoFile(null);
-                  setPreviewVideoFileName("");
-                  setPreviewVideoFileSize(0);
-                  setPreviewVideoStatus("pending");
-                  setPreviewVideoProgress(0);
-                  setPreviewVideoTempPath("");
-                  if (previewVideoInputRef.current)
-                    previewVideoInputRef.current.value = "";
-                }}
-                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-
-          {previewVideoStatus === "error" && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-100">
-                <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-red-800">
-                    Upload failed
-                  </p>
-                  <p className="text-xs text-red-600">{previewVideoError}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setPreviewVideoStatus("pending");
-                  setPreviewVideoError("");
-                }}
-                className="text-xs font-semibold text-red-600 hover:text-red-700"
-              >
-                Try again
-              </button>
-            </div>
-          )}
+          <VideoUploader
+            title="Course Preview Video"
+            onUploadComplete={handlePreviewVideoUploadComplete}
+            existingVideoId={bunnyPreviewVideoId}
+            videoStatus={bunnyPreviewVideoId ? "ready" : "pending"}
+            signedIframeUrl={metadata.bunnyPreviewVideoUrl}
+          />
         </div>
 
         {/* Chapters List */}
@@ -1918,23 +1711,6 @@ export default function EditCoursePage() {
                               <button
                                 type="button"
                                 onClick={() =>
-                                  fileInputRefs.current[lesson.id]?.click()
-                                }
-                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                                  lesson.videoStatus === "pending"
-                                    ? "text-gray-500 bg-gray-100 hover:bg-red-50 hover:text-red-600"
-                                    : "text-red-600 bg-red-50 hover:bg-red-100"
-                                }`}
-                              >
-                                <Video className="w-3.5 h-3.5" />
-                                {lesson.videoStatus === "pending"
-                                  ? "Add Video"
-                                  : "Change Video"}
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() =>
                                   addLessonLink(chapter.id, lesson.id)
                                 }
                                 className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
@@ -1980,70 +1756,22 @@ export default function EditCoursePage() {
                             </div>
                           </div>
 
-                          {/* Video Status Row (If active) */}
-                          {lesson.videoStatus !== "pending" && (
-                            <div className="flex items-center gap-3 pl-9">
-                              <div className="flex items-center gap-2 shrink-0">
-                                {lesson.videoStatus === "selected" && (
-                                  <span className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg animate-pulse">
-                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                    Waiting...
-                                  </span>
-                                )}
-                                {lesson.videoStatus === "uploading" && (
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                      <div
-                                        className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-300 ease-out"
-                                        style={{
-                                          width: `${lesson.uploadProgress}%`,
-                                        }}
-                                      />
-                                    </div>
-                                    <span className="text-xs font-bold text-red-600 min-w-[3rem] text-right">
-                                      {lesson.uploadProgress}%
-                                    </span>
-                                  </div>
-                                )}
-                                {lesson.videoStatus === "uploaded" && (
-                                  <span className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-lg">
-                                    <CheckCircle2 className="w-3.5 h-3.5" />
-                                    Video Uploaded
-                                  </span>
-                                )}
-                                {lesson.videoStatus === "error" && (
-                                  <div className="flex items-center gap-2">
-                                    <span
-                                      className="text-xs font-semibold text-red-500 max-w-[150px] truncate"
-                                      title={
-                                        lesson.uploadError || "Upload failed"
-                                      }
-                                    >
-                                      {lesson.uploadError || "Failed"}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        retryUpload(chapter.id, lesson.id)
-                                      }
-                                      className="text-xs font-bold text-red-600 underline hover:text-red-700 cursor-pointer"
-                                    >
-                                      Retry
-                                    </button>
-                                  </div>
-                                )}
-                                {lesson.videoFileName && (
-                                  <span
-                                    className="text-[10px] text-gray-400 font-medium max-w-[150px] sm:max-w-xs truncate"
-                                    title={lesson.videoFileName}
-                                  >
-                                    {lesson.videoFileName} (
-                                    {formatFileSize(lesson.videoFileSize)})
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          )}
+                          {/* Video Uploader */}
+                          <div className="pl-9 pr-2">
+                            <VideoUploader
+                              title={lesson.title || `Lesson ${lIdx + 1}`}
+                              onUploadComplete={(videoId) =>
+                                handleVideoUploadComplete(
+                                  chapter.id,
+                                  lesson.id,
+                                  videoId,
+                                )
+                              }
+                              existingVideoId={lesson.bunnyVideoId}
+                              videoStatus={lesson.videoStatus}
+                              signedIframeUrl={lesson.signedIframeUrl}
+                            />
+                          </div>
 
                           {/* Expansion Area: Description */}
                           <div className="pl-9 pr-2 space-y-3 mt-1">
@@ -2172,22 +1900,6 @@ export default function EditCoursePage() {
                             )}
                           </div>
                         </div>
-
-                        {/* Hidden file input for video */}
-                        <input
-                          ref={(el) => {
-                            if (el) fileInputRefs.current[lesson.id] = el;
-                          }}
-                          type="file"
-                          accept="video/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              handleVideoSelect(chapter.id, lesson.id, file);
-                            }
-                          }}
-                        />
                       </div>
                     ))}
 

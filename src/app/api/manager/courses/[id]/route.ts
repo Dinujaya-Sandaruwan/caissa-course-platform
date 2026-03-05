@@ -5,6 +5,7 @@ import Course from "@/models/Course";
 import Chapter from "@/models/Chapter";
 import Lesson from "@/models/Lesson";
 import { logAction } from "@/lib/auditLog";
+import { generateSignedEmbedUrl } from "@/lib/bunny";
 
 export async function GET(
   request: NextRequest,
@@ -38,20 +39,28 @@ export async function GET(
     // Fetch all lessons for all chapters, sorted by order
     const chapterIds = chapters.map((ch) => ch._id);
     const lessons = await Lesson.find({ chapterId: { $in: chapterIds } })
-      .select("title chapterId videoUrl tempVideoPath videoStatus order")
+      .select("title chapterId bunnyVideoId videoStatus order")
       .sort({ order: 1 })
       .lean();
 
     // Group lessons by chapter
     const chaptersWithLessons = chapters.map((ch) => ({
       ...ch,
-      lessons: lessons.filter(
-        (l) => l.chapterId.toString() === ch._id.toString(),
-      ),
+      lessons: lessons
+        .filter((l) => l.chapterId.toString() === ch._id.toString())
+        .map((l) => ({
+          ...l,
+          signedIframeUrl: l.bunnyVideoId
+            ? generateSignedEmbedUrl(l.bunnyVideoId)
+            : undefined,
+        })),
     }));
 
     return NextResponse.json({
       ...course,
+      bunnyPreviewVideoUrl: course.bunnyPreviewVideoId
+        ? generateSignedEmbedUrl(course.bunnyPreviewVideoId)
+        : undefined,
       chapters: chaptersWithLessons,
     });
   } catch (error) {
@@ -96,7 +105,13 @@ export async function DELETE(
     ]);
     await course.deleteOne();
 
-    logAction({ managerId: session.userId, action: `Permanently deleted course "${course.title}"`, category: "courses", targetId: courseId, targetName: course.title });
+    logAction({
+      managerId: session.userId,
+      action: `Permanently deleted course "${course.title}"`,
+      category: "courses",
+      targetId: courseId,
+      targetName: course.title,
+    });
 
     return NextResponse.json({ message: "Course permanently deleted" });
   } catch (error) {
@@ -139,7 +154,13 @@ export async function PATCH(
     course.trashedAt = undefined;
     await course.save();
 
-    logAction({ managerId: session.userId, action: `Reactivated course "${course.title}" as draft`, category: "courses", targetId: courseId, targetName: course.title });
+    logAction({
+      managerId: session.userId,
+      action: `Reactivated course "${course.title}" as draft`,
+      category: "courses",
+      targetId: courseId,
+      targetName: course.title,
+    });
 
     return NextResponse.json({ message: "Course reactivated as draft" });
   } catch (error) {

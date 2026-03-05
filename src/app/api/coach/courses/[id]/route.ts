@@ -10,6 +10,7 @@ import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import sharp from "sharp";
+import { generateSignedEmbedUrl } from "@/lib/bunny";
 
 export async function GET(
   request: NextRequest,
@@ -45,13 +46,21 @@ export async function GET(
     // Group lessons into their respective chapters
     const chaptersWithLessons = chapters.map((chapter) => ({
       ...chapter,
-      lessons: lessons.filter(
-        (lesson) => String(lesson.chapterId) === String(chapter._id),
-      ),
+      lessons: lessons
+        .filter((lesson) => String(lesson.chapterId) === String(chapter._id))
+        .map((l) => ({
+          ...l,
+          signedIframeUrl: l.bunnyVideoId
+            ? generateSignedEmbedUrl(l.bunnyVideoId)
+            : undefined,
+        })),
     }));
 
     return NextResponse.json({
       ...course,
+      bunnyPreviewVideoUrl: course.bunnyPreviewVideoId
+        ? generateSignedEmbedUrl(course.bunnyPreviewVideoId)
+        : undefined,
       chapters: chaptersWithLessons,
     });
   } catch (error) {
@@ -101,7 +110,7 @@ export async function PATCH(
       tags,
       thumbnailUrl,
       tempThumbnailPath,
-      tempPreviewVideoPath,
+      bunnyPreviewVideoId,
       allowDiscounts,
       maxDiscountPercent,
       discountedPrice,
@@ -242,47 +251,9 @@ export async function PATCH(
       }
     }
 
-    // Handle preview video temp file
-    if (tempPreviewVideoPath && typeof tempPreviewVideoPath === "string") {
-      const UPLOAD_DIR = process.env.UPLOAD_DIR || "public/uploads";
-      const tempFileName = tempPreviewVideoPath.split("/").pop();
-      if (tempFileName) {
-        const fullTempPath = path.join(
-          process.cwd(),
-          UPLOAD_DIR,
-          "temp",
-          tempFileName,
-        );
-
-        try {
-          await fs.access(fullTempPath);
-
-          const courseDir = path.join(
-            process.cwd(),
-            UPLOAD_DIR,
-            "courses",
-            course._id.toString(),
-          );
-          await fs.mkdir(courseDir, { recursive: true });
-
-          const ext = path.extname(tempPreviewVideoPath);
-          const videoFileName = `preview-video-${crypto.randomBytes(4).toString("hex")}${ext}`;
-          const fullVideoPath = path.join(courseDir, videoFileName);
-
-          await fs.rename(fullTempPath, fullVideoPath);
-
-          // Format frontend URL to omit 'public/'
-          const cleanUploadDir = UPLOAD_DIR.replace(/^\.\//, "");
-          const basePath = cleanUploadDir.startsWith("public/")
-            ? `/${cleanUploadDir.slice(7)}`
-            : `/${cleanUploadDir}`;
-          const relativeUrl = `${basePath}/courses/${course._id.toString()}/${videoFileName}`;
-
-          course.tempPreviewVideoPath = relativeUrl;
-        } catch (err) {
-          console.error("Error processing preview video:", err);
-        }
-      }
+    // Handle preview video
+    if (bunnyPreviewVideoId && typeof bunnyPreviewVideoId === "string") {
+      course.bunnyPreviewVideoId = bunnyPreviewVideoId;
     }
 
     // Handle discount fields
