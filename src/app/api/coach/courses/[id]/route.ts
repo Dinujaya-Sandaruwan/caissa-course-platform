@@ -10,7 +10,7 @@ import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import sharp from "sharp";
-import { generateSignedEmbedUrl } from "@/lib/bunny";
+import { generateSignedEmbedUrl, getBunnyVideoStatus } from "@/lib/bunny";
 
 export async function GET(
   request: NextRequest,
@@ -42,6 +42,31 @@ export async function GET(
     const lessons = await Lesson.find({ courseId: course._id })
       .sort({ order: 1 })
       .lean();
+
+    // Quick sync for processing videos
+    for (const l of lessons) {
+      if (l.videoStatus === "processing" && l.bunnyVideoId) {
+        try {
+          const status = await getBunnyVideoStatus(l.bunnyVideoId);
+          if (status === 3) {
+            // Finished
+            await Lesson.findByIdAndUpdate(l._id, { videoStatus: "ready" });
+            l.videoStatus = "ready";
+          } else if (status === 4) {
+            // Error
+            await Lesson.findByIdAndUpdate(l._id, {
+              videoStatus: "pending",
+              bunnyVideoId: null,
+            });
+            l.videoStatus = "pending";
+            // @ts-ignore
+            l.bunnyVideoId = null;
+          }
+        } catch (e) {
+          console.error(`Failed to sync status for video ${l.bunnyVideoId}`, e);
+        }
+      }
+    }
 
     // Group lessons into their respective chapters
     const chaptersWithLessons = chapters.map((chapter) => ({

@@ -1492,7 +1492,7 @@ export default function CreateCoursePage() {
           </div>
 
           <VideoUploader
-            title={`Preview — ${metadata.title || "Course"}`}
+            title={`[Preview] ${metadata.title || "Untitled Course"}`}
             onUploadComplete={handlePreviewVideoUploadComplete}
             existingVideoId={bunnyPreviewVideoId || null}
           />
@@ -1637,7 +1637,7 @@ export default function CreateCoursePage() {
                           {/* Video Uploader */}
                           <div className="pl-9 pr-2">
                             <VideoUploader
-                              title={lesson.title || `Lesson ${lIdx + 1}`}
+                              title={`[Course: ${metadata.title || "Untitled Course"}] - [Chapter ${chIdx + 1}: ${chapter.title || "Untitled Chapter"}] - ${lesson.title || `Lesson ${lIdx + 1}`}`}
                               onUploadComplete={(videoId) =>
                                 handleVideoUploadComplete(
                                   chapter.id,

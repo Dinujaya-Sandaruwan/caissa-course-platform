@@ -90,3 +90,28 @@ export async function deleteBunnyVideo(videoId: string) {
 
   return true;
 }
+
+/**
+ * Fetches the current processing status of a video from Bunny Stream.
+ * Returns the status code: 0 = Created, 1 = Uploaded, 2 = Processing, 3 = Finished, 4 = Error
+ */
+export async function getBunnyVideoStatus(videoId: string): Promise<number> {
+  const res = await fetch(
+    `https://video.bunnycdn.com/library/${BUNNY_LIBRARY_ID}/videos/${videoId}`,
+    {
+      headers: {
+        AccessKey: BUNNY_STREAM_API_KEY,
+        Accept: "application/json",
+      },
+      next: { revalidate: 0 }, // Don't cache this request
+    },
+  );
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to fetch Bunny video status: ${errorText}`);
+  }
+
+  const data = await res.json();
+  return data.status;
+}
