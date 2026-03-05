@@ -69,11 +69,17 @@ export default function NavbarClient({
           <div className="hidden md:flex flex-1 items-center justify-end space-x-8">
             {/* Nav Links */}
             <div className="flex space-x-6">
-              {[{ label: "Courses", href: "/courses" }].map((item) => (
+              {[
+                { label: "Courses", href: "/courses" },
+                { label: "Pricing", href: "/pricing" },
+                { label: "FAQ", href: "/faq" },
+                { label: "About Us", href: "/about" },
+                { label: "Contact Us", href: "/contact" },
+              ].map((item) => (
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="font-sans text-gray-600 hover:text-primary-red font-medium text-sm transition-colors py-2"
+                  className="font-sans text-gray-600 hover:text-primary-red font-medium text-sm transition-colors py-2 whitespace-nowrap"
                 >
                   {item.label}
                 </Link>
@@ -139,7 +145,15 @@ export default function NavbarClient({
         className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
       >
         <div className="px-4 pt-2 pb-6 space-y-1 sm:px-3 bg-white border-b border-gray-200">
-          {[{ label: "Courses", href: "/courses" }].map((item) => (
+          {[
+            { label: "Courses", href: "/courses" },
+            { label: "About Us", href: "/about" },
+            { label: "Pricing", href: "/pricing" },
+            { label: "Become a Coach", href: "/become-a-coach" },
+            { label: "How It Works", href: "/how-it-works" },
+            { label: "Contact Us", href: "/contact" },
+            { label: "FAQ", href: "/faq" },
+          ].map((item) => (
             <Link
               key={item.label}
               href={item.href}
