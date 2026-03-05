@@ -8,6 +8,7 @@ import Footer from "@/components/landing/Footer";
 import SearchBar from "@/components/ui/SearchBar";
 import CourseFilters from "@/components/ui/CourseFilters";
 import { Users, BookOpen, Loader2 } from "lucide-react";
+import LoadingScreen from "@/components/LoadingScreen";
 
 interface PublicCourse {
   _id: string;
@@ -131,11 +132,7 @@ function CoursesContent() {
       </section>
 
       {/* Loading State */}
-      {loading && (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
-        </div>
-      )}
+      {loading && <LoadingScreen />}
 
       {/* Course Grid */}
       {!loading && (
@@ -276,13 +273,7 @@ export default function PublicCoursesPage() {
   return (
     <>
       <NavbarClient session={null} />
-      <Suspense
-        fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
-          </div>
-        }
-      >
+      <Suspense fallback={<LoadingScreen />}>
         <CoursesContent />
       </Suspense>
       <Footer />

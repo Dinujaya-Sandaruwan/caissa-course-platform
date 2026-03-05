@@ -10,7 +10,7 @@ const footerLinks = {
       { label: "Browse Courses", href: "/courses" },
       { label: "About Us", href: "/about" },
       { label: "Pricing", href: "/pricing" },
-      { label: "Student Portal", href: "#" },
+      { label: "Student Portal", href: "/student/dashboard" },
     ],
   },
   forCoaches: {

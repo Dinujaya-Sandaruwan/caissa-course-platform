@@ -11,10 +11,11 @@ import {
   Upload,
   ImageIcon,
   Send,
-  Loader2,
   CheckCircle2,
   X,
+  Loader2,
 } from "lucide-react";
+import LoadingScreen from "@/components/LoadingScreen";
 
 interface CourseBasic {
   _id: string;
@@ -131,15 +132,7 @@ export default function EnrollPage() {
   }
 
   if (loading) {
-    return (
-      <>
-        <NavbarClient session={null} />
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
-        </div>
-        <Footer />
-      </>
-    );
+    return <LoadingScreen />;
   }
 
   if (!course) {

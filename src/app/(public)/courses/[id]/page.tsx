@@ -16,10 +16,10 @@ import {
   Loader2,
   CheckCircle2,
   Lock,
-  Check,
-  Award,
   MonitorSmartphone,
+  Check,
 } from "lucide-react";
+import LoadingScreen from "@/components/LoadingScreen";
 
 interface Lesson {
   _id: string;
@@ -156,15 +156,7 @@ export default function PublicCourseDetailPage() {
   }
 
   if (loading) {
-    return (
-      <>
-        <NavbarClient session={null} />
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
-        </div>
-        <Footer />
-      </>
-    );
+    return <LoadingScreen />;
   }
 
   if (!course) {
