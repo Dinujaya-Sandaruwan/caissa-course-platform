@@ -10,6 +10,7 @@ import {
   Loader2,
   AlertTriangle,
 } from "lucide-react";
+import ActiveVisitorGraph from "@/components/manager/ActiveVisitorGraph";
 
 interface DashboardData {
   pendingCoaches: number;
@@ -134,6 +135,11 @@ export default function ManagerDashboardPage() {
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* Real-time Visitor Graph */}
+      <div className="mt-10">
+        <ActiveVisitorGraph />
       </div>
 
       {/* Ambient background watermark */}

@@ -34,6 +34,7 @@ export const metadata: Metadata = {
 
 import { Toaster } from "react-hot-toast";
 import Preloader from "@/components/Preloader";
+import { TrackingProvider } from "@/components/TrackingProvider";
 
 export default function RootLayout({
   children,
@@ -46,9 +47,11 @@ export default function RootLayout({
         className={`${inter.variable} ${outfit.variable} ${jetbrainsMono.variable} font-sans antialiased`}
         suppressHydrationWarning
       >
-        <Preloader />
-        <Toaster position="top-center" />
-        {children}
+        <TrackingProvider>
+          <Preloader />
+          <Toaster position="top-center" />
+          {children}
+        </TrackingProvider>
       </body>
     </html>
   );
