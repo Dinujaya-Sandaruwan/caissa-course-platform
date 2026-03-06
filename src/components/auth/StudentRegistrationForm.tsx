@@ -282,7 +282,7 @@ export default function StudentRegistrationForm({
               type="text"
               value={form.name}
               onChange={(e) => updateField("name", e.target.value)}
-              placeholder="e.g. Appuhamilage Garry Kasparov"
+              placeholder="e.g. Athawuda Mudiyanselage Dinujaya Sandaruwan Bandara"
               className={inputClasses}
               autoFocus
             />
@@ -294,7 +294,7 @@ export default function StudentRegistrationForm({
               type="text"
               value={form.nickname}
               onChange={(e) => updateField("nickname", e.target.value)}
-              placeholder="e.g. Kaspy"
+              placeholder="e.g. Dinujaya"
               className={inputClasses}
             />
             <p className="text-xs text-gray-500 mt-1.5 font-medium">

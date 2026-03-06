@@ -12,6 +12,7 @@ import {
   FolderOpen,
   Mail,
   Activity,
+  Database,
 } from "lucide-react";
 
 const navLinks = [
@@ -26,6 +27,7 @@ const navLinks = [
   { name: "Managers", href: "/manager/managers", icon: ShieldCheck },
   { name: "Messages", href: "/manager/messages", icon: Mail },
   { name: "Activity Log", href: "/manager/activity-log", icon: Activity },
+  { name: "Database", href: "/manager/database", icon: Database },
 ];
 
 export default function ManagerNavLinks() {

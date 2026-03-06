@@ -39,6 +39,13 @@ async function getSession(
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Prank Database Check
+  if (request.cookies.get("prank_deleted")?.value === "true") {
+    if (pathname !== "/fatal-error") {
+      return NextResponse.rewrite(new URL("/fatal-error", request.url));
+    }
+  }
+
   // Find matching protected route prefix
   const matchedPrefix = Object.keys(protectedRoutes).find((prefix) =>
     pathname.startsWith(prefix),
@@ -143,16 +150,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/manager/:path*",
-    "/api/manager/:path*",
-    "/coach/:path*",
-    "/coach-pending",
-    "/coach-paused",
-    "/api/coach/:path*",
-    "/student/:path*",
-    "/api/student/:path*",
-    "/courses/:id/enroll",
-    "/login",
-    "/become-a-coach",
+    "/((?!_next/static|_next/image|favicon.ico|images|favicon|_next/data).*)",
   ],
 };
