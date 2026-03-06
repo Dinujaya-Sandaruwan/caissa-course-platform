@@ -35,7 +35,7 @@ export default function ManagerNavLinks() {
     <>
       {navLinks.map((link) => {
         const Icon = link.icon;
-        const isActive = pathname.startsWith(link.href);
+        const isActive = pathname?.startsWith(link.href) || false;
 
         return (
           <Link

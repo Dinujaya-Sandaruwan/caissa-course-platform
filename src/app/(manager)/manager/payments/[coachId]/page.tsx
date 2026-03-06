@@ -78,7 +78,7 @@ interface ActivePayoutRequest {
 export default function ManagerCoachPayoutBreakdownPage() {
   const params = useParams();
   const router = useRouter();
-  const coachId = params.coachId as string;
+  const coachId = params?.coachId as string;
 
   const [data, setData] = useState<BreakdownData | null>(null);
   const [loading, setLoading] = useState(true);

@@ -149,9 +149,9 @@ const statusConfig: Record<
 };
 
 export default function ManagerCourseDetailPage() {
-  const params = useParams() as { id: string };
+  const params = useParams() as { id: string } | null;
   const router = useRouter();
-  const courseId = params.id;
+  const courseId = params?.id;
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [loading, setLoading] = useState(true);

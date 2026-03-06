@@ -36,9 +36,9 @@ interface PayoutRequestData {
 }
 
 export default function CoachPayoutReviewPage() {
-  const params = useParams() as { requestId: string };
+  const params = useParams() as { requestId: string } | null;
   const router = useRouter();
-  const requestId = params.requestId;
+  const requestId = params?.requestId;
 
   const [data, setData] = useState<PayoutRequestData | null>(null);
   const [loading, setLoading] = useState(true);

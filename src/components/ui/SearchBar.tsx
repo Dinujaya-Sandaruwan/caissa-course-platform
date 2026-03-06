@@ -19,17 +19,17 @@ export default function SearchBar({
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const [value, setValue] = useState(searchParams.get(paramName) || "");
+  const [value, setValue] = useState(searchParams?.get(paramName) || "");
 
   // Sync from URL → state on mount / param changes
   useEffect(() => {
-    setValue(searchParams.get(paramName) || "");
+    setValue(searchParams?.get(paramName) || "");
   }, [searchParams, paramName]);
 
   // Debounced URL update
   const updateUrl = useCallback(
     (newValue: string) => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(searchParams?.toString() || "");
       if (newValue.trim()) {
         params.set(paramName, newValue.trim());
       } else {
@@ -42,7 +42,7 @@ export default function SearchBar({
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const currentParam = searchParams.get(paramName) || "";
+      const currentParam = searchParams?.get(paramName) || "";
       if (value.trim() !== currentParam) {
         updateUrl(value);
       }

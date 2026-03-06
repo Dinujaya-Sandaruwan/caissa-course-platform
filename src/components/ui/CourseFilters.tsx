@@ -9,9 +9,9 @@ export default function CourseFilters() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const level = searchParams.get("level") || "";
-  const sort = searchParams.get("sort") || "newest";
-  const category = searchParams.get("category") || "";
+  const level = searchParams?.get("level") || "";
+  const sort = searchParams?.get("sort") || "newest";
+  const category = searchParams?.get("category") || "";
 
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>(
     [],
@@ -25,7 +25,7 @@ export default function CourseFilters() {
   }, []);
 
   function updateParam(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams?.toString() || "");
     if (value) {
       params.set(key, value);
     } else {

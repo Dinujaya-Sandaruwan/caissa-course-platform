@@ -85,7 +85,7 @@ const levelColors: Record<
 export default function PublicCourseDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const courseId = params.id as string;
+  const courseId = params?.id as string;
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [loading, setLoading] = useState(true);

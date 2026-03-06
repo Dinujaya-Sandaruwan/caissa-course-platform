@@ -114,8 +114,8 @@ export default function EditCoursePage() {
   const [chapters, setChapters] = useState<ChapterDraft[]>([]);
   const [step2Error, setStep2Error] = useState("");
   const router = useRouter();
-  const params = useParams() as { id: string };
-  const courseId = params.id;
+  const params = useParams() as { id: string } | null;
+  const courseId = params?.id;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState("");
   const [submitError, setSubmitError] = useState("");

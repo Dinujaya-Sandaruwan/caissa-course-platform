@@ -58,7 +58,7 @@ interface CourseContent {
 export default function StudentCourseViewerPage() {
   const params = useParams();
   const router = useRouter();
-  const courseId = params.id as string;
+  const courseId = params?.id as string;
 
   const [data, setData] = useState<CourseContent | null>(null);
   const [loading, setLoading] = useState(true);

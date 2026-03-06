@@ -28,7 +28,7 @@ interface CourseBasic {
 export default function EnrollPage() {
   const params = useParams();
   const router = useRouter();
-  const courseId = params.id as string;
+  const courseId = params?.id as string;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [course, setCourse] = useState<CourseBasic | null>(null);

@@ -48,10 +48,10 @@ const levelColors: Record<
 
 function CoursesContent() {
   const searchParams = useSearchParams();
-  const search = searchParams.get("search") || "";
-  const levelParam = searchParams.get("level") || "";
-  const categoryParam = searchParams.get("category") || "";
-  const sortParam = searchParams.get("sort") || "newest";
+  const search = searchParams?.get("search") || "";
+  const levelParam = searchParams?.get("level") || "";
+  const categoryParam = searchParams?.get("category") || "";
+  const sortParam = searchParams?.get("sort") || "newest";
 
   const [courses, setCourses] = useState<PublicCourse[]>([]);
   const [loading, setLoading] = useState(true);
