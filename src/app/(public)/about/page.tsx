@@ -105,7 +105,7 @@ export default function AboutPage() {
                   </div>
                   <div>
                     <div className="font-extrabold text-2xl text-gray-900">
-                      1000+
+                      300+
                     </div>
                     <div className="text-sm text-gray-500 font-medium">
                       Active Students

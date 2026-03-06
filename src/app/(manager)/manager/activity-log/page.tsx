@@ -138,16 +138,31 @@ export default function ManagerActivityLogPage() {
     });
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="space-y-8 relative z-10">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] flex items-center gap-3">
-          <Activity className="w-8 h-8 text-primary-red" />
-          Activity Log
-        </h1>
-        <p className="text-gray-500 mt-2">
-          Complete audit trail of all manager actions on the platform.
-        </p>
+      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-[2.5rem] p-8 md:p-12 mb-8 text-white shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gray-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gray-500/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="px-3 py-1 bg-white/10 text-white/90 rounded-full text-xs font-bold uppercase tracking-widest border border-white/20 backdrop-blur-md">
+                Caissa Course Platform
+              </span>
+            </div>
+
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white font-[family-name:var(--font-outfit)] tracking-tight mb-4 flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center shadow-lg shadow-gray-500/30 border border-white/10">
+                <Activity className="w-7 h-7 text-white" />
+              </div>
+              Activity Log
+            </h1>
+            <p className="text-gray-300 text-lg max-w-2xl leading-relaxed">
+              Complete audit trail of all manager actions on the platform.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}

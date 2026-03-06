@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Shield } from "lucide-react";
 
 interface Manager {
   _id: string;
@@ -101,22 +101,36 @@ export default function ManagersPage() {
   return (
     <div className="space-y-8 relative z-10">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
-            Platform Managers
-          </h1>
-          <p className="text-gray-500 mt-2 text-lg">
-            Manage admin access and permissions.
-          </p>
+      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-[2.5rem] p-8 md:p-12 mb-8 text-white shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="px-3 py-1 bg-white/10 text-white/90 rounded-full text-xs font-bold uppercase tracking-widest border border-white/20 backdrop-blur-md">
+                Caissa Course Platform
+              </span>
+            </div>
+
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white font-[family-name:var(--font-outfit)] tracking-tight mb-4 flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 border border-white/10">
+                <Shield className="w-7 h-7 text-white" />
+              </div>
+              Platform Managers
+            </h1>
+            <p className="text-gray-300 text-lg max-w-2xl leading-relaxed">
+              Manage admin access and permissions.
+            </p>
+          </div>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="group flex items-center gap-2.5 px-6 py-3 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-full transition-all duration-300 shadow-[0_8px_20px_rgba(220,38,38,0.25)] hover:shadow-[0_12px_25px_rgba(220,38,38,0.35)] hover:-translate-y-0.5 cursor-pointer ring-1 ring-red-500/50"
+          >
+            <Plus className="w-5 h-5 transition-transform group-hover:rotate-90" />
+            Add Manager
+          </button>
         </div>
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="group flex items-center gap-2.5 px-6 py-3 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-full transition-all duration-300 shadow-[0_8px_20px_rgba(220,38,38,0.25)] hover:shadow-[0_12px_25px_rgba(220,38,38,0.35)] hover:-translate-y-0.5"
-        >
-          <Plus className="w-5 h-5 transition-transform group-hover:rotate-90" />
-          Add Manager
-        </button>
       </div>
 
       {/* Filters/Search */}

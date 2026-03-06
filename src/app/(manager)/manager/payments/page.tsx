@@ -123,15 +123,31 @@ export default function ManagerPaymentsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+    <div className="space-y-8 relative z-10">
       {/* Header section */}
-      <div>
-        <h1 className="text-3xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)]">
-          Payment Analytics
-        </h1>
-        <p className="text-gray-500 mt-2">
-          Monitor platform revenue and process coach payouts.
-        </p>
+      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-[2.5rem] p-8 md:p-12 mb-8 text-white shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-green-500/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="px-3 py-1 bg-white/10 text-white/90 rounded-full text-xs font-bold uppercase tracking-widest border border-white/20 backdrop-blur-md">
+                Caissa Course Platform
+              </span>
+            </div>
+
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white font-[family-name:var(--font-outfit)] tracking-tight mb-4 flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-lg shadow-green-500/30 border border-white/10">
+                <Banknote className="w-7 h-7 text-white" />
+              </div>
+              Payment Analytics
+            </h1>
+            <p className="text-gray-300 text-lg max-w-2xl leading-relaxed">
+              Monitor platform revenue and process coach payouts.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Analytics Summary Cards */}

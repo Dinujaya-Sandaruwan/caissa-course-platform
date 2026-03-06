@@ -95,36 +95,41 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-8 relative z-10">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/20">
-              <FolderOpen className="w-5 h-5 text-white" />
+      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-[2.5rem] p-8 md:p-12 mb-8 text-white shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="px-3 py-1 bg-white/10 text-white/90 rounded-full text-xs font-bold uppercase tracking-widest border border-white/20 backdrop-blur-md">
+                Caissa Course Platform
+              </span>
             </div>
-            <span className="text-xs font-bold uppercase tracking-widest text-red-500">
-              Course Management
-            </span>
+
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white font-[family-name:var(--font-outfit)] tracking-tight mb-4 flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/30 border border-white/10">
+                <FolderOpen className="w-7 h-7 text-white" />
+              </div>
+              Categories
+            </h1>
+            <p className="text-gray-300 text-lg max-w-2xl leading-relaxed">
+              Manage course categories. Coaches select these when creating
+              courses.
+            </p>
           </div>
-          <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
-            Categories
-          </h1>
-          <p className="text-gray-500 mt-2 text-lg">
-            Manage course categories. Coaches select these when creating
-            courses.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="text-sm font-bold text-gray-400 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
-            {categories.length} categories
+          <div className="flex items-center gap-3">
+            <div className="text-sm font-bold text-gray-300 bg-white/5 px-4 py-2 rounded-full border border-white/10 backdrop-blur-md">
+              {categories.length} categories
+            </div>
+            <button
+              onClick={fetchCategories}
+              className="group flex items-center gap-2.5 px-6 py-3 bg-white text-gray-900 border border-transparent text-sm font-bold rounded-full transition-all duration-300 shadow-lg cursor-pointer hover:scale-105 active:scale-95 hover:bg-gray-100"
+            >
+              <RefreshCw className="w-5 h-5 transition-transform group-hover:rotate-180" />
+              Refresh
+            </button>
           </div>
-          <button
-            onClick={fetchCategories}
-            className="group flex items-center gap-2.5 px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-full transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 ring-1 ring-black/5 hover:-translate-y-0.5 cursor-pointer"
-          >
-            <RefreshCw className="w-5 h-5 transition-transform group-hover:rotate-180" />
-            Refresh
-          </button>
         </div>
       </div>
 

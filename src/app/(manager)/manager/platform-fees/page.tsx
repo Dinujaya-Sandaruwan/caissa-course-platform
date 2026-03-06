@@ -148,22 +148,30 @@ export default function PlatformFeesPage() {
   }
 
   return (
-    <div className="space-y-10 relative z-10">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-lg shadow-red-500/20">
-              <CreditCard className="w-5 h-5 text-white" />
+    <div className="space-y-8 relative z-10">
+      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-[2.5rem] p-8 md:p-12 mb-8 text-white shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="px-3 py-1 bg-white/10 text-white/90 rounded-full text-xs font-bold uppercase tracking-widest border border-white/20 backdrop-blur-md">
+                Caissa Course Platform
+              </span>
             </div>
+
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white font-[family-name:var(--font-outfit)] tracking-tight mb-4 flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-lg shadow-red-500/30 border border-white/10">
+                <CreditCard className="w-7 h-7 text-white" />
+              </div>
+              Platform Fees
+            </h1>
+            <p className="text-gray-300 text-lg max-w-2xl leading-relaxed font-medium">
+              Manage the percentage of earnings the platform takes from each
+              course.
+            </p>
           </div>
-          <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
-            Platform Fees
-          </h1>
-          <p className="text-gray-500 mt-2 text-lg font-medium">
-            Manage the percentage of earnings the platform takes from each
-            course.
-          </p>
         </div>
       </div>
 

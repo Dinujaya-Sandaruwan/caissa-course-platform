@@ -9,6 +9,7 @@ import {
   Video,
   Loader2,
   AlertTriangle,
+  LayoutDashboard,
 } from "lucide-react";
 import ActiveVisitorGraph from "@/components/manager/ActiveVisitorGraph";
 
@@ -81,10 +82,18 @@ export default function ManagerDashboardPage() {
   ];
 
   return (
-    <div className="space-y-10 relative z-10">
+    <div className="space-y-8 relative z-10">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <LayoutDashboard className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xs font-bold uppercase tracking-widest text-red-500">
+              Platform Overview
+            </span>
+          </div>
           <h1 className="text-4xl font-extrabold text-gray-900 font-[family-name:var(--font-outfit)] tracking-tight">
             Dashboard Overview
           </h1>
