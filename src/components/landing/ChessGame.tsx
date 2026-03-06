@@ -31,7 +31,7 @@ function useStockfish() {
   const currentEvalTurnRef = useRef<"w" | "b">("w");
 
   useEffect(() => {
-    const worker = new Worker("/stockfish/stockfish-18-single.js");
+    const worker = new Worker("/stockfish/stockfish.js");
     workerRef.current = worker;
 
     const handleMessage = (e: MessageEvent) => {
@@ -99,8 +99,8 @@ function useStockfish() {
         currentEvalTurnRef.current = fen.split(" ")[1] === "w" ? "w" : "b";
         worker.addEventListener("message", handleResponse);
         worker.postMessage("position fen " + fen);
-        // depth 18 for strong play
-        worker.postMessage("go depth 18");
+        // Use fixed time limit for consistent speed on mobile devices
+        worker.postMessage("go movetime 1000");
       });
     },
     [isReady],
@@ -114,7 +114,7 @@ function useStockfish() {
       // but for simple evaluation we just send position and wait for 'info' which is captured by the global listener or next bestmove)
       // We will actually just run a shorter depth search to get the evaluation fast without blocking a full move search.
       workerRef.current.postMessage("position fen " + fen);
-      workerRef.current.postMessage("go depth 14");
+      workerRef.current.postMessage("go movetime 250");
     },
     [isReady],
   );
