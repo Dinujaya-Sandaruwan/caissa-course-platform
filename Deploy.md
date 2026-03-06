@@ -147,3 +147,56 @@ Choose "Redirect" if it asks if you'd like to redirect all HTTP traffic to HTTPS
 **Recap:**
 You are shifting from a static structure to a backend-driven structure. Instead of Nginx just giving out `.html` files, Nginx acts as a middleman that passes user requests to the Next.js Server running continuously on PM2.
 You can use your FTP client exactly as you have been doing — just upload the zipped build output, SSH in, and manage it through PM2!
+
+## 5. Deploying Updates (How to push new changes)
+
+Once your initial server is set up (Nginx, SSL, PM2), deploying new changes to your chess platform is much easier. You do not need to touch Nginx or SSL certificates again.
+
+Whenever you make changes to your codebase (like we just did for the Video Uploader and Stockfish Bot), follow these steps to update the live server:
+
+### 1. Build the updates locally
+
+In your local terminal, run:
+
+```bash
+npm run build
+```
+
+### 2. Zip the updated files
+
+Zip the following newly built files and folders:
+
+- `.next/` (contains all your newly compiled code)
+- `public/` (contains the new lightweight stockfish files we added)
+- `package.json`
+- `package-lock.json`
+
+_(You do not need to upload `.env` or `next.config.ts` again unless you have changed them.)_
+
+### 3. Upload via FTP
+
+Use your FTP client to connect to `/var/www/learn.caissachess.org`.
+Upload the zip and extract it globally, **overwriting** the existing `.next` and `public` folders.
+
+### 4. Restart the Server (SSH)
+
+SSH into your server and navigate to your folder:
+
+```bash
+ssh root@167.71.195.201
+cd /var/www/learn.caissachess.org
+```
+
+_(Optional) If you installed any new NPM packages during your development, run:_
+
+```bash
+npm install --production
+```
+
+Finally, tell PM2 to restart the Next.js process so it loads your new code:
+
+```bash
+pm2 restart caissa-nextjs
+```
+
+Your new changes are now live!

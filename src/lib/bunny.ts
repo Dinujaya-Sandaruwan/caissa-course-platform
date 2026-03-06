@@ -17,7 +17,7 @@ export function generateSignedEmbedUrl(videoId: string): string {
     .update(BUNNY_TOKEN_AUTH_KEY + videoId + expires)
     .digest("hex");
 
-  return `https://iframe.mediadelivery.net/embed/${BUNNY_LIBRARY_ID}/${videoId}?token=${token}&expires=${expires}`;
+  return `https://iframe.mediadelivery.net/embed/${BUNNY_LIBRARY_ID}/${videoId}?token=${token}&expires=${expires}&autoplay=false`;
 }
 
 /**
@@ -25,7 +25,7 @@ export function generateSignedEmbedUrl(videoId: string): string {
  * Used for public preview videos that don't need access control.
  */
 export function generatePublicEmbedUrl(videoId: string): string {
-  return `https://iframe.mediadelivery.net/embed/${BUNNY_LIBRARY_ID}/${videoId}`;
+  return `https://iframe.mediadelivery.net/embed/${BUNNY_LIBRARY_ID}/${videoId}?autoplay=false`;
 }
 
 /**
