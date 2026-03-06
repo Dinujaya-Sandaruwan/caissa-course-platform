@@ -41,8 +41,21 @@ export default function VideoUploader({
   const uploadRef = useRef<tus.Upload | null>(null);
 
   async function startUpload(file: File) {
-    if (!file.type.startsWith("video/")) {
-      setErrorMsg("Please select a valid video file.");
+    // Check file type (Strict MP4 only)
+    if (file.type !== "video/mp4") {
+      setErrorMsg(
+        "Invalid file format. We only accept .mp4 files. Please export your video as an MP4 before uploading.",
+      );
+      setStatus("error");
+      return;
+    }
+
+    // Check file size (Max 500MB)
+    const MAX_MB = 500;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setErrorMsg(
+        `File is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). The maximum allowed size is ${MAX_MB}MB. Please compress your video before uploading.`,
+      );
       setStatus("error");
       return;
     }
@@ -218,7 +231,7 @@ export default function VideoUploader({
         <input
           ref={fileRef}
           type="file"
-          accept="video/*"
+          accept="video/mp4"
           className="hidden"
           onChange={handleFileSelect}
         />
@@ -258,13 +271,13 @@ export default function VideoUploader({
               Drop video file here or click to browse
             </p>
             <p className="text-xs text-gray-400 mt-1">
-              Supports MP4, MOV, MKV, AVI — Resumable upload
+              Supports MP4 only — Max 500MB — Resumable upload
             </p>
           </div>
           <input
             ref={fileRef}
             type="file"
-            accept="video/*"
+            accept="video/mp4"
             className="hidden"
             onChange={handleFileSelect}
           />
