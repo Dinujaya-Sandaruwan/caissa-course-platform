@@ -161,7 +161,7 @@ export default function LMSBanner() {
             {/* Dashboard image */}
             <div className="relative rounded-2xl overflow-hidden border border-gray-200 shadow-2xl shadow-gray-200/50">
               <Image
-                src="/images/lms-dashboard.png"
+                src="/images/lms-dashboard-new.png"
                 alt="Caissa Chess LMS Dashboard"
                 width={800}
                 height={600}
