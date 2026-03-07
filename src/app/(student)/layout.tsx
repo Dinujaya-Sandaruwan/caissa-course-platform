@@ -5,7 +5,7 @@ import User from "@/models/User";
 import Link from "next/link";
 import React from "react";
 import StudentNavLinks from "@/components/StudentNavLinks";
-import StudentProfileMenu from "@/components/student/StudentProfileMenu";
+import UserDropdown from "@/components/auth/UserDropdown";
 
 export default async function StudentLayout({
   children,
@@ -29,6 +29,8 @@ export default async function StudentLayout({
     name: dbUser?.name || "Student",
     nickname: dbUser?.nickname || undefined,
     profilePhotoThumbnail: dbUser?.profilePhotoThumbnail || undefined,
+    role: user.role,
+    availableRoles: Object.keys(user.availableRoles || {}),
   };
 
   return (
@@ -57,7 +59,7 @@ export default async function StudentLayout({
 
             {/* Right: User Menu */}
             <div className="flex items-center gap-3">
-              <StudentProfileMenu user={profileUser} />
+              <UserDropdown user={profileUser} />
             </div>
           </div>
 

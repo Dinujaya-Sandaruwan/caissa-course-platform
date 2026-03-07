@@ -8,6 +8,7 @@ export interface SessionUser {
   whatsappNumber: string;
   status?: "active" | "suspended" | string;
   isNewUser?: boolean;
+  availableRoles?: Record<string, string>;
 }
 
 export async function getSessionUser(): Promise<SessionUser | null> {
@@ -30,6 +31,9 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       whatsappNumber: payload.whatsappNumber as string,
       status: payload.status as string | undefined,
       isNewUser: payload.isNewUser as boolean | undefined,
+      availableRoles: payload.availableRoles as
+        | Record<string, string>
+        | undefined,
     };
   } catch {
     return null;

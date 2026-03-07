@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { LogOut, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import CoachNavLinks from "./CoachNavLinks";
-import LogoutButton from "@/components/auth/LogoutButton";
+import UserDropdown from "@/components/auth/UserDropdown";
 
-export default function MobileCoachNav({ userName }: { userName: string }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default function MobileCoachNav({ user }: { user: any }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -50,21 +51,8 @@ export default function MobileCoachNav({ userName }: { userName: string }) {
             </div>
           </nav>
 
-          <div className="p-4 border-t border-gray-50 bg-gray-50/50 pb-8">
-            <div className="flex items-center gap-3 mb-4 p-2">
-              <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-red-600 font-bold text-lg border border-gray-100">
-                {userName.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-900 truncate">
-                  {userName}
-                </p>
-                <p className="text-xs font-medium text-gray-500 truncate">
-                  Coach
-                </p>
-              </div>
-            </div>
-            <LogoutButton className="w-full justify-center mt-1" />
+          <div className="p-4 border-t border-gray-50 bg-gray-50/50 pb-8 flex justify-center">
+            <UserDropdown user={user} />
           </div>
         </div>
       </div>

@@ -7,7 +7,7 @@ import { LogOut } from "lucide-react";
 import React from "react";
 import ManagerNavLinks from "./ManagerNavLinks";
 import MobileManagerNav from "./MobileManagerNav";
-import LogoutButton from "@/components/auth/LogoutButton";
+import UserDropdown from "@/components/auth/UserDropdown";
 
 export default async function ManagerLayout({
   children,
@@ -24,10 +24,16 @@ export default async function ManagerLayout({
   const dbUser = await User.findById(user.userId).select("name").lean();
   const userName = dbUser?.name || "Manager";
 
+  const profileUser = {
+    name: userName,
+    role: user.role,
+    availableRoles: Object.keys(user.availableRoles || {}),
+  };
+
   return (
     <>
       {/* Mobile Navigation (Visible only on small screens) */}
-      <MobileManagerNav userName={userName} />
+      <MobileManagerNav user={profileUser} />
 
       <div className="flex min-h-screen bg-slate-50 relative selection:bg-red-100 selection:text-red-900">
         {/* Decorative background ambient element */}
@@ -54,21 +60,8 @@ export default async function ManagerLayout({
             </nav>
 
             <div className="p-4 mt-auto">
-              <div className="bg-gray-50 rounded-2xl p-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-red-600 font-bold text-lg border border-gray-100">
-                    {userName.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 truncate">
-                      {userName}
-                    </p>
-                    <p className="text-xs font-medium text-gray-500 truncate">
-                      Administrator
-                    </p>
-                  </div>
-                </div>
-                <LogoutButton className="w-full justify-center mt-1" />
+              <div className="bg-gray-50 rounded-2xl p-2 flex justify-center">
+                <UserDropdown user={profileUser} />
               </div>
             </div>
           </aside>

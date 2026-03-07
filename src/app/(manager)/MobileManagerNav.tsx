@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import ManagerNavLinks from "./ManagerNavLinks";
-import LogoutButton from "@/components/auth/LogoutButton";
+import UserDropdown from "@/components/auth/UserDropdown";
 
-export default function MobileManagerNav({ userName }: { userName: string }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default function MobileManagerNav({ user }: { user: any }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -59,22 +60,9 @@ export default function MobileManagerNav({ userName }: { userName: string }) {
           <ManagerNavLinks />
         </nav>
 
-        <div className="p-4 mt-auto border-t border-gray-100">
-          <div className="bg-gray-50 rounded-2xl p-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-red-600 font-bold text-lg border border-gray-100">
-                {userName.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-900 truncate">
-                  {userName}
-                </p>
-                <p className="text-xs font-medium text-gray-500 truncate">
-                  Administrator
-                </p>
-              </div>
-            </div>
-            <LogoutButton className="w-full justify-center mt-1" />
+        <div className="p-4 mt-auto border-t border-gray-100 flex justify-center">
+          <div className="bg-gray-50 rounded-2xl p-2 flex justify-center w-full">
+            <UserDropdown user={user} />
           </div>
         </div>
       </div>

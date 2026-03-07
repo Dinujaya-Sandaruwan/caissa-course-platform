@@ -8,7 +8,7 @@ import { LogOut } from "lucide-react";
 import React from "react";
 import CoachNavLinks from "./CoachNavLinks";
 import MobileCoachNav from "./MobileCoachNav";
-import LogoutButton from "@/components/auth/LogoutButton";
+import UserDropdown from "@/components/auth/UserDropdown";
 
 export default async function CoachLayout({
   children,
@@ -38,9 +38,17 @@ export default async function CoachLayout({
     .lean();
   const userName = dbUser?.name || "Coach";
 
+  const profileUser = {
+    name: userName,
+    profilePhotoThumbnail:
+      dbUser?.profilePhotoThumbnail || dbUser?.profilePhoto,
+    role: user.role,
+    availableRoles: Object.keys(user.availableRoles || {}),
+  };
+
   return (
     <>
-      <MobileCoachNav userName={userName} />
+      <MobileCoachNav user={profileUser} />
 
       <div className="flex min-h-screen bg-slate-50 relative selection:bg-red-100 selection:text-red-900">
         {/* Decorative background ambient element */}
@@ -70,32 +78,8 @@ export default async function CoachLayout({
             </nav>
 
             <div className="p-4 mt-auto">
-              <div className="bg-gray-50 rounded-2xl p-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-red-600 font-bold text-lg border border-gray-100 overflow-hidden">
-                    {dbUser?.profilePhotoThumbnail || dbUser?.profilePhoto ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={
-                          dbUser.profilePhotoThumbnail || dbUser.profilePhoto
-                        }
-                        alt={userName}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      userName.charAt(0).toUpperCase()
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 truncate">
-                      {userName}
-                    </p>
-                    <p className="text-xs font-medium text-gray-500 truncate">
-                      Coach
-                    </p>
-                  </div>
-                </div>
-                <LogoutButton className="w-full justify-center mt-1" />
+              <div className="bg-gray-50 rounded-2xl p-2 flex justify-center">
+                <UserDropdown user={profileUser} />
               </div>
             </div>
           </aside>
