@@ -5,7 +5,11 @@ import Course from "@/models/Course";
 import Chapter from "@/models/Chapter";
 import Lesson from "@/models/Lesson";
 import { logAction } from "@/lib/auditLog";
-import { generateSignedEmbedUrl, getBunnyVideoStatus } from "@/lib/bunny";
+import {
+  generateSignedEmbedUrl,
+  getBunnyVideoStatus,
+  deleteBunnyVideo,
+} from "@/lib/bunny";
 
 export async function GET(
   request: NextRequest,
@@ -121,6 +125,21 @@ export async function DELETE(
         { error: "Only trashed courses can be permanently deleted" },
         { status: 403 },
       );
+    }
+
+    // Delete Bunny videos for all lessons in this course before removing documents
+    const lessons = await Lesson.find({ courseId: course._id })
+      .select("bunnyVideoId")
+      .lean();
+    for (const lesson of lessons) {
+      if (lesson.bunnyVideoId) {
+        deleteBunnyVideo(lesson.bunnyVideoId).catch((err) =>
+          console.warn(
+            `Could not delete Bunny video ${lesson.bunnyVideoId}:`,
+            err,
+          ),
+        );
+      }
     }
 
     // Permanently delete chapters, lessons, and the course

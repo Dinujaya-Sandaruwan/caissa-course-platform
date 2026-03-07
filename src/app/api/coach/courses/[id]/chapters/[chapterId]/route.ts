@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import Course from "@/models/Course";
 import Chapter from "@/models/Chapter";
 import Lesson from "@/models/Lesson";
+import { deleteBunnyVideo } from "@/lib/bunny";
 
 export async function PATCH(
   request: NextRequest,
@@ -112,7 +113,20 @@ export async function DELETE(
       return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
     }
 
-    // Delete all associated lessons
+    // Delete Bunny videos for all lessons in this chapter, then delete lesson documents
+    const lessons = await Lesson.find({ chapterId })
+      .select("bunnyVideoId")
+      .lean();
+    for (const lesson of lessons) {
+      if (lesson.bunnyVideoId) {
+        deleteBunnyVideo(lesson.bunnyVideoId).catch((err) =>
+          console.warn(
+            `Could not delete Bunny video ${lesson.bunnyVideoId}:`,
+            err,
+          ),
+        );
+      }
+    }
     await Lesson.deleteMany({ chapterId });
 
     // Delete the chapter
