@@ -32,29 +32,38 @@ export default function EnrollPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [course, setCourse] = useState<CourseBasic | null>(null);
+  const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [referenceNumber, setReferenceNumber] = useState("");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [isSwitching, setIsSwitching] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    async function fetchCourse() {
+    async function fetchData() {
       try {
-        const res = await fetch(`/api/courses/${courseId}`);
-        if (res.ok) {
-          const data = await res.json();
+        const [courseRes, sessionRes] = await Promise.all([
+          fetch(`/api/courses/${courseId}`),
+          fetch("/api/auth/session"),
+        ]);
+        if (courseRes.ok) {
+          const data = await courseRes.json();
           setCourse(data);
         }
+        if (sessionRes.ok) {
+          const data = await sessionRes.json();
+          setSession(data.session);
+        }
       } catch (err) {
-        console.error("Failed to fetch course:", err);
+        console.error("Failed to fetch data:", err);
       } finally {
         setLoading(false);
       }
     }
-    fetchCourse();
+    fetchData();
   }, [courseId]);
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -131,6 +140,27 @@ export default function EnrollPage() {
     }
   }
 
+  const handleSwitchToStudent = async () => {
+    try {
+      setIsSwitching(true);
+      const res = await fetch("/api/auth/switch-role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetRole: "student" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.redirectUrl) {
+        // We will reload the current page directly instead of the generic student dashboard
+        window.location.reload();
+      } else {
+        setIsSwitching(false);
+      }
+    } catch (error) {
+      console.error("Switch role failed:", error);
+      setIsSwitching(false);
+    }
+  };
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -138,7 +168,7 @@ export default function EnrollPage() {
   if (!course) {
     return (
       <>
-        <NavbarClient session={null} />
+        <NavbarClient session={session} />
         <div className="text-center py-32 min-h-screen">
           <h2 className="text-2xl font-bold text-gray-900">Course not found</h2>
           <Link
@@ -153,9 +183,12 @@ export default function EnrollPage() {
     );
   }
 
+  const isNonStudent = session && session.role !== "student";
+  const canSwitchToStudent = session?.availableRoles?.["student"];
+
   return (
     <>
-      <NavbarClient session={null} />
+      <NavbarClient session={session} />
       <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-2xl mx-auto px-6 pt-28 pb-20">
           {/* Back Link */}
@@ -172,7 +205,9 @@ export default function EnrollPage() {
             Enroll in Course
           </h1>
           <p className="text-gray-500 mt-2 text-base font-medium">
-            Complete your payment and upload the receipt to enroll.
+            {isNonStudent
+              ? "You must be logged in as a Student to enroll."
+              : "Complete your payment and upload the receipt to enroll."}
           </p>
 
           {/* Success State */}
@@ -227,175 +262,216 @@ export default function EnrollPage() {
                 </div>
               </div>
 
-              {/* Bank Details Card */}
-              <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100">
-                <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-red-500" />
-                  Bank Account Details
-                </h2>
-                <p className="text-xs text-gray-500 mb-4">
-                  Transfer the exact amount to the following bank account, then
-                  upload your receipt below.
-                </p>
-                <div className="bg-gray-50 rounded-2xl p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                      Account Name
-                    </span>
-                    <span className="text-sm font-bold text-gray-900">
-                      {process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME ||
-                        "Caissa Chess Academy"}
-                    </span>
+              {isNonStudent ? (
+                <div className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-red-100 text-center animate-[fade-in-up_0.3s_ease-out]">
+                  <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <X className="w-8 h-8 text-red-600" />
                   </div>
-                  <div className="border-t border-gray-200" />
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                      Account Number
-                    </span>
-                    <span className="text-sm font-bold text-gray-900 font-mono">
-                      {process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER ||
-                        "XXXX-XXXX-XXXX"}
-                    </span>
-                  </div>
-                  <div className="border-t border-gray-200" />
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                      Bank Name
-                    </span>
-                    <span className="text-sm font-bold text-gray-900">
-                      {process.env.NEXT_PUBLIC_BANK_NAME || "Bank of Ceylon"}
-                    </span>
-                  </div>
-                  <div className="border-t border-gray-200" />
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                      Branch
-                    </span>
-                    <span className="text-sm font-bold text-gray-900">
-                      {process.env.NEXT_PUBLIC_BANK_BRANCH || "Main Branch"}
-                    </span>
-                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Action Required
+                  </h3>
+                  <p className="text-gray-600 mb-6 max-w-sm mx-auto">
+                    You are currently signed in as a{" "}
+                    <strong className="capitalize text-gray-900">
+                      {session.role}
+                    </strong>
+                    . You must have a Student account to enroll in courses.
+                  </p>
+                  {canSwitchToStudent ? (
+                    <button
+                      onClick={handleSwitchToStudent}
+                      disabled={isSwitching}
+                      className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors shadow-sm shadow-red-600/20 disabled:opacity-60"
+                    >
+                      {isSwitching ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : null}
+                      Switch to Student Mode
+                    </button>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      <p className="text-sm text-gray-500">
+                        Since your current phone number isn't registered as a
+                        student yet, you need to sign out and register as a
+                        student using the exact same WhatsApp number.
+                      </p>
+                    </div>
+                  )}
                 </div>
-              </div>
-
-              {/* Reference Number */}
-              <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100">
-                <label className="block text-base font-bold text-gray-900 mb-2">
-                  Bank Transfer Reference Number
-                </label>
-                <p className="text-xs text-gray-500 mb-3">
-                  Enter the reference/receipt number from your bank transfer
-                </p>
-                <input
-                  type="text"
-                  value={referenceNumber}
-                  onChange={(e) => setReferenceNumber(e.target.value)}
-                  placeholder="e.g. TXN-123456789"
-                  className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 text-base font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-                />
-              </div>
-
-              {/* Receipt Upload */}
-              <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100">
-                <label className="block text-base font-bold text-gray-900 mb-2">
-                  Payment Receipt
-                </label>
-                <p className="text-xs text-gray-500 mb-3">
-                  Upload a screenshot or photo of your bank transfer receipt
-                  (JPG, PNG, or PDF)
-                </p>
-
-                {!receiptFile ? (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full border-2 border-dashed border-gray-300 rounded-2xl py-10 flex flex-col items-center gap-3 hover:border-red-400 hover:bg-red-50/30 transition-colors cursor-pointer"
-                  >
-                    <Upload className="w-8 h-8 text-gray-400" />
-                    <span className="text-sm font-semibold text-gray-500">
-                      Click to upload receipt
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      JPG, PNG, WebP, or PDF up to 10MB
-                    </span>
-                  </button>
-                ) : (
-                  <div className="border-2 border-gray-200 rounded-2xl p-4 space-y-3">
-                    {/* Preview */}
-                    {receiptPreview && (
-                      <div className="relative rounded-xl overflow-hidden bg-gray-100 max-h-64 flex items-center justify-center">
-                        <img
-                          src={receiptPreview}
-                          alt="Receipt preview"
-                          className="max-h-64 object-contain"
-                        />
-                      </div>
-                    )}
-                    {!receiptPreview &&
-                      receiptFile.type === "application/pdf" && (
-                        <div className="flex items-center justify-center gap-2 py-6 bg-gray-50 rounded-xl">
-                          <ImageIcon className="w-6 h-6 text-red-400" />
-                          <span className="text-sm font-medium text-gray-600">
-                            PDF Receipt
-                          </span>
-                        </div>
-                      )}
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                        <span className="text-sm font-medium text-gray-700 truncate">
-                          {receiptFile.name}
+              ) : (
+                <>
+                  {/* Bank Details Card */}
+                  <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100">
+                    <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-red-500" />
+                      Bank Account Details
+                    </h2>
+                    <p className="text-xs text-gray-500 mb-4">
+                      Transfer the exact amount to the following bank account,
+                      then upload your receipt below.
+                    </p>
+                    <div className="bg-gray-50 rounded-2xl p-5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                          Account Name
                         </span>
-                        <span className="text-xs text-gray-400 shrink-0">
-                          ({(receiptFile.size / 1024).toFixed(0)} KB)
+                        <span className="text-sm font-bold text-gray-900">
+                          {process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME ||
+                            "Caissa Chess Academy"}
                         </span>
                       </div>
-                      <button
-                        onClick={removeReceipt}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      <div className="border-t border-gray-200" />
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                          Account Number
+                        </span>
+                        <span className="text-sm font-bold text-gray-900 font-mono">
+                          {process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER ||
+                            "XXXX-XXXX-XXXX"}
+                        </span>
+                      </div>
+                      <div className="border-t border-gray-200" />
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                          Bank Name
+                        </span>
+                        <span className="text-sm font-bold text-gray-900">
+                          {process.env.NEXT_PUBLIC_BANK_NAME ||
+                            "Bank of Ceylon"}
+                        </span>
+                      </div>
+                      <div className="border-t border-gray-200" />
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                          Branch
+                        </span>
+                        <span className="text-sm font-bold text-gray-900">
+                          {process.env.NEXT_PUBLIC_BANK_BRANCH || "Main Branch"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                )}
 
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,application/pdf"
-                  className="hidden"
-                  onChange={handleFileSelect}
-                />
-              </div>
+                  {/* Reference Number */}
+                  <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100">
+                    <label className="block text-base font-bold text-gray-900 mb-2">
+                      Bank Transfer Reference Number
+                    </label>
+                    <p className="text-xs text-gray-500 mb-3">
+                      Enter the reference/receipt number from your bank transfer
+                    </p>
+                    <input
+                      type="text"
+                      value={referenceNumber}
+                      onChange={(e) => setReferenceNumber(e.target.value)}
+                      placeholder="e.g. TXN-123456789"
+                      className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 placeholder-gray-400 text-base font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                    />
+                  </div>
 
-              {/* Error */}
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-4 text-sm text-red-600 font-medium flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
-                  {error}
-                </div>
+                  {/* Receipt Upload */}
+                  <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100">
+                    <label className="block text-base font-bold text-gray-900 mb-2">
+                      Payment Receipt
+                    </label>
+                    <p className="text-xs text-gray-500 mb-3">
+                      Upload a screenshot or photo of your bank transfer receipt
+                      (JPG, PNG, or PDF)
+                    </p>
+
+                    {!receiptFile ? (
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full border-2 border-dashed border-gray-300 rounded-2xl py-10 flex flex-col items-center gap-3 hover:border-red-400 hover:bg-red-50/30 transition-colors cursor-pointer"
+                      >
+                        <Upload className="w-8 h-8 text-gray-400" />
+                        <span className="text-sm font-semibold text-gray-500">
+                          Click to upload receipt
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          JPG, PNG, WebP, or PDF up to 10MB
+                        </span>
+                      </button>
+                    ) : (
+                      <div className="border-2 border-gray-200 rounded-2xl p-4 space-y-3">
+                        {/* Preview */}
+                        {receiptPreview && (
+                          <div className="relative rounded-xl overflow-hidden bg-gray-100 max-h-64 flex items-center justify-center">
+                            <img
+                              src={receiptPreview}
+                              alt="Receipt preview"
+                              className="max-h-64 object-contain"
+                            />
+                          </div>
+                        )}
+                        {!receiptPreview &&
+                          receiptFile.type === "application/pdf" && (
+                            <div className="flex items-center justify-center gap-2 py-6 bg-gray-50 rounded-xl">
+                              <ImageIcon className="w-6 h-6 text-red-400" />
+                              <span className="text-sm font-medium text-gray-600">
+                                PDF Receipt
+                              </span>
+                            </div>
+                          )}
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                            <span className="text-sm font-medium text-gray-700 truncate">
+                              {receiptFile.name}
+                            </span>
+                            <span className="text-xs text-gray-400 shrink-0">
+                              ({(receiptFile.size / 1024).toFixed(0)} KB)
+                            </span>
+                          </div>
+                          <button
+                            onClick={removeReceipt}
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,application/pdf"
+                      className="hidden"
+                      onChange={handleFileSelect}
+                    />
+                  </div>
+
+                  {/* Error */}
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-4 text-sm text-red-600 font-medium flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+                      {error}
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <button
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    className="w-full flex items-center justify-center gap-2.5 px-8 py-4 bg-red-600 text-white text-base font-bold rounded-2xl hover:bg-red-700 shadow-xl shadow-red-600/20 hover:shadow-red-600/30 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5" />
+                        Submit Enrollment
+                      </>
+                    )}
+                  </button>
+                </>
               )}
-
-              {/* Submit Button */}
-              <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="w-full flex items-center justify-center gap-2.5 px-8 py-4 bg-red-600 text-white text-base font-bold rounded-2xl hover:bg-red-700 shadow-xl shadow-red-600/20 hover:shadow-red-600/30 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    Submit Enrollment
-                  </>
-                )}
-              </button>
             </div>
           )}
         </div>
