@@ -21,11 +21,14 @@ export default async function ManagerLayout({
   }
 
   await connectDB();
-  const dbUser = await User.findById(user.userId).select("name").lean();
+  const dbUser = await User.findById(user.userId)
+    .select("name nickname")
+    .lean();
   const userName = dbUser?.name || "Manager";
 
   const profileUser = {
     name: userName,
+    nickname: dbUser?.nickname || undefined,
     role: user.role,
     availableRoles: Object.keys(user.availableRoles || {}),
   };

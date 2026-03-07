@@ -34,12 +34,13 @@ export default async function CoachLayout({
   }
 
   const dbUser = await User.findById(user.userId)
-    .select("name profilePhoto profilePhotoThumbnail")
+    .select("name nickname profilePhoto profilePhotoThumbnail")
     .lean();
   const userName = dbUser?.name || "Coach";
 
   const profileUser = {
     name: userName,
+    nickname: dbUser?.nickname || undefined,
     profilePhotoThumbnail:
       dbUser?.profilePhotoThumbnail || dbUser?.profilePhoto,
     role: user.role,

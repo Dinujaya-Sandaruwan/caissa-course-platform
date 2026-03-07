@@ -23,6 +23,7 @@ const ROLES: RoleOption[] = [
 interface UserDropdownProps {
   user: {
     name: string;
+    nickname?: string;
     profilePhotoThumbnail?: string;
     role: string;
     availableRoles?: string[]; // Array of role strings available to this user
@@ -124,6 +125,12 @@ export default function UserDropdown({
           >
             {getInitials(user.name)}
           </div>
+        )}
+
+        {variant === "topbar" && user.nickname && (
+          <span className="hidden sm:block text-sm font-semibold text-gray-700 mx-1 truncate max-w-[120px]">
+            {user.nickname}
+          </span>
         )}
 
         {variant === "sidebar" && (

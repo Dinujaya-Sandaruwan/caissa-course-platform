@@ -37,6 +37,7 @@ export default function VideoUploader({
   );
   const [errorMsg, setErrorMsg] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [isReplacing, setIsReplacing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const uploadRef = useRef<tus.Upload | null>(null);
 
@@ -63,6 +64,7 @@ export default function VideoUploader({
     setStatus("uploading");
     setProgress(0);
     setErrorMsg("");
+    setIsReplacing(true);
 
     try {
       // Get upload credentials from our server
@@ -97,6 +99,7 @@ export default function VideoUploader({
         },
         onSuccess() {
           setStatus("done");
+          setIsReplacing(false);
           onUploadComplete(videoId);
         },
         onError(error) {
@@ -138,7 +141,7 @@ export default function VideoUploader({
   }
 
   // Show existing video status
-  if (existingVideoId && status === "idle") {
+  if (existingVideoId && status === "idle" && !isReplacing) {
     return (
       <div className="space-y-4">
         {/* Secure Video Preview */}
@@ -336,6 +339,17 @@ export default function VideoUploader({
               minutes.
             </p>
           </div>
+          <button
+            onClick={() => {
+              setStatus("idle");
+              setIsReplacing(true);
+              if (fileRef.current) fileRef.current.value = "";
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-all shrink-0"
+          >
+            <Upload className="w-3 h-3" />
+            Replace
+          </button>
         </div>
       )}
 
@@ -353,6 +367,7 @@ export default function VideoUploader({
             onClick={() => {
               setStatus("idle");
               setErrorMsg("");
+              setIsReplacing(false);
               if (fileRef.current) fileRef.current.value = "";
             }}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-red-600 bg-white hover:bg-red-50 rounded-lg border border-red-200 transition-all shrink-0"

@@ -119,6 +119,12 @@ export default function EditCoursePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState("");
   const [submitError, setSubmitError] = useState("");
+
+  // ─── Chapter Drag-and-Drop State ────────────────────────
+  const [dragChapterId, setDragChapterId] = useState<string | null>(null);
+  const [dragOverChapterId, setDragOverChapterId] = useState<string | null>(
+    null,
+  );
   const [isFetchingCourse, setIsFetchingCourse] = useState(true);
   const [deletedChapterIds, setDeletedChapterIds] = useState<string[]>([]);
   const [deletedLessonIds, setDeletedLessonIds] = useState<
@@ -605,6 +611,49 @@ export default function EditCoursePage() {
         ch.id === chapterId ? { ...ch, isExpanded: !ch.isExpanded } : ch,
       ),
     );
+  };
+
+  // ─── Chapter Drag Handlers ─────────────────────────────
+  const handleChapterDragStart = (e: React.DragEvent, chapterId: string) => {
+    setDragChapterId(chapterId);
+    e.dataTransfer.effectAllowed = "move";
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = "0.5";
+    }
+  };
+
+  const handleChapterDragEnd = (e: React.DragEvent) => {
+    setDragChapterId(null);
+    setDragOverChapterId(null);
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = "1";
+    }
+  };
+
+  const handleChapterDragOver = (e: React.DragEvent, chapterId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverChapterId(chapterId);
+  };
+
+  const handleChapterDrop = (e: React.DragEvent, targetChapterId: string) => {
+    e.preventDefault();
+    if (!dragChapterId || dragChapterId === targetChapterId) {
+      setDragChapterId(null);
+      setDragOverChapterId(null);
+      return;
+    }
+    setChapters((prev) => {
+      const dragIndex = prev.findIndex((ch) => ch.id === dragChapterId);
+      const dropIndex = prev.findIndex((ch) => ch.id === targetChapterId);
+      if (dragIndex === -1 || dropIndex === -1) return prev;
+      const newChapters = [...prev];
+      const [removed] = newChapters.splice(dragIndex, 1);
+      newChapters.splice(dropIndex, 0, removed);
+      return newChapters;
+    });
+    setDragChapterId(null);
+    setDragOverChapterId(null);
   };
 
   const addLesson = (chapterId: string) => {
@@ -1625,14 +1674,26 @@ export default function EditCoursePage() {
           {chapters.map((chapter, chIdx) => (
             <div
               key={chapter.id}
-              className="bg-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)]"
+              draggable
+              onDragStart={(e) => handleChapterDragStart(e, chapter.id)}
+              onDragEnd={handleChapterDragEnd}
+              onDragOver={(e) => handleChapterDragOver(e, chapter.id)}
+              onDrop={(e) => handleChapterDrop(e, chapter.id)}
+              className={`bg-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] border overflow-hidden transition-all duration-200 hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] ${
+                dragOverChapterId === chapter.id && dragChapterId !== chapter.id
+                  ? "border-red-400 ring-2 ring-red-200"
+                  : "border-gray-100"
+              }`}
             >
               {/* Chapter Header */}
               <div
                 className="flex items-center gap-3 p-5 cursor-pointer"
                 onClick={() => toggleChapter(chapter.id)}
               >
-                <div className="text-gray-300 hover:text-gray-500 transition-colors">
+                <div
+                  className="text-gray-300 hover:text-gray-500 transition-colors cursor-grab active:cursor-grabbing"
+                  title="Drag to reorder"
+                >
                   <GripVertical className="w-5 h-5" />
                 </div>
                 <button
