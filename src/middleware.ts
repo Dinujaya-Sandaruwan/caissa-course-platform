@@ -100,8 +100,17 @@ export async function middleware(request: NextRequest) {
   if (matchedPrefix) {
     const requiredRole = protectedRoutes[matchedPrefix];
     if (session.role !== requiredRole) {
-      const loginUrl = new URL("/login", request.url);
-      return NextResponse.redirect(loginUrl);
+      // They are logged in, but trying to access another role's area directly.
+      // Redirect them back to their current active role's dashboard.
+      const dashboardUrl = new URL(
+        session.role === "coach"
+          ? "/coach/dashboard"
+          : session.role === "manager"
+            ? "/manager/dashboard"
+            : "/student/dashboard",
+        request.url,
+      );
+      return NextResponse.redirect(dashboardUrl);
     }
 
     // Suspension logic for students

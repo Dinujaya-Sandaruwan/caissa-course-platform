@@ -59,14 +59,16 @@ export default function BecomeACoachPage() {
       setStep("register");
       scrollToForm();
     } else {
-      if (data.role === "coach") {
-        if (data.verificationStatus === "approved") {
-          router.push("/coach/dashboard");
-        } else {
-          router.push("/coach-pending");
-        }
-      } else if (data.role === "manager") {
+      if (data.role === "manager") {
         router.push("/manager/dashboard");
+      } else if (data.role === "coach") {
+        if (data.verificationStatus === "paused") {
+          router.push("/coach-paused");
+        } else if (data.verificationStatus === "pending") {
+          router.push("/coach-pending");
+        } else {
+          router.push("/coach/dashboard");
+        }
       } else {
         router.push("/student/dashboard");
       }

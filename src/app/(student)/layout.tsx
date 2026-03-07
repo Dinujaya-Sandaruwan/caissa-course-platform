@@ -6,7 +6,6 @@ import Link from "next/link";
 import React from "react";
 import StudentNavLinks from "@/components/StudentNavLinks";
 import StudentProfileMenu from "@/components/student/StudentProfileMenu";
-import RoleSwitcher from "@/components/auth/RoleSwitcher";
 
 export default async function StudentLayout({
   children,
@@ -56,13 +55,8 @@ export default async function StudentLayout({
               <StudentNavLinks />
             </div>
 
-            {/* Right: User Menu & Role Switcher */}
+            {/* Right: User Menu */}
             <div className="flex items-center gap-3">
-              {/* @ts-ignore */}
-              <RoleSwitcher
-                currentRole="student"
-                availableRoles={user?.availableRoles || {}}
-              />
               <StudentProfileMenu user={profileUser} />
             </div>
           </div>

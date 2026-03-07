@@ -68,22 +68,18 @@ function LoginContent() {
       if (data.existingProfile) setInitialData(data.existingProfile);
       setStep("register");
     } else {
-      if (callbackUrl && data.role !== "manager") {
+      if (callbackUrl) {
         router.push(callbackUrl);
-      } else if (
-        data.role === "coach" &&
-        data.verificationStatus === "paused"
-      ) {
-        router.push("/coach-paused");
-      } else if (
-        data.role === "coach" &&
-        data.verificationStatus === "pending"
-      ) {
-        router.push("/coach-pending");
       } else if (data.role === "manager") {
         router.push("/manager/dashboard");
       } else if (data.role === "coach") {
-        router.push("/coach/dashboard");
+        if (data.verificationStatus === "paused") {
+          router.push("/coach-paused");
+        } else if (data.verificationStatus === "pending") {
+          router.push("/coach-pending");
+        } else {
+          router.push("/coach/dashboard");
+        }
       } else {
         router.push("/student/dashboard");
       }
