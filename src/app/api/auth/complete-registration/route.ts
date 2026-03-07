@@ -13,12 +13,12 @@ import { setSessionCookie } from "@/lib/cookies";
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Verify the incoming session — must be a new-user token
+    // 1. Verify the incoming session — can be a new-user token or a fully authenticated active token
     const session = await getSessionUser();
 
-    if (!session || !session.isNewUser) {
+    if (!session) {
       return NextResponse.json(
-        { error: "Unauthorized. Please verify your OTP first." },
+        { error: "Unauthorized. Please verify your OTP or log in first." },
         { status: 401 },
       );
     }
@@ -107,6 +107,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const finalProfilePhotoUrl =
+      profilePhotoUrl ||
+      (existingUsers.length > 0 ? existingUsers[0].profilePhoto : undefined);
+    const finalProfilePhotoThumbnailUrl =
+      profilePhotoThumbnailUrl ||
+      (existingUsers.length > 0
+        ? existingUsers[0].profilePhotoThumbnail
+        : undefined);
+
     // 4. Create the User document
     const user = await User.create({
       whatsappNumber: session.whatsappNumber,
@@ -114,8 +123,8 @@ export async function POST(request: NextRequest) {
       nickname: nickname?.trim() || undefined,
       email: email?.trim() || undefined,
       role,
-      profilePhoto: profilePhotoUrl,
-      profilePhotoThumbnail: profilePhotoThumbnailUrl,
+      profilePhoto: finalProfilePhotoUrl,
+      profilePhotoThumbnail: finalProfilePhotoThumbnailUrl,
       lastLoginAt: new Date(),
     });
 

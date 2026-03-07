@@ -14,8 +14,10 @@ import {
   CheckCircle2,
   X,
   Loader2,
+  UserPlus,
 } from "lucide-react";
 import LoadingScreen from "@/components/LoadingScreen";
+import StudentRegistrationForm from "@/components/auth/StudentRegistrationForm";
 
 interface CourseBasic {
   _id: string;
@@ -41,6 +43,8 @@ export default function EnrollPage() {
   const [isSwitching, setIsSwitching] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -161,6 +165,38 @@ export default function EnrollPage() {
     }
   };
 
+  const handleRegisterStudent = async (data: any) => {
+    try {
+      const fb = new FormData();
+      Object.keys(data).forEach((key) => {
+        if (key === "profilePicture" || key === "profilePictureThumbnail") {
+          fb.append(key, data[key]);
+        } else if (Array.isArray(data[key])) {
+          fb.append(key, JSON.stringify(data[key]));
+        } else if (data[key] !== undefined) {
+          fb.append(key, data[key]);
+        }
+      });
+      fb.append("role", "student");
+
+      const res = await fetch("/api/auth/complete-registration", {
+        method: "POST",
+        body: fb,
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to register student profile");
+      }
+
+      // complete-registration automatically issues a new active JWT for the created role.
+      window.location.reload();
+    } catch (err) {
+      console.error("Registration error:", err);
+      throw err; // Re-throw to be caught by StudentRegistrationForm
+    }
+  };
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -263,41 +299,62 @@ export default function EnrollPage() {
               </div>
 
               {isNonStudent ? (
-                <div className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-red-100 text-center animate-[fade-in-up_0.3s_ease-out]">
-                  <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <X className="w-8 h-8 text-red-600" />
+                isRegistering ? (
+                  <div className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 animate-[fade-in-up_0.3s_ease-out]">
+                    <StudentRegistrationForm
+                      onSubmit={handleRegisterStudent}
+                      initialData={{
+                        name: session?.name,
+                        email: session?.email,
+                        profilePhoto: session?.profilePhoto,
+                        profilePhotoThumbnail: session?.profilePhotoThumbnail,
+                      }}
+                    />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    Action Required
-                  </h3>
-                  <p className="text-gray-600 mb-6 max-w-sm mx-auto">
-                    You are currently signed in as a{" "}
-                    <strong className="capitalize text-gray-900">
-                      {session.role}
-                    </strong>
-                    . You must have a Student account to enroll in courses.
-                  </p>
-                  {canSwitchToStudent ? (
-                    <button
-                      onClick={handleSwitchToStudent}
-                      disabled={isSwitching}
-                      className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors shadow-sm shadow-red-600/20 disabled:opacity-60"
-                    >
-                      {isSwitching ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : null}
-                      Switch to Student Mode
-                    </button>
-                  ) : (
-                    <div className="flex flex-col gap-3">
-                      <p className="text-sm text-gray-500">
-                        Since your current phone number isn't registered as a
-                        student yet, you need to sign out and register as a
-                        student using the exact same WhatsApp number.
-                      </p>
+                ) : (
+                  <div className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-red-100 text-center animate-[fade-in-up_0.3s_ease-out]">
+                    <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <X className="w-8 h-8 text-red-600" />
                     </div>
-                  )}
-                </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      Action Required
+                    </h3>
+                    <p className="text-gray-600 mb-6 max-w-sm mx-auto">
+                      You are currently signed in as a{" "}
+                      <strong className="capitalize text-gray-900">
+                        {session.role}
+                      </strong>
+                      . You must have a Student account to enroll in courses.
+                    </p>
+                    {canSwitchToStudent ? (
+                      <button
+                        onClick={handleSwitchToStudent}
+                        disabled={isSwitching}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors shadow-sm shadow-red-600/20 disabled:opacity-60"
+                      >
+                        {isSwitching ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : null}
+                        Switch to Student Mode
+                      </button>
+                    ) : (
+                      <div className="flex flex-col gap-4">
+                        <p className="text-sm text-gray-500">
+                          Since your current phone number isn't registered as a
+                          student yet, you can quickly create your student
+                          profile right here.
+                        </p>
+                        <button
+                          onClick={() => setIsRegistering(true)}
+                          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors shadow-sm shadow-red-600/20"
+                        >
+                          <UserPlus className="w-5 h-5" />
+                          Create Student Profile
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
               ) : (
                 <>
                   {/* Bank Details Card */}
