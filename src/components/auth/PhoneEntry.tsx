@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Phone, ArrowRight, Loader2 } from "lucide-react";
+import PhoneInput from "@/components/ui/PhoneInput";
 
 interface PhoneEntryProps {
   onSubmit: (phoneNumber: string) => Promise<void>;
@@ -23,16 +24,14 @@ export default function PhoneEntry({
     setError("");
 
     const cleaned = phoneNumber.replace(/\s/g, "");
-    if (!cleaned || cleaned.length < 9) {
-      setError("Please enter a valid phone number");
+    // Require at least a plus sign and some digits (e.g. +94712345678)
+    if (!cleaned || !cleaned.startsWith("+") || cleaned.length < 10) {
+      setError("Please enter a valid phone number with country code");
       return;
     }
 
-    const fullNumber = cleaned.startsWith("0")
-      ? `94${cleaned.slice(1)}`
-      : cleaned.startsWith("94")
-        ? cleaned
-        : `94${cleaned}`;
+    // Pass the full number without the '+' to the backend
+    const fullNumber = cleaned.slice(1);
 
     setLoading(true);
     try {
@@ -60,26 +59,13 @@ export default function PhoneEntry({
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            WhatsApp Number
-          </label>
-          <div className="flex gap-2">
-            <div className="flex items-center px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-600 text-sm font-medium">
-              +94
-            </div>
-            <input
-              type="tel"
-              value={phoneNumber}
-              onChange={(e) => {
-                setPhoneNumber(e.target.value.replace(/[^0-9]/g, ""));
-                setError("");
-              }}
-              placeholder="7X XXX XXXX"
-              className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
-              maxLength={10}
-              autoFocus
-            />
-          </div>
+          <PhoneInput
+            value={phoneNumber}
+            onChange={(val) => {
+              setPhoneNumber(val);
+              setError("");
+            }}
+          />
         </div>
 
         {error && (

@@ -241,10 +241,14 @@ export default function CoachAccountPage() {
     if (!newPhoneNumber.trim()) return toast.error("Enter a new number");
     setPhoneLoading(true);
     try {
+      const formattedNumber = newPhoneNumber.startsWith("+")
+        ? newPhoneNumber.slice(1)
+        : newPhoneNumber;
+
       const res = await fetch("/api/user/phone/send-new-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newWhatsappNumber: newPhoneNumber }),
+        body: JSON.stringify({ newWhatsappNumber: formattedNumber }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send OTP");
@@ -262,11 +266,15 @@ export default function CoachAccountPage() {
   const verifyNewOtp = async () => {
     setPhoneLoading(true);
     try {
+      const formattedNumber = newPhoneNumber.startsWith("+")
+        ? newPhoneNumber.slice(1)
+        : newPhoneNumber;
+
       const res = await fetch("/api/user/phone/verify-new-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          newWhatsappNumber: newPhoneNumber,
+          newWhatsappNumber: formattedNumber,
           otp: phoneOtp,
         }),
       });
