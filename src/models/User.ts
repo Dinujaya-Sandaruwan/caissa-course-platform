@@ -21,7 +21,6 @@ const UserSchema = new Schema<IUser>(
     whatsappNumber: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     name: {
@@ -71,6 +70,8 @@ const UserSchema = new Schema<IUser>(
     timestamps: true,
   },
 );
+
+UserSchema.index({ whatsappNumber: 1, role: 1 }, { unique: true });
 
 const User: Model<IUser> =
   mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
