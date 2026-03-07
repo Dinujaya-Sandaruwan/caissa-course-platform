@@ -80,11 +80,23 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Session exists — if they try to visit login/apply, redirect to dashboard
+  // Session exists — if they try to visit login/apply, apply smart redirects
   if (isAuthPage) {
     if ((session as any).isNewUser) {
       return NextResponse.next();
     }
+
+    // For /become-a-coach: allow through if user doesn't already have a coach role
+    if (pathname === "/become-a-coach") {
+      if (session.availableRoles?.coach) {
+        // Already a coach — send to coach dashboard
+        return NextResponse.redirect(new URL("/coach/dashboard", request.url));
+      }
+      // Not a coach yet — let them through to register
+      return NextResponse.next();
+    }
+
+    // For /login: redirect logged-in users to their dashboard
     const dashboardUrl = new URL(
       session.role === "coach"
         ? "/coach/dashboard"

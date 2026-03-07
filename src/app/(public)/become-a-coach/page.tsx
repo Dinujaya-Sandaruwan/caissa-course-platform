@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import NavbarClient from "@/components/landing/NavbarClient";
@@ -27,6 +27,39 @@ export default function BecomeACoachPage() {
   const [phoneNumber, setPhoneNumber] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [initialData, setInitialData] = useState<any>(undefined);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [session, setSession] = useState<any>(null);
+
+  // Check if the user is already logged in
+  useEffect(() => {
+    async function checkSession() {
+      try {
+        const res = await fetch("/api/auth/session");
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.role) {
+            setSession(data);
+            // If user already has a coach role, redirect to dashboard
+            if (data.availableRoles?.coach) {
+              router.push("/coach/dashboard");
+              return;
+            }
+            // User is logged in but doesn't have a coach role — skip OTP, go straight to registration
+            setInitialData({
+              name: data.name,
+              email: data.email,
+              profilePhoto: data.profilePhoto,
+              profilePhotoThumbnail: data.profilePhotoThumbnail,
+            });
+            setStep("register");
+          }
+        }
+      } catch {
+        // Not logged in, proceed with normal phone/OTP flow
+      }
+    }
+    checkSession();
+  }, [router]);
 
   const handleSendOTP = async (phone: string) => {
     setPhoneNumber(phone);
@@ -140,7 +173,7 @@ export default function BecomeACoachPage() {
 
   return (
     <>
-      <NavbarClient session={null} />
+      <NavbarClient session={session} />
       <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         {/* Hero Section */}
         <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden bg-gray-900">
