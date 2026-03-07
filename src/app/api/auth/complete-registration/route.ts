@@ -93,14 +93,16 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    // 3. Check if user already exists (edge case)
-    const existingUser = await User.findOne({
+    // 3. Check if user already exists for THIS ROLE
+    const existingUsers = await User.find({
       whatsappNumber: session.whatsappNumber,
     });
 
-    if (existingUser) {
+    const userHasRole = existingUsers.some((u) => u.role === role);
+
+    if (userHasRole) {
       return NextResponse.json(
-        { error: "User already registered" },
+        { error: `User already registered as ${role}` },
         { status: 409 },
       );
     }
@@ -116,6 +118,9 @@ export async function POST(request: NextRequest) {
       profilePhotoThumbnail: profilePhotoThumbnailUrl,
       lastLoginAt: new Date(),
     });
+
+    // Add the newly created user to our slice so we can build a proper token
+    existingUsers.push(user);
 
     // 5. Create role-specific profile
     if (role === "coach") {
@@ -156,11 +161,19 @@ export async function POST(request: NextRequest) {
     }
 
     // 6. Generate a full session JWT and replace the temporary cookie
+    const availableRoles: Record<string, string> = {};
+    existingUsers.forEach((u) => {
+      if (u.status === "active") {
+        availableRoles[u.role] = u._id!.toString();
+      }
+    });
+
     const token = await signToken({
       userId: user._id!.toString(),
       role: user.role,
       whatsappNumber: user.whatsappNumber,
       status: user.status,
+      availableRoles,
     });
 
     await setSessionCookie(token);

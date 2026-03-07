@@ -69,20 +69,26 @@ export async function POST(request: NextRequest) {
     // 5. OTP is valid — delete the session
     await OTPSession.deleteOne({ _id: session._id });
 
-    // 6. Look up User by whatsappNumber
-    const user = await User.findOne({
+    // 6. Look up ALL Users by whatsappNumber
+    const users = await User.find({
       whatsappNumber: whatsappNumber.trim(),
     });
 
-    if (user && user.status === "suspended") {
+    const requestedRole = body.loginType || "student";
+    const targetUser = users.find((u) => u.role === requestedRole);
+
+    if (targetUser && targetUser.status === "suspended") {
       return NextResponse.json(
-        { error: "Your account has been suspended. Please contact support." },
+        {
+          error: `Your ${requestedRole} account has been suspended. Please contact support.`,
+        },
         { status: 403 },
       );
     }
 
-    // 7. New user — temporary token
-    if (!user) {
+    // 7. New user for this specific role — temporary token
+    if (!targetUser) {
+      // We might have other roles, but for the requested role, they are new.
       const token = await signToken({
         whatsappNumber: whatsappNumber.trim(),
         isNewUser: true,
@@ -93,28 +99,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ isNewUser: true }, { status: 200 });
     }
 
-    // 8. Existing user — full session token
-    user.lastLoginAt = new Date();
-    await user.save();
+    // 8. Existing user for requested role — full session token
+    targetUser.lastLoginAt = new Date();
+    await targetUser.save();
+
+    const availableRoles: Record<string, string> = {};
+    users.forEach((u) => {
+      if (u.status === "active") {
+        availableRoles[u.role] = u._id!.toString();
+      }
+    });
 
     const token = await signToken({
-      userId: user._id!.toString(),
-      role: user.role,
-      whatsappNumber: user.whatsappNumber,
-      status: user.status,
+      userId: targetUser._id!.toString(),
+      role: targetUser.role,
+      whatsappNumber: targetUser.whatsappNumber,
+      status: targetUser.status,
+      availableRoles,
     });
 
     await setSessionCookie(token);
 
     // 9. For coaches, include verification status
     let verificationStatus: string | undefined;
-    if (user.role === "coach") {
-      const coachProfile = await CoachProfile.findOne({ userId: user._id });
+    if (targetUser.role === "coach") {
+      const coachProfile = await CoachProfile.findOne({
+        userId: targetUser._id,
+      });
       verificationStatus = coachProfile?.verificationStatus || "pending";
     }
 
     return NextResponse.json(
-      { isNewUser: false, role: user.role, verificationStatus },
+      { isNewUser: false, role: targetUser.role, verificationStatus },
       { status: 200 },
     );
   } catch (error) {

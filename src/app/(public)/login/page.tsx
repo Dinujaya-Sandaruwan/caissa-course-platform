@@ -53,7 +53,11 @@ function LoginContent() {
     const res = await fetch("/api/auth/verify-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ whatsappNumber: phoneNumber, otp }),
+      body: JSON.stringify({
+        whatsappNumber: phoneNumber,
+        otp,
+        loginType: "student",
+      }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);

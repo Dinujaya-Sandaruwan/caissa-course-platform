@@ -8,6 +8,7 @@ interface SessionPayload {
   role: "student" | "coach" | "manager";
   whatsappNumber: string;
   status?: "active" | "suspended" | string;
+  availableRoles?: Record<string, string>;
 }
 
 const protectedRoutes: Record<string, string> = {
