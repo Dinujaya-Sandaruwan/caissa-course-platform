@@ -30,7 +30,7 @@ export async function GET(
     // Fetch the coach profile by userId
     const coachProfile = await CoachProfile.findOne({ userId })
       .select(
-        "fideId fideRating bio specializations coachAchievements playerAchievements dateOfBirth address cvUrl verificationStatus",
+        "fideId fideRating bio specializations coachAchievements playerAchievements dateOfBirth address cvUrl verificationStatus bankDetails verifiedAt",
       )
       .lean();
 

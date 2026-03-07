@@ -18,6 +18,9 @@ import {
   Crown,
   PauseCircle,
   PlayCircle,
+  Landmark,
+  Banknote,
+  Eye,
 } from "lucide-react";
 
 interface PendingCoach {
@@ -55,6 +58,36 @@ interface ApprovedCoach {
   verifiedAt?: string;
 }
 
+interface CoachDetail {
+  user: {
+    _id: string;
+    name: string;
+    whatsappNumber: string;
+    email?: string;
+    profilePhoto?: string;
+    profilePhotoThumbnail?: string;
+  };
+  profile: {
+    fideId?: string;
+    fideRating?: number;
+    bio?: string;
+    specializations?: string[];
+    coachAchievements?: string[];
+    playerAchievements?: string[];
+    dateOfBirth?: string;
+    address?: string;
+    cvUrl?: string;
+    verificationStatus?: string;
+    verifiedAt?: string;
+    bankDetails?: {
+      accountOwnerName?: string;
+      bankName?: string;
+      bankLocation?: string;
+      accountNumber?: string;
+    };
+  } | null;
+}
+
 type Tab = "pending" | "approved";
 
 export default function CoachesPage() {
@@ -88,6 +121,10 @@ export default function CoachesPage() {
   const [pauseConfirmAction, setPauseConfirmAction] = useState<
     "pause" | "unpause"
   >("pause");
+
+  // Coach detail modal state
+  const [detailCoach, setDetailCoach] = useState<CoachDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const fetchPendingCoaches = async () => {
     setLoading(true);
@@ -186,6 +223,21 @@ export default function CoachesPage() {
       );
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const fetchCoachDetail = async (userId: string) => {
+    setDetailLoading(true);
+    try {
+      const res = await fetch(`/api/manager/coaches/${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch coach details");
+      const data = await res.json();
+      setDetailCoach(data);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load coach details");
+    } finally {
+      setDetailLoading(false);
     }
   };
 
@@ -608,7 +660,10 @@ export default function CoachesPage() {
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-2.5 flex-wrap">
-                          <h3 className="text-base font-bold text-gray-900 truncate font-[family-name:var(--font-outfit)]">
+                          <h3
+                            className="text-base font-bold text-gray-900 truncate font-[family-name:var(--font-outfit)] cursor-pointer hover:text-red-600 transition-colors"
+                            onClick={() => fetchCoachDetail(coach.userId._id)}
+                          >
                             {coach.userId.name}
                           </h3>
                           {coach.fideRating && (
@@ -867,6 +922,355 @@ export default function CoachesPage() {
                 </button>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Coach Detail Modal */}
+      {(detailCoach || detailLoading) && (
+        <div
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-[fade-in_0.2s_ease-out]"
+          onClick={() => {
+            if (!detailLoading) setDetailCoach(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.15)] w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden transform transition-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {detailLoading ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <div className="animate-spin w-10 h-10 border-4 border-red-500 border-t-red-100 rounded-full mb-4" />
+                <p className="text-gray-500 font-medium">
+                  Loading coach details...
+                </p>
+              </div>
+            ) : detailCoach ? (
+              <>
+                {/* Header with profile photo */}
+                <div className="shrink-0 relative bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-t-[2rem] p-8 text-white overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+                  <button
+                    onClick={() => setDetailCoach(null)}
+                    className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-colors cursor-pointer z-10"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <div className="relative z-10 flex items-center gap-5">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white font-extrabold text-3xl shadow-lg overflow-hidden ring-4 ring-white/20 shrink-0">
+                      {detailCoach.user.profilePhotoThumbnail ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={detailCoach.user.profilePhotoThumbnail}
+                          alt={detailCoach.user.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        detailCoach.user.name.charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-extrabold tracking-tight font-[family-name:var(--font-outfit)]">
+                        {detailCoach.user.name}
+                      </h2>
+                      <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                        {detailCoach.profile?.fideRating && (
+                          <span className="text-xs font-extrabold bg-gradient-to-r from-red-500 to-rose-600 text-white px-2.5 py-0.5 rounded-lg shadow-sm">
+                            {detailCoach.profile.fideRating} ELO
+                          </span>
+                        )}
+                        {detailCoach.profile?.verificationStatus && (
+                          <span
+                            className={`text-xs font-bold px-2.5 py-0.5 rounded-lg capitalize ${
+                              detailCoach.profile.verificationStatus ===
+                              "approved"
+                                ? "bg-emerald-500/20 text-emerald-300"
+                                : detailCoach.profile.verificationStatus ===
+                                    "paused"
+                                  ? "bg-amber-500/20 text-amber-300"
+                                  : "bg-gray-500/20 text-gray-300"
+                            }`}
+                          >
+                            {detailCoach.profile.verificationStatus}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Body content */}
+                <div className="flex-1 overflow-y-auto scrollbar-thin p-8 space-y-6">
+                  {/* Contact & Personal Info */}
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
+                      <User className="w-3.5 h-3.5" />
+                      Personal Information
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100">
+                        <Phone className="w-4 h-4 text-gray-400 shrink-0" />
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase">
+                            WhatsApp
+                          </p>
+                          <p className="text-sm font-semibold text-gray-800">
+                            +{detailCoach.user.whatsappNumber}
+                          </p>
+                        </div>
+                      </div>
+                      {detailCoach.user.email && (
+                        <div className="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100">
+                          <Mail className="w-4 h-4 text-gray-400 shrink-0" />
+                          <div>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase">
+                              Email
+                            </p>
+                            <p className="text-sm font-semibold text-gray-800 truncate">
+                              {detailCoach.user.email}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {detailCoach.profile?.dateOfBirth && (
+                        <div className="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100">
+                          <Calendar className="w-4 h-4 text-gray-400 shrink-0" />
+                          <div>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase">
+                              Date of Birth
+                            </p>
+                            <p className="text-sm font-semibold text-gray-800">
+                              {new Date(
+                                detailCoach.profile.dateOfBirth,
+                              ).toLocaleDateString(undefined, {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {detailCoach.profile?.address && (
+                        <div className="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100">
+                          <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
+                          <div>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase">
+                              Address
+                            </p>
+                            <p className="text-sm font-semibold text-gray-800">
+                              {detailCoach.profile.address}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* FIDE & CV */}
+                  {(detailCoach.profile?.fideId ||
+                    detailCoach.profile?.cvUrl) && (
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
+                        <Medal className="w-3.5 h-3.5" />
+                        FIDE & Documents
+                      </h3>
+                      <div className="flex flex-wrap gap-3">
+                        {detailCoach.profile?.fideId && (
+                          <a
+                            href={`https://ratings.fide.com/profile/${detailCoach.profile.fideId}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 text-sm font-bold text-red-600 bg-red-50 px-4 py-2.5 rounded-xl border border-red-100 hover:bg-red-100 transition-colors"
+                          >
+                            <User className="w-4 h-4" />
+                            FIDE #{detailCoach.profile.fideId}
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                        {detailCoach.profile?.cvUrl && (
+                          <a
+                            href={detailCoach.profile.cvUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 text-sm font-bold text-gray-700 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors"
+                          >
+                            <FileText className="w-4 h-4 text-gray-500" />
+                            View CV
+                            <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bio */}
+                  {detailCoach.profile?.bio && (
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
+                        <Eye className="w-3.5 h-3.5" />
+                        Bio
+                      </h3>
+                      <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100 whitespace-pre-wrap">
+                        {detailCoach.profile.bio}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Specializations */}
+                  {(detailCoach.profile?.specializations?.filter((s) =>
+                    s.trim(),
+                  ).length ?? 0) > 0 && (
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
+                        <Star className="w-3.5 h-3.5 fill-current" />
+                        Specializations
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {detailCoach.profile!.specializations!.map(
+                          (spec, i) =>
+                            spec.trim() && (
+                              <span
+                                key={i}
+                                className="px-3.5 py-1.5 bg-red-50 border border-red-100 text-red-700 text-xs font-bold rounded-lg"
+                              >
+                                {spec}
+                              </span>
+                            ),
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Achievements */}
+                  {((detailCoach.profile?.coachAchievements?.filter((a) =>
+                    a.trim(),
+                  ).length ?? 0) > 0 ||
+                    (detailCoach.profile?.playerAchievements?.filter((a) =>
+                      a.trim(),
+                    ).length ?? 0) > 0) && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {(detailCoach.profile?.coachAchievements?.filter((a) =>
+                        a.trim(),
+                      ).length ?? 0) > 0 && (
+                        <div>
+                          <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
+                            <Medal className="w-3.5 h-3.5" />
+                            Coaching Achievements
+                          </h3>
+                          <div className="space-y-2">
+                            {detailCoach.profile!.coachAchievements!.map(
+                              (item, i) =>
+                                item.trim() && (
+                                  <div
+                                    key={i}
+                                    className="flex items-start gap-2.5 text-sm text-gray-700 bg-gray-50 px-3.5 py-2.5 rounded-xl border border-gray-100"
+                                  >
+                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                                    <span className="font-medium">{item}</span>
+                                  </div>
+                                ),
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {(detailCoach.profile?.playerAchievements?.filter((a) =>
+                        a.trim(),
+                      ).length ?? 0) > 0 && (
+                        <div>
+                          <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
+                            <Trophy className="w-3.5 h-3.5" />
+                            Player Achievements
+                          </h3>
+                          <div className="space-y-2">
+                            {detailCoach.profile!.playerAchievements!.map(
+                              (item, i) =>
+                                item.trim() && (
+                                  <div
+                                    key={i}
+                                    className="flex items-start gap-2.5 text-sm text-gray-700 bg-gray-50 px-3.5 py-2.5 rounded-xl border border-gray-100"
+                                  >
+                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                                    <span className="font-medium">{item}</span>
+                                  </div>
+                                ),
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Bank Details */}
+                  {detailCoach.profile?.bankDetails && (
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
+                        <Banknote className="w-3.5 h-3.5" />
+                        Bank Details
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {detailCoach.profile.bankDetails.accountOwnerName && (
+                          <div className="bg-gray-50 px-4 py-3 rounded-xl border border-gray-100">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase">
+                              Account Owner
+                            </p>
+                            <p className="text-sm font-semibold text-gray-800">
+                              {detailCoach.profile.bankDetails.accountOwnerName}
+                            </p>
+                          </div>
+                        )}
+                        {detailCoach.profile.bankDetails.bankName && (
+                          <div className="bg-gray-50 px-4 py-3 rounded-xl border border-gray-100">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase">
+                              Bank
+                            </p>
+                            <p className="text-sm font-semibold text-gray-800">
+                              {detailCoach.profile.bankDetails.bankName}
+                            </p>
+                          </div>
+                        )}
+                        {detailCoach.profile.bankDetails.bankLocation && (
+                          <div className="bg-gray-50 px-4 py-3 rounded-xl border border-gray-100">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase">
+                              Branch
+                            </p>
+                            <p className="text-sm font-semibold text-gray-800">
+                              {detailCoach.profile.bankDetails.bankLocation}
+                            </p>
+                          </div>
+                        )}
+                        {detailCoach.profile.bankDetails.accountNumber && (
+                          <div className="bg-gray-50 px-4 py-3 rounded-xl border border-gray-100">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase">
+                              Account Number
+                            </p>
+                            <p className="text-sm font-semibold text-gray-800 font-mono">
+                              {detailCoach.profile.bankDetails.accountNumber}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Verified At */}
+                  {detailCoach.profile?.verifiedAt && (
+                    <div className="pt-4 border-t border-gray-100">
+                      <p className="text-xs text-gray-400 font-medium">
+                        Approved on{" "}
+                        {new Date(
+                          detailCoach.profile.verifiedAt,
+                        ).toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : null}
           </div>
         </div>
       )}
