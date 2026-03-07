@@ -25,6 +25,8 @@ function LoginContent() {
   const callbackUrl = searchParams?.get("callbackUrl");
   const [step, setStep] = useState<Step>("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [initialData, setInitialData] = useState<any>(undefined);
 
   useEffect(() => {
     fetch("/api/auth/session")
@@ -63,6 +65,7 @@ function LoginContent() {
     if (!res.ok) throw new Error(data.error);
 
     if (data.isNewUser) {
+      if (data.existingProfile) setInitialData(data.existingProfile);
       setStep("register");
     } else {
       if (callbackUrl && data.role !== "manager") {
@@ -256,6 +259,7 @@ function LoginContent() {
             {step === "register" && (
               <StudentRegistrationForm
                 onSubmit={(data) => handleRegister(data, "student")}
+                initialData={initialData}
               />
             )}
           </div>

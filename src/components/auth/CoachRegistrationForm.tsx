@@ -31,14 +31,21 @@ interface CoachRegistrationData {
 
 interface CoachRegistrationFormProps {
   onSubmit: (data: CoachRegistrationData) => Promise<void>;
+  initialData?: {
+    name?: string;
+    email?: string;
+    profilePhoto?: string;
+    profilePhotoThumbnail?: string;
+  };
 }
 
 export default function CoachRegistrationForm({
   onSubmit,
+  initialData,
 }: CoachRegistrationFormProps) {
   const [form, setForm] = useState({
-    name: "",
-    email: "",
+    name: initialData?.name || "",
+    email: initialData?.email || "",
     dateOfBirth: "",
     fideId: "",
     fideRating: "",
@@ -53,7 +60,7 @@ export default function CoachRegistrationForm({
     null,
   );
   const [profilePicPreview, setProfilePicPreview] = useState<string | null>(
-    null,
+    initialData?.profilePhotoThumbnail || initialData?.profilePhoto || null,
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cvInputRef = useRef<HTMLInputElement>(null);
@@ -250,8 +257,6 @@ export default function CoachRegistrationForm({
         dateOfBirth: form.dateOfBirth,
         fideId: form.fideId.trim(),
         fideRating: Number(form.fideRating),
-        profilePicture: profilePic,
-        profilePictureThumbnail: profilePicThumbnail,
         address: form.address.trim(),
         bio: form.bio.trim(),
         specializations: form.specializations
@@ -268,6 +273,12 @@ export default function CoachRegistrationForm({
           .filter(Boolean),
         cv: cvFile,
       };
+
+      if (profilePic && profilePicThumbnail) {
+        data.profilePicture = profilePic;
+        data.profilePictureThumbnail = profilePicThumbnail;
+      }
+
       await onSubmit(data);
     } catch (err: unknown) {
       const message =

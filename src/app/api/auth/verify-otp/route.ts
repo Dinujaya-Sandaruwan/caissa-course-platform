@@ -96,7 +96,20 @@ export async function POST(request: NextRequest) {
 
       await setSessionCookie(token);
 
-      return NextResponse.json({ isNewUser: true }, { status: 200 });
+      const responsePayload: any = { isNewUser: true };
+
+      // If they have sibling accounts, return that data for autofill
+      if (users.length > 0) {
+        const sibling = users[0];
+        responsePayload.existingProfile = {
+          name: sibling.name,
+          email: sibling.email,
+          profilePhoto: sibling.profilePhoto,
+          profilePhotoThumbnail: sibling.profilePhotoThumbnail,
+        };
+      }
+
+      return NextResponse.json(responsePayload, { status: 200 });
     }
 
     // 8. Existing user for requested role — full session token

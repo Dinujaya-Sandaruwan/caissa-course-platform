@@ -25,6 +25,8 @@ export default function BecomeACoachPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [initialData, setInitialData] = useState<any>(undefined);
 
   const handleSendOTP = async (phone: string) => {
     setPhoneNumber(phone);
@@ -53,6 +55,7 @@ export default function BecomeACoachPage() {
     if (!res.ok) throw new Error(data.error);
 
     if (data.isNewUser) {
+      if (data.existingProfile) setInitialData(data.existingProfile);
       setStep("register");
       scrollToForm();
     } else {
@@ -407,7 +410,10 @@ export default function BecomeACoachPage() {
                       />
                     )}
                     {step === "register" && (
-                      <CoachRegistrationForm onSubmit={handleRegister} />
+                      <CoachRegistrationForm
+                        onSubmit={handleRegister}
+                        initialData={initialData}
+                      />
                     )}
                   </div>
                 </div>

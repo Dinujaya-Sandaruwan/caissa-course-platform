@@ -23,15 +23,22 @@ interface StudentRegistrationData {
 
 interface StudentRegistrationFormProps {
   onSubmit: (data: StudentRegistrationData) => Promise<void>;
+  initialData?: {
+    name?: string;
+    email?: string;
+    profilePhoto?: string;
+    profilePhotoThumbnail?: string;
+  };
 }
 
 export default function StudentRegistrationForm({
   onSubmit,
+  initialData,
 }: StudentRegistrationFormProps) {
   const [form, setForm] = useState<StudentRegistrationData>({
-    name: "",
+    name: initialData?.name || "",
     nickname: "",
-    email: "",
+    email: initialData?.email || "",
     dateOfBirth: "",
     gender: "",
     fideId: "",
@@ -50,7 +57,7 @@ export default function StudentRegistrationForm({
     null,
   );
   const [profilePicPreview, setProfilePicPreview] = useState<string | null>(
-    null,
+    initialData?.profilePhotoThumbnail || initialData?.profilePhoto || null,
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoError, setPhotoError] = useState("");
@@ -139,7 +146,8 @@ export default function StudentRegistrationForm({
     e.preventDefault();
     setError("");
 
-    if (!profilePic || !profilePicThumbnail) {
+    // If there is no existing profile photo AND no newly uploaded one, block submission
+    if (!profilePicPreview && (!profilePic || !profilePicThumbnail)) {
       setError("Profile picture is required");
       setPhotoError("Please upload a profile picture");
       return;
@@ -172,9 +180,12 @@ export default function StudentRegistrationForm({
         name: form.name.trim(),
         dateOfBirth: form.dateOfBirth,
         gender: form.gender,
-        profilePicture: profilePic,
-        profilePictureThumbnail: profilePicThumbnail,
       };
+
+      if (profilePic && profilePicThumbnail) {
+        data.profilePicture = profilePic;
+        data.profilePictureThumbnail = profilePicThumbnail;
+      }
       if (form.nickname?.trim()) data.nickname = form.nickname.trim();
       if (form.email?.trim()) data.email = form.email.trim();
       if (form.fideId?.trim()) data.fideId = form.fideId.trim();
