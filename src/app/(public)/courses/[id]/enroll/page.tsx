@@ -226,7 +226,9 @@ export default function EnrollPage() {
     <>
       <NavbarClient session={session} />
       <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-2xl mx-auto px-6 pt-28 pb-20">
+        <div
+          className={`mx-auto px-6 pt-28 pb-20 transition-all duration-300 ${isNonStudent && isRegistering ? "max-w-4xl" : "max-w-2xl"}`}
+        >
           {/* Back Link */}
           <Link
             href={`/courses/${courseId}`}
@@ -264,7 +266,11 @@ export default function EnrollPage() {
           )}
 
           {!success && (
-            <div className="space-y-6 mt-8">
+            <div
+              className={`space-y-6 mt-8 w-full mx-auto transition-all duration-300 ${
+                isNonStudent && isRegistering ? "max-w-4xl" : "max-w-2xl"
+              }`}
+            >
               {/* Course Summary Card */}
               <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100">
                 <div className="flex items-center justify-between">
@@ -302,6 +308,7 @@ export default function EnrollPage() {
                 isRegistering ? (
                   <div className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 animate-[fade-in-up_0.3s_ease-out]">
                     <StudentRegistrationForm
+                      variant="embedded"
                       onSubmit={handleRegisterStudent}
                       initialData={{
                         name: session?.name,

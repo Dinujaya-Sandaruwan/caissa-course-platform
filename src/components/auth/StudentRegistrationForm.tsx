@@ -29,11 +29,13 @@ interface StudentRegistrationFormProps {
     profilePhoto?: string;
     profilePhotoThumbnail?: string;
   };
+  variant?: "page" | "embedded";
 }
 
 export default function StudentRegistrationForm({
   onSubmit,
   initialData,
+  variant = "page",
 }: StudentRegistrationFormProps) {
   const [form, setForm] = useState<StudentRegistrationData>({
     name: initialData?.name || "",
@@ -214,21 +216,42 @@ export default function StudentRegistrationForm({
 
   return (
     <div className="w-full animate-[fade-in-up_0.4s_ease-out]">
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 mb-4">
-          <UserPlus className="w-8 h-8 text-red-500" />
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 font-[family-name:var(--font-outfit)]">
-          Create Your Account
+      <div
+        className={`text-center ${variant === "embedded" ? "mb-6" : "mb-8"}`}
+      >
+        {variant !== "embedded" && (
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 mb-4">
+            <UserPlus className="w-8 h-8 text-red-500" />
+          </div>
+        )}
+        <h1
+          className={`${variant === "embedded" ? "text-2xl" : "text-3xl"} font-bold text-gray-900 font-[family-name:var(--font-outfit)]`}
+        >
+          Create Student Profile
         </h1>
         <p className="text-gray-500 mt-2">
-          Fill in your details to get started
+          {variant === "embedded"
+            ? "Please provide your student details to continue."
+            : "Fill in your details to get started"}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form
+        onSubmit={handleSubmit}
+        className={
+          variant === "embedded"
+            ? "flex flex-col md:flex-row gap-8"
+            : "space-y-6"
+        }
+      >
         {/* Profile Picture Upload */}
-        <div className="flex flex-col items-center mb-8">
+        <div
+          className={
+            variant === "embedded"
+              ? "w-full md:w-1/3 flex flex-col items-center pt-2"
+              : "flex flex-col items-center mb-8"
+          }
+        >
           <div
             className="relative w-32 h-32 rounded-full mb-3 cursor-pointer group"
             onClick={() => fileInputRef.current?.click()}
@@ -284,202 +307,212 @@ export default function StudentRegistrationForm({
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div className="sm:col-span-1">
-            <label className={labelClasses}>
-              Full Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => updateField("name", e.target.value)}
-              placeholder="e.g. Athawuda Mudiyanselage Dinujaya Sandaruwan Bandara"
-              className={inputClasses}
-              autoFocus
-            />
-          </div>
-
-          <div className="sm:col-span-1">
-            <label className={labelClasses}>Nickname</label>
-            <input
-              type="text"
-              value={form.nickname}
-              onChange={(e) => updateField("nickname", e.target.value)}
-              placeholder="e.g. Dinujaya"
-              className={inputClasses}
-            />
-            <p className="text-xs text-gray-500 mt-1.5 font-medium">
-              This is the name we&apos;ll call you around the learning platform.
-            </p>
-          </div>
-
-          <div>
-            <label className={labelClasses}>
-              Date of Birth <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={form.dateOfBirth}
-              onChange={(e) => updateField("dateOfBirth", e.target.value)}
-              className={inputClasses}
-            />
-          </div>
-
-          <div>
-            <label className={labelClasses}>Email</label>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => updateField("email", e.target.value)}
-              placeholder="you@example.com"
-              className={inputClasses}
-            />
-          </div>
-
-          <div className="sm:col-span-2">
-            <label className={labelClasses}>
-              Gender <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-3">
-              {[
-                { value: "male", label: "Male" },
-                { value: "female", label: "Female" },
-                { value: "other", label: "Other" },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => updateField("gender", option.value)}
-                  className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${
-                    form.gender === option.value
-                      ? "bg-red-50 border-red-500 text-red-600"
-                      : "bg-white border-gray-300 text-gray-500 hover:border-gray-400"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
+        <div
+          className={`w-full ${variant === "embedded" ? "md:w-2/3 space-y-6" : "space-y-6"}`}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="sm:col-span-1">
+              <label className={labelClasses}>
+                Full Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => updateField("name", e.target.value)}
+                placeholder="e.g. Athawuda Mudiyanselage Dinujaya Sandaruwan Bandara"
+                className={inputClasses}
+                autoFocus
+              />
             </div>
-          </div>
 
-          {/* Parent Fields (conditional base on age) */}
-          {isUnder13 && (
-            <div className="sm:col-span-2 space-y-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-              <p className="text-amber-700 text-xs font-medium uppercase tracking-wider">
-                Parent / Guardian Details
+            <div className="sm:col-span-1">
+              <label className={labelClasses}>Nickname</label>
+              <input
+                type="text"
+                value={form.nickname}
+                onChange={(e) => updateField("nickname", e.target.value)}
+                placeholder="e.g. Dinujaya"
+                className={inputClasses}
+              />
+              <p className="text-xs text-gray-500 mt-1.5 font-medium">
+                This is the name we&apos;ll call you around the learning
+                platform.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClasses}>
-                    Parent Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.parentName}
-                    onChange={(e) => updateField("parentName", e.target.value)}
-                    placeholder="Parent's full name"
-                    className={inputClasses}
-                  />
-                </div>
-                <div>
-                  <label className={labelClasses}>
-                    Parent Date of Birth <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={form.parentDateOfBirth}
-                    onChange={(e) =>
-                      updateField("parentDateOfBirth", e.target.value)
-                    }
-                    className={inputClasses}
-                  />
-                </div>
+            </div>
+
+            <div>
+              <label className={labelClasses}>
+                Date of Birth <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                value={form.dateOfBirth}
+                onChange={(e) => updateField("dateOfBirth", e.target.value)}
+                className={inputClasses}
+              />
+            </div>
+
+            <div>
+              <label className={labelClasses}>Email</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => updateField("email", e.target.value)}
+                placeholder="you@example.com"
+                className={inputClasses}
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className={labelClasses}>
+                Gender <span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-3">
+                {[
+                  { value: "male", label: "Male" },
+                  { value: "female", label: "Female" },
+                  { value: "other", label: "Other" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => updateField("gender", option.value)}
+                    className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${
+                      form.gender === option.value
+                        ? "bg-red-50 border-red-500 text-red-600"
+                        : "bg-white border-gray-300 text-gray-500 hover:border-gray-400"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
               </div>
             </div>
+
+            {/* Parent Fields (conditional base on age) */}
+            {isUnder13 && (
+              <div className="sm:col-span-2 space-y-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <p className="text-amber-700 text-xs font-medium uppercase tracking-wider">
+                  Parent / Guardian Details
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClasses}>
+                      Parent Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={form.parentName}
+                      onChange={(e) =>
+                        updateField("parentName", e.target.value)
+                      }
+                      placeholder="Parent's full name"
+                      className={inputClasses}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClasses}>
+                      Parent Date of Birth{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={form.parentDateOfBirth}
+                      onChange={(e) =>
+                        updateField("parentDateOfBirth", e.target.value)
+                      }
+                      className={inputClasses}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Optional Fields Divider */}
+            <div className="sm:col-span-2 relative py-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-3 bg-white text-gray-400 uppercase tracking-wider">
+                  Optional Information
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label className={labelClasses}>FIDE ID</label>
+              <input
+                type="text"
+                value={form.fideId}
+                onChange={(e) => updateField("fideId", e.target.value)}
+                placeholder="e.g. 123456789"
+                className={inputClasses}
+              />
+            </div>
+
+            <div>
+              <label className={labelClasses}>City / Location</label>
+              <input
+                type="text"
+                value={form.city}
+                onChange={(e) => updateField("city", e.target.value)}
+                placeholder="e.g. Colombo"
+                className={inputClasses}
+              />
+            </div>
+
+            <div>
+              <label className={labelClasses}>Skill Level</label>
+              <select
+                value={form.skillLevel}
+                onChange={(e) => updateField("skillLevel", e.target.value)}
+                className={inputClasses}
+              >
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+                <option value="expert">Expert</option>
+              </select>
+            </div>
+
+            <div>
+              <label className={labelClasses}>Language</label>
+              <select
+                value={form.preferredLanguage}
+                onChange={(e) =>
+                  updateField("preferredLanguage", e.target.value)
+                }
+                className={inputClasses}
+              >
+                <option value="en">English</option>
+                <option value="si">Sinhala</option>
+                <option value="ta">Tamil</option>
+              </select>
+            </div>
+          </div>
+
+          {error && (
+            <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
           )}
 
-          {/* Optional Fields Divider */}
-          <div className="sm:col-span-2 relative py-2">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="px-3 bg-white text-gray-400 uppercase tracking-wider">
-                Optional Information
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <label className={labelClasses}>FIDE ID</label>
-            <input
-              type="text"
-              value={form.fideId}
-              onChange={(e) => updateField("fideId", e.target.value)}
-              placeholder="e.g. 123456789"
-              className={inputClasses}
-            />
-          </div>
-
-          <div>
-            <label className={labelClasses}>City / Location</label>
-            <input
-              type="text"
-              value={form.city}
-              onChange={(e) => updateField("city", e.target.value)}
-              placeholder="e.g. Colombo"
-              className={inputClasses}
-            />
-          </div>
-
-          <div>
-            <label className={labelClasses}>Skill Level</label>
-            <select
-              value={form.skillLevel}
-              onChange={(e) => updateField("skillLevel", e.target.value)}
-              className={inputClasses}
-            >
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
-              <option value="expert">Expert</option>
-            </select>
-          </div>
-
-          <div>
-            <label className={labelClasses}>Language</label>
-            <select
-              value={form.preferredLanguage}
-              onChange={(e) => updateField("preferredLanguage", e.target.value)}
-              className={inputClasses}
-            >
-              <option value="en">English</option>
-              <option value="si">Sinhala</option>
-              <option value="ta">Tamil</option>
-            </select>
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-red-600 hover:bg-red-700 disabled:bg-red-200 disabled:text-red-400 disabled:shadow-none disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-red-600/20 hover:shadow-red-600/30 mt-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Creating Account...
+              </>
+            ) : (
+              "Create Account"
+            )}
+          </button>
         </div>
-
-        {error && (
-          <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
-            <p className="text-red-600 text-sm">{error}</p>
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-red-600 hover:bg-red-700 disabled:bg-red-200 disabled:text-red-400 disabled:shadow-none disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-red-600/20 hover:shadow-red-600/30 mt-2"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Creating Account...
-            </>
-          ) : (
-            "Create Account"
-          )}
-        </button>
       </form>
 
       {/* Image Crop Modal */}
