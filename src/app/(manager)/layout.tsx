@@ -61,7 +61,7 @@ export default async function ManagerLayout({
 
             <div className="p-4 mt-auto">
               <div className="bg-gray-50 rounded-2xl p-2 flex justify-center">
-                <UserDropdown user={profileUser} />
+                <UserDropdown user={profileUser} variant="sidebar" />
               </div>
             </div>
           </aside>

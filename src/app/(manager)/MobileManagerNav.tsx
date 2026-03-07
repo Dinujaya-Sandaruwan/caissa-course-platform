@@ -62,7 +62,7 @@ export default function MobileManagerNav({ user }: { user: any }) {
 
         <div className="p-4 mt-auto border-t border-gray-100 flex justify-center">
           <div className="bg-gray-50 rounded-2xl p-2 flex justify-center w-full">
-            <UserDropdown user={user} />
+            <UserDropdown user={user} variant="sidebar" />
           </div>
         </div>
       </div>

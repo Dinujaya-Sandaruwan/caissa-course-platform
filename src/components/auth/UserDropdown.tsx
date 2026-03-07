@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { LogOut, ChevronDown, User, ShieldCheck, Crown } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 interface RoleOption {
@@ -28,9 +27,13 @@ interface UserDropdownProps {
     role: string;
     availableRoles?: string[]; // Array of role strings available to this user
   };
+  variant?: "topbar" | "sidebar";
 }
 
-export default function UserDropdown({ user }: UserDropdownProps) {
+export default function UserDropdown({
+  user,
+  variant = "topbar",
+}: UserDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -85,12 +88,12 @@ export default function UserDropdown({ user }: UserDropdownProps) {
   };
 
   const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .substring(0, 2)
-      .toUpperCase();
+    if (!name) return "U";
+    const parts = name.split(" ").filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   };
 
   // Only show roles they actually have access to, and filter out current
@@ -102,30 +105,49 @@ export default function UserDropdown({ user }: UserDropdownProps) {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-1 pr-2 rounded-full hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200"
+        className={
+          variant === "sidebar"
+            ? "flex items-center gap-3 p-2 w-full rounded-xl hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200 text-left"
+            : "flex items-center gap-2 p-1 pr-2 rounded-full hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200"
+        }
       >
         {user.profilePhotoThumbnail ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={user.profilePhotoThumbnail}
             alt={user.name}
-            width={32}
-            height={32}
-            className="rounded-full object-cover border border-gray-200"
+            className={`rounded-full object-cover shadow-sm shrink-0 border border-gray-200 ${variant === "sidebar" ? "w-10 h-10" : "w-8 h-8"}`}
           />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold text-sm">
+          <div
+            className={`rounded-full shrink-0 flex items-center justify-center text-red-600 font-bold border ${variant === "sidebar" ? "w-10 h-10 text-lg bg-white border-gray-100 shadow-sm" : "w-8 h-8 text-sm bg-red-100 border-red-50"}`}
+          >
             {getInitials(user.name)}
           </div>
         )}
+
+        {variant === "sidebar" && (
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-gray-900 truncate">
+              {user.name}
+            </p>
+            <p className="text-xs font-medium text-gray-500 truncate capitalize">
+              {user.role}
+            </p>
+          </div>
+        )}
+
         <ChevronDown
-          className={`w-4 h-4 text-gray-500 transition-transform ${
+          className={`shrink-0 transition-transform ${
             isOpen ? "rotate-180" : ""
-          }`}
+          } ${variant === "sidebar" ? "w-5 h-5 text-gray-400" : "w-4 h-4 text-gray-500"}`}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50 animate-[fade-in-up_0.2s_ease-out]">
+        <div
+          className={`absolute mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50 animate-[fade-in-up_0.2s_ease-out] ${variant === "sidebar" ? "bottom-full mb-2 left-0" : "right-0"}`}
+        >
           <div className="p-3 border-b border-gray-100 bg-slate-50">
             <p className="text-sm font-bold text-gray-900 truncate">
               {user.name}

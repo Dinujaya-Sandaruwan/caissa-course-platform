@@ -52,7 +52,7 @@ export default function MobileCoachNav({ user }: { user: any }) {
           </nav>
 
           <div className="p-4 border-t border-gray-50 bg-gray-50/50 pb-8 flex justify-center">
-            <UserDropdown user={user} />
+            <UserDropdown user={user} variant="sidebar" />
           </div>
         </div>
       </div>
