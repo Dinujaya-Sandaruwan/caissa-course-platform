@@ -16,6 +16,8 @@ export interface ICourse extends Document {
   category?: Types.ObjectId;
   durationHours: number;
   durationMinutes: number;
+  ageMin?: number;
+  ageMax?: number;
   status:
     | "draft"
     | "pending_review"
@@ -102,6 +104,16 @@ const CourseSchema = new Schema<ICourse>(
       default: 0,
       min: 0,
       max: 59,
+    },
+    ageMin: {
+      type: Number,
+      min: 3,
+      max: 100,
+    },
+    ageMax: {
+      type: Number,
+      min: 3,
+      max: 100,
     },
     status: {
       type: String,

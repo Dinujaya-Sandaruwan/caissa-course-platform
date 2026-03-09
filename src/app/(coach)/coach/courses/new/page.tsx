@@ -46,6 +46,8 @@ interface CourseMetadata {
   category: string;
   durationHours: string;
   durationMinutes: string;
+  ageMin: string;
+  ageMax: string;
   tags: string[];
   thumbnailFile: File | null;
   tempThumbnailPath: string | null;
@@ -98,8 +100,10 @@ export default function CreateCoursePage() {
     price: "",
     level: "beginner",
     category: "",
-    durationHours: "0",
-    durationMinutes: "0",
+    durationHours: "",
+    durationMinutes: "",
+    ageMin: "",
+    ageMax: "",
     tags: [],
     thumbnailFile: null,
     tempThumbnailPath: null,
@@ -396,6 +400,28 @@ export default function CreateCoursePage() {
 
     if (!metadata.tempThumbnailPath) {
       newErrors.thumbnailFile = "A course thumbnail is required";
+    }
+
+    // Validate age group (optional, but both required if either is set)
+    if (metadata.ageMin || metadata.ageMax) {
+      if (!metadata.ageMin || !metadata.ageMax) {
+        newErrors.ageGroup = "Both minimum and maximum age are required";
+      } else {
+        const min = Number(metadata.ageMin);
+        const max = Number(metadata.ageMax);
+        if (
+          isNaN(min) ||
+          isNaN(max) ||
+          min < 3 ||
+          max < 3 ||
+          min > 100 ||
+          max > 100
+        ) {
+          newErrors.ageGroup = "Age must be between 3 and 100";
+        } else if (min > max) {
+          newErrors.ageGroup = "Minimum age cannot be greater than maximum age";
+        }
+      }
     }
 
     setErrors(newErrors);
@@ -997,6 +1023,8 @@ export default function CreateCoursePage() {
           tags: metadata.tags,
           tempThumbnailPath: metadata.tempThumbnailPath,
           allowDiscounts: metadata.allowDiscounts,
+          ageMin: metadata.ageMin ? Number(metadata.ageMin) : undefined,
+          ageMax: metadata.ageMax ? Number(metadata.ageMax) : undefined,
           maxDiscountPercent: metadata.allowDiscounts
             ? Number(metadata.maxDiscountPercent)
             : 0,
@@ -1300,6 +1328,16 @@ export default function CreateCoursePage() {
                 )}
               </div>
             </div>
+            {metadata.ageMin && metadata.ageMax && (
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Age Group
+                </p>
+                <p className="text-base font-semibold text-gray-900">
+                  Ages {metadata.ageMin}–{metadata.ageMax}
+                </p>
+              </div>
+            )}
             <div className="sm:col-span-2">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
                 Description
@@ -2190,9 +2228,9 @@ export default function CreateCoursePage() {
             </div>
 
             {/* Course Time & Category Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 border-t border-gray-100 pt-8 mt-4">
+            <div className="border-t border-gray-100 pt-8 mt-4">
               {/* Course Length */}
-              <div className="sm:col-span-2">
+              <div>
                 <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-1">
                   <Clock className="w-4 h-4 text-red-500" />
                   Course Length
@@ -2269,42 +2307,73 @@ export default function CreateCoursePage() {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Category */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
-                  <Folder className="w-4 h-4 text-red-500" />
-                  Course Category
-                </label>
-                <div className="relative">
-                  <select
-                    value={metadata.category}
-                    onChange={(e) =>
-                      setMetadata({ ...metadata, category: e.target.value })
-                    }
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 text-sm font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 appearance-none"
-                  >
-                    <option value="" disabled>
-                      Select a category
-                    </option>
-                    {categories.map((cat) => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                    <option value="none">None of the above (General)</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
-                  </div>
+            {/* Age Group */}
+            <div className="border-t border-gray-100 pt-8 mt-4">
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-1">
+                <BarChart3 className="w-4 h-4 text-red-500" />
+                Age Group
+                <span className="text-xs font-normal text-gray-400">
+                  (Optional)
+                </span>
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                Set the target age range for this course. Students can filter
+                courses by their age.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-600 mb-1.5 block">
+                    From Age
+                  </label>
+                  <input
+                    type="number"
+                    min="3"
+                    max="100"
+                    value={metadata.ageMin}
+                    onChange={(e) => {
+                      setMetadata({ ...metadata, ageMin: e.target.value });
+                      if (errors.ageGroup)
+                        setErrors({ ...errors, ageGroup: "" });
+                    }}
+                    placeholder="e.g. 6"
+                    className={`w-full px-4 py-3 rounded-xl border-2 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none ${
+                      errors.ageGroup
+                        ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                        : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+                    }`}
+                  />
                 </div>
-                {errors.category && (
-                  <p className="text-red-500 text-xs mt-1 font-medium flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" />
-                    {errors.category}
-                  </p>
-                )}
+                <div>
+                  <label className="text-xs font-bold text-gray-600 mb-1.5 block">
+                    To Age
+                  </label>
+                  <input
+                    type="number"
+                    min="3"
+                    max="100"
+                    value={metadata.ageMax}
+                    onChange={(e) => {
+                      setMetadata({ ...metadata, ageMax: e.target.value });
+                      if (errors.ageGroup)
+                        setErrors({ ...errors, ageGroup: "" });
+                    }}
+                    placeholder="e.g. 12"
+                    className={`w-full px-4 py-3 rounded-xl border-2 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none ${
+                      errors.ageGroup
+                        ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                        : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+                    }`}
+                  />
+                </div>
               </div>
+              {errors.ageGroup && (
+                <p className="mt-2 text-xs text-red-500 font-medium flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {errors.ageGroup}
+                </p>
+              )}
             </div>
           </div>
 
@@ -2577,6 +2646,42 @@ export default function CreateCoursePage() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2.5">
+                <Folder className="w-4 h-4 text-red-500" />
+                Course Category
+              </label>
+              <div className="relative">
+                <select
+                  value={metadata.category}
+                  onChange={(e) =>
+                    setMetadata({ ...metadata, category: e.target.value })
+                  }
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 text-sm font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 appearance-none"
+                >
+                  <option value="" disabled>
+                    Select a category
+                  </option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                  <option value="none">None of the above (General)</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                </div>
+              </div>
+              {errors.category && (
+                <p className="text-red-500 text-xs mt-1 font-medium flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {errors.category}
+                </p>
+              )}
             </div>
           </div>
         </div>

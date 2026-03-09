@@ -14,7 +14,7 @@ export async function GET() {
 
     const courses = await Course.find({ status: "published" })
       .populate("coach", "name phone")
-      .select("title price level status createdAt coach")
+      .select("title price level status createdAt coach ageMin ageMax")
       .sort({ createdAt: -1 })
       .lean();
 

@@ -34,6 +34,7 @@ import {
   Maximize2,
   Star,
   Trophy,
+  Users,
 } from "lucide-react";
 
 interface Lesson {
@@ -66,6 +67,8 @@ interface CourseDetail {
   discountedPrice?: number;
   reviewNotes?: string;
   createdAt: string;
+  ageMin?: number;
+  ageMax?: number;
   coach?: {
     _id?: string;
     name?: string;
@@ -433,6 +436,17 @@ export default function ManagerCourseDetailPage() {
             </p>
           </div>
           <div className="space-y-4">
+            {course.ageMin != null && course.ageMax != null && (
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Age Group
+                </p>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-blue-700 bg-blue-50 rounded-xl border border-blue-200">
+                  <Users className="w-4 h-4" />
+                  Ages {course.ageMin}–{course.ageMax}
+                </span>
+              </div>
+            )}
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
                 Tags

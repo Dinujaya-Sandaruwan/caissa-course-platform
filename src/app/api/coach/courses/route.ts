@@ -78,6 +78,8 @@ export async function POST(request: NextRequest) {
       discountedPrice,
       durationHours,
       durationMinutes,
+      ageMin,
+      ageMax,
     } = body;
 
     // Validate required fields
@@ -209,6 +211,38 @@ export async function POST(request: NextRequest) {
 
     const thumbnailUrl = `${basePath}/courses/${tempCourseId.toString()}/${compressedFileName}`;
 
+    // Validate age fields (optional, but if one is given both must be)
+    let validAgeMin: number | undefined;
+    let validAgeMax: number | undefined;
+    if (
+      (ageMin != null && ageMin !== "") ||
+      (ageMax != null && ageMax !== "")
+    ) {
+      const aMin = Number(ageMin);
+      const aMax = Number(ageMax);
+      if (
+        isNaN(aMin) ||
+        isNaN(aMax) ||
+        aMin < 3 ||
+        aMax < 3 ||
+        aMin > 100 ||
+        aMax > 100
+      ) {
+        return NextResponse.json(
+          { error: "Age values must be between 3 and 100" },
+          { status: 400 },
+        );
+      }
+      if (aMin > aMax) {
+        return NextResponse.json(
+          { error: "Minimum age cannot be greater than maximum age" },
+          { status: 400 },
+        );
+      }
+      validAgeMin = aMin;
+      validAgeMax = aMax;
+    }
+
     // Create a new draft course
     const newCourse = await Course.create({
       _id: tempCourseId,
@@ -234,6 +268,8 @@ export async function POST(request: NextRequest) {
       Number(discountedPrice) > 0
         ? { discountedPrice: Number(discountedPrice) }
         : {}),
+      ...(validAgeMin !== undefined ? { ageMin: validAgeMin } : {}),
+      ...(validAgeMax !== undefined ? { ageMax: validAgeMax } : {}),
     });
 
     // Register tags in the global Tag collection for autocomplete

@@ -22,6 +22,8 @@ interface PendingCourse {
   level: string;
   createdAt: string;
   coach?: { name?: string; phone?: string };
+  ageMin?: number;
+  ageMax?: number;
 }
 
 interface TrashedCourse {
@@ -31,6 +33,8 @@ interface TrashedCourse {
   level: string;
   trashedAt: string;
   coach?: { name?: string; phone?: string };
+  ageMin?: number;
+  ageMax?: number;
 }
 
 const levelEmoji: Record<string, string> = {
@@ -444,7 +448,6 @@ export default function ManagerCoursesPage() {
                 key={course._id}
                 className="grid grid-cols-1 md:grid-cols-[1fr_150px_100px_100px_120px_200px] gap-3 md:gap-4 px-8 py-5 items-center hover:bg-gray-50/50 transition-colors"
               >
-                {/* Course Title */}
                 <div>
                   <Link
                     href={`/manager/courses/${course._id}`}
@@ -452,6 +455,11 @@ export default function ManagerCoursesPage() {
                   >
                     {course.title}
                   </Link>
+                  {course.ageMin != null && course.ageMax != null && (
+                    <span className="ml-2 hidden md:inline-flex items-center px-2 py-0.5 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-md">
+                      Ages {course.ageMin}–{course.ageMax}
+                    </span>
+                  )}
                 </div>
 
                 {/* Coach */}
@@ -463,6 +471,13 @@ export default function ManagerCoursesPage() {
                 <span className="text-sm text-gray-600 font-medium capitalize">
                   {levelEmoji[course.level] || "📚"} {course.level}
                 </span>
+
+                {/* Age Group — shown inline after level on mobile, as part of the grid row */}
+                {course.ageMin != null && course.ageMax != null && (
+                  <span className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-md px-2 py-0.5 md:hidden">
+                    Ages {course.ageMin}–{course.ageMax}
+                  </span>
+                )}
 
                 {/* Price */}
                 <span className="text-sm font-bold text-gray-700">

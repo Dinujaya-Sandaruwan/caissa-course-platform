@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     const level = searchParams.get("level") || "";
     const category = searchParams.get("category") || "";
     const sort = searchParams.get("sort") || "newest";
+    const age = searchParams.get("age") || "";
     const cursor = searchParams.get("cursor") || "";
     const limit = 20;
 
@@ -33,6 +34,15 @@ export async function GET(request: NextRequest) {
         query.category = null;
       } else {
         query.category = new Types.ObjectId(category);
+      }
+    }
+
+    // Age filter: find courses whose age range includes the student's age
+    if (age) {
+      const ageNum = Number(age);
+      if (!isNaN(ageNum) && ageNum >= 3 && ageNum <= 100) {
+        query.ageMin = { $lte: ageNum };
+        query.ageMax = { $gte: ageNum };
       }
     }
 
@@ -72,7 +82,7 @@ export async function GET(request: NextRequest) {
       .populate("coach", "name profilePhotoThumbnail")
       .populate("category", "name")
       .select(
-        "title thumbnailUrl bunnyPreviewVideoId price discountedPrice level enrollmentCount tags createdAt coach category durationHours durationMinutes",
+        "title thumbnailUrl bunnyPreviewVideoId price discountedPrice level enrollmentCount tags createdAt coach category durationHours durationMinutes ageMin ageMax",
       )
       .sort(sortObj)
       .limit(limit + 1)

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { SlidersHorizontal, ChevronDown, Folder } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, Folder, Users } from "lucide-react";
 
 export default function CourseFilters() {
   const router = useRouter();
@@ -12,6 +12,7 @@ export default function CourseFilters() {
   const level = searchParams?.get("level") || "";
   const sort = searchParams?.get("sort") || "newest";
   const category = searchParams?.get("category") || "";
+  const age = searchParams?.get("age") || "";
 
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>(
     [],
@@ -69,6 +70,20 @@ export default function CourseFilters() {
           <option value="advanced">👑 Advanced</option>
         </select>
         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+      </div>
+
+      {/* Age Filter */}
+      <div className="relative">
+        <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+        <input
+          type="number"
+          min={3}
+          max={100}
+          placeholder="Age"
+          value={age}
+          onChange={(e) => updateParam("age", e.target.value)}
+          className="w-[100px] pl-10 pr-3 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 text-sm font-medium transition-all focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        />
       </div>
 
       {/* Sort Dropdown */}

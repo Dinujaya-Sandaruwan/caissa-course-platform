@@ -44,6 +44,8 @@ interface CourseMetadata {
   level: CourseLevel;
   durationHours: string;
   durationMinutes: string;
+  ageMin: string;
+  ageMax: string;
   tags: string[];
   thumbnailFile: File | null;
   tempThumbnailPath: string | null;
@@ -98,8 +100,10 @@ export default function EditCoursePage() {
     description: "",
     price: "",
     level: "beginner",
-    durationHours: "0",
-    durationMinutes: "0",
+    durationHours: "",
+    durationMinutes: "",
+    ageMin: "",
+    ageMax: "",
     tags: [],
     thumbnailFile: null,
     tempThumbnailPath: null,
@@ -149,6 +153,8 @@ export default function EditCoursePage() {
           level: data.level,
           durationHours: data.durationHours?.toString() || "0",
           durationMinutes: data.durationMinutes?.toString() || "0",
+          ageMin: data.ageMin?.toString() || "",
+          ageMax: data.ageMax?.toString() || "",
           tags: data.tags,
           thumbnailFile: null,
           tempThumbnailPath: data.thumbnailUrl || null,
@@ -483,6 +489,28 @@ export default function EditCoursePage() {
 
     if (!metadata.tempThumbnailPath) {
       newErrors.thumbnailFile = "A course thumbnail is required";
+    }
+
+    // Validate age group (optional, but both required if either is set)
+    if (metadata.ageMin || metadata.ageMax) {
+      if (!metadata.ageMin || !metadata.ageMax) {
+        newErrors.ageGroup = "Both minimum and maximum age are required";
+      } else {
+        const min = Number(metadata.ageMin);
+        const max = Number(metadata.ageMax);
+        if (
+          isNaN(min) ||
+          isNaN(max) ||
+          min < 3 ||
+          max < 3 ||
+          min > 100 ||
+          max > 100
+        ) {
+          newErrors.ageGroup = "Age must be between 3 and 100";
+        } else if (min > max) {
+          newErrors.ageGroup = "Minimum age cannot be greater than maximum age";
+        }
+      }
     }
 
     setErrors(newErrors);
@@ -1097,6 +1125,8 @@ export default function EditCoursePage() {
         tags: metadata.tags,
         durationHours: Number(metadata.durationHours),
         durationMinutes: Number(metadata.durationMinutes),
+        ageMin: metadata.ageMin ? Number(metadata.ageMin) : null,
+        ageMax: metadata.ageMax ? Number(metadata.ageMax) : null,
         allowDiscounts: metadata.allowDiscounts,
         maxDiscountPercent: metadata.allowDiscounts
           ? Number(metadata.maxDiscountPercent)
@@ -1419,6 +1449,16 @@ export default function EditCoursePage() {
                 )}
               </div>
             </div>
+            {metadata.ageMin && metadata.ageMax && (
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Age Group
+                </p>
+                <p className="text-base font-semibold text-gray-900">
+                  Ages {metadata.ageMin}–{metadata.ageMax}
+                </p>
+              </div>
+            )}
             <div className="sm:col-span-2">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
                 Description
@@ -2662,6 +2702,73 @@ export default function EditCoursePage() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Age Group */}
+            <div className="border-t border-gray-100 pt-8 mt-4">
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-1">
+                <BarChart3 className="w-4 h-4 text-red-500" />
+                Age Group
+                <span className="text-xs font-normal text-gray-400">
+                  (Optional)
+                </span>
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                Set the target age range for this course. Students can filter
+                courses by their age.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-600 mb-1.5 block">
+                    From Age
+                  </label>
+                  <input
+                    type="number"
+                    min="3"
+                    max="100"
+                    value={metadata.ageMin}
+                    onChange={(e) => {
+                      setMetadata({ ...metadata, ageMin: e.target.value });
+                      if (errors.ageGroup)
+                        setErrors({ ...errors, ageGroup: "" });
+                    }}
+                    placeholder="e.g. 6"
+                    className={`w-full px-4 py-3 rounded-xl border-2 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none ${
+                      errors.ageGroup
+                        ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                        : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-600 mb-1.5 block">
+                    To Age
+                  </label>
+                  <input
+                    type="number"
+                    min="3"
+                    max="100"
+                    value={metadata.ageMax}
+                    onChange={(e) => {
+                      setMetadata({ ...metadata, ageMax: e.target.value });
+                      if (errors.ageGroup)
+                        setErrors({ ...errors, ageGroup: "" });
+                    }}
+                    placeholder="e.g. 12"
+                    className={`w-full px-4 py-3 rounded-xl border-2 text-gray-900 placeholder-gray-400 text-sm font-medium transition-all focus:outline-none ${
+                      errors.ageGroup
+                        ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                        : "border-gray-200 bg-gray-50/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:bg-white"
+                    }`}
+                  />
+                </div>
+              </div>
+              {errors.ageGroup && (
+                <p className="mt-2 text-xs text-red-500 font-medium flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {errors.ageGroup}
+                </p>
+              )}
             </div>
           </div>
         </div>

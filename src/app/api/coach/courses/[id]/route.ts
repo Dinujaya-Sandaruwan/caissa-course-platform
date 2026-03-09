@@ -141,6 +141,8 @@ export async function PATCH(
       discountedPrice,
       durationHours,
       durationMinutes,
+      ageMin,
+      ageMax,
     } = body;
 
     if (title !== undefined) course.title = stripHtml(String(title));
@@ -273,6 +275,39 @@ export async function PATCH(
         course.thumbnailOriginalUrl = thumbnailOriginalUrl;
       } catch (err) {
         console.error("Error processing updated thumbnail:", err);
+      }
+    }
+
+    // Handle age category
+    if (ageMin !== undefined || ageMax !== undefined) {
+      const aMin = ageMin != null && ageMin !== "" ? Number(ageMin) : null;
+      const aMax = ageMax != null && ageMax !== "" ? Number(ageMax) : null;
+      if (aMin !== null && aMax !== null) {
+        if (
+          isNaN(aMin) ||
+          isNaN(aMax) ||
+          aMin < 3 ||
+          aMax < 3 ||
+          aMin > 100 ||
+          aMax > 100
+        ) {
+          return NextResponse.json(
+            { error: "Age values must be between 3 and 100" },
+            { status: 400 },
+          );
+        }
+        if (aMin > aMax) {
+          return NextResponse.json(
+            { error: "Minimum age cannot be greater than maximum age" },
+            { status: 400 },
+          );
+        }
+        course.ageMin = aMin;
+        course.ageMax = aMax;
+      } else if (aMin === null && aMax === null) {
+        // Clear both
+        course.ageMin = undefined;
+        course.ageMax = undefined;
       }
     }
 

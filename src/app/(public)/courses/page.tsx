@@ -21,6 +21,8 @@ interface PublicCourse {
   tags: string[];
   coach?: { name?: string };
   category?: { name?: string };
+  ageMin?: number;
+  ageMax?: number;
 }
 
 const levelEmoji: Record<string, string> = {
@@ -52,6 +54,7 @@ function CoursesContent() {
   const levelParam = searchParams?.get("level") || "";
   const categoryParam = searchParams?.get("category") || "";
   const sortParam = searchParams?.get("sort") || "newest";
+  const ageParam = searchParams?.get("age") || "";
 
   const [courses, setCourses] = useState<PublicCourse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +75,7 @@ function CoursesContent() {
         if (search.trim()) params.set("search", search.trim());
         if (levelParam) params.set("level", levelParam);
         if (categoryParam) params.set("category", categoryParam);
+        if (ageParam) params.set("age", ageParam);
         params.set("sort", sortParam);
         if (!reset && cursor) params.set("cursor", cursor);
 
@@ -93,7 +97,7 @@ function CoursesContent() {
         setLoadingMore(false);
       }
     },
-    [search, levelParam, categoryParam, sortParam, cursor],
+    [search, levelParam, categoryParam, sortParam, ageParam, cursor],
   );
 
   // Refetch when URL params change
@@ -101,7 +105,7 @@ function CoursesContent() {
     setCursor(null);
     fetchCourses(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, levelParam, categoryParam, sortParam]);
+  }, [search, levelParam, categoryParam, sortParam, ageParam]);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -191,6 +195,11 @@ function CoursesContent() {
                             {course.category && (
                               <span className="px-2 py-1 text-[10px] font-bold text-gray-600 bg-gray-50 border border-gray-100 rounded-md uppercase tracking-wider truncate max-w-[120px]">
                                 {course.category.name}
+                              </span>
+                            )}
+                            {course.ageMin != null && course.ageMax != null && (
+                              <span className="px-2 py-1 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-md uppercase tracking-wider">
+                                Ages {course.ageMin}–{course.ageMax}
                               </span>
                             )}
                           </div>
