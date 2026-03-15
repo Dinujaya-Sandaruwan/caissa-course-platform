@@ -1091,6 +1091,17 @@ export default function EditCoursePage() {
 
   // ─── Submit Chain ─────────────────────────────────────
   const handleSubmitCourse = async () => {
+    // Prevent saving if there are active video uploads in Bunny
+    const hasPendingVideoUploads = chapters.some((ch) =>
+      ch.lessons.some((l) => l.videoStatus === "pending" && l.bunnyVideoId)
+    );
+    
+    // Check our own materials upload queue
+    if (isUploadingRef.current || hasPendingVideoUploads) {
+      setSubmitError("Please wait for all video and material uploads to finish before saving.");
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError("");
 
@@ -1139,7 +1150,7 @@ export default function EditCoursePage() {
       // Only attach new thumbnail path if it changed
       if (
         metadata.tempThumbnailPath &&
-        !metadata.tempThumbnailPath.startsWith("/public/uploads/courses")
+        !metadata.tempThumbnailPath.startsWith("/uploads/courses")
       ) {
         coursePayload.tempThumbnailPath = metadata.tempThumbnailPath;
       }
