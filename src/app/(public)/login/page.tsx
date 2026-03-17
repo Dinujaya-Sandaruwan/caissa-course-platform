@@ -4,12 +4,20 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { BookOpen, Users, Trophy, ShieldCheck, ArrowLeft } from "lucide-react";
+import {
+  BookOpen,
+  Users,
+  Trophy,
+  ShieldCheck,
+  ArrowLeft,
+  GraduationCap,
+  ArrowRight,
+} from "lucide-react";
 import PhoneEntry from "@/components/auth/PhoneEntry";
 import OTPEntry from "@/components/auth/OTPEntry";
 import StudentRegistrationForm from "@/components/auth/StudentRegistrationForm";
 
-type Step = "phone" | "otp" | "register";
+type Step = "phone" | "otp" | "choice" | "register";
 
 export default function LoginPage() {
   return (
@@ -27,6 +35,7 @@ function LoginContent() {
   const [phoneNumber, setPhoneNumber] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [initialData, setInitialData] = useState<any>(undefined);
+  const [existingRoles, setExistingRoles] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/auth/session")
@@ -66,7 +75,13 @@ function LoginContent() {
 
     if (data.isNewUser) {
       if (data.existingProfile) setInitialData(data.existingProfile);
-      setStep("register");
+      // If user has accounts in other roles, show choice dialog
+      if (data.existingRoles && data.existingRoles.length > 0) {
+        setExistingRoles(data.existingRoles);
+        setStep("choice");
+      } else {
+        setStep("register");
+      }
     } else {
       if (callbackUrl) {
         router.push(callbackUrl);
@@ -83,6 +98,20 @@ function LoginContent() {
       } else {
         router.push("/student/dashboard");
       }
+    }
+  };
+
+  const handleGoToDashboard = async () => {
+    // Use switch-role to create a proper session for the existing role
+    const role = existingRoles.includes("coach") ? "coach" : "manager";
+    const switchRes = await fetch("/api/auth/switch-role", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ targetRole: role }),
+    });
+    if (switchRes.ok) {
+      const data = await switchRes.json();
+      router.push(data.redirectUrl || `/${role}/dashboard`);
     }
   };
 
@@ -193,10 +222,12 @@ function LoginContent() {
             {[
               { key: "phone", label: "Phone" },
               { key: "otp", label: "Verify" },
-              { key: "register", label: "Profile" },
+              ...(step === "choice"
+                ? [{ key: "choice", label: "Options" }]
+                : [{ key: "register", label: "Profile" }]),
             ].map((s, i) => {
-              const steps = ["phone", "otp", "register"];
-              const currentIndex = steps.indexOf(step);
+              const displayedSteps = ["phone", "otp", step === "choice" ? "choice" : "register"];
+              const currentIndex = displayedSteps.indexOf(step);
               const isActive = step === s.key;
               const isComplete = currentIndex > i;
 
@@ -251,6 +282,60 @@ function LoginContent() {
                 onSubmit={handleVerifyOTP}
                 onResend={handleResendOTP}
               />
+            )}
+            {step === "choice" && (
+              <div className="space-y-6 animate-[fade-in-up_0.3s_ease-out]">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-gray-900 font-[family-name:var(--font-outfit)]">
+                    Welcome Back!
+                  </h2>
+                  <p className="text-gray-500 mt-2 text-sm">
+                    You already have{" "}
+                    {existingRoles.includes("coach") ? "a Coach" : "a Manager"}{" "}
+                    account. What would you like to do?
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={handleGoToDashboard}
+                    className="w-full flex items-center gap-4 p-5 rounded-2xl border-2 border-red-100 bg-red-50/50 hover:bg-red-50 hover:border-red-200 transition-all group"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center shrink-0 group-hover:bg-red-200 transition-colors">
+                      <ArrowRight className="w-6 h-6 text-red-600" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-bold text-gray-900">
+                        Go to{" "}
+                        {existingRoles.includes("coach")
+                          ? "Coach"
+                          : "Manager"}{" "}
+                        Dashboard
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Continue with your existing account
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setStep("register")}
+                    className="w-full flex items-center gap-4 p-5 rounded-2xl border-2 border-gray-100 bg-gray-50/50 hover:bg-gray-50 hover:border-gray-200 transition-all group"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 group-hover:bg-gray-200 transition-colors">
+                      <GraduationCap className="w-6 h-6 text-gray-600" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-bold text-gray-900">
+                        Create a Student Account
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Also enroll as a student to take courses
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
             )}
             {step === "register" && (
               <StudentRegistrationForm

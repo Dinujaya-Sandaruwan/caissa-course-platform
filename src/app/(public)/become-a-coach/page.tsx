@@ -17,9 +17,11 @@ import {
   ChevronRight,
   BadgePercent,
   PlayCircle,
+  ArrowRight,
+  GraduationCap,
 } from "lucide-react";
 
-type Step = "phone" | "otp" | "register" | "pending";
+type Step = "phone" | "otp" | "choice" | "register" | "pending";
 
 export default function BecomeACoachPage() {
   const router = useRouter();
@@ -29,6 +31,7 @@ export default function BecomeACoachPage() {
   const [initialData, setInitialData] = useState<any>(undefined);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [session, setSession] = useState<any>(null);
+  const [existingRoles, setExistingRoles] = useState<string[]>([]);
 
   // Check if the user is already logged in
   useEffect(() => {
@@ -89,8 +92,15 @@ export default function BecomeACoachPage() {
 
     if (data.isNewUser) {
       if (data.existingProfile) setInitialData(data.existingProfile);
-      setStep("register");
-      scrollToForm();
+      // If user has accounts in other roles, show choice dialog
+      if (data.existingRoles && data.existingRoles.length > 0) {
+        setExistingRoles(data.existingRoles);
+        setStep("choice");
+        scrollToForm();
+      } else {
+        setStep("register");
+        scrollToForm();
+      }
     } else {
       if (data.role === "manager") {
         router.push("/manager/dashboard");
@@ -105,6 +115,20 @@ export default function BecomeACoachPage() {
       } else {
         router.push("/student/dashboard");
       }
+    }
+  };
+
+  const handleGoToDashboard = async () => {
+    // Use switch-role to log into the existing role
+    const role = existingRoles.includes("student") ? "student" : "manager";
+    const switchRes = await fetch("/api/auth/switch-role", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ targetRole: role }),
+    });
+    if (switchRes.ok) {
+      const respData = await switchRes.json();
+      router.push(respData.redirectUrl || `/${role}/dashboard`);
     }
   };
 
@@ -377,7 +401,7 @@ export default function BecomeACoachPage() {
                 className={`w-full ${step === "register" ? "max-w-4xl" : "max-w-md"} transition-all duration-500`}
               >
                 {/* Step Indicators */}
-                {step !== "pending" && (
+                {step !== "pending" && step !== "choice" && (
                   <div className="flex items-center justify-center gap-2 mb-8">
                     {["phone", "otp", "register"].map((s, i) => (
                       <div key={s} className="flex items-center gap-2">
@@ -443,6 +467,62 @@ export default function BecomeACoachPage() {
                         onSubmit={handleVerifyOTP}
                         onResend={handleResendOTP}
                       />
+                    )}
+                    {step === "choice" && (
+                      <div className="space-y-6 animate-[fade-in-up_0.3s_ease-out]">
+                        <div className="text-center">
+                          <h2 className="text-2xl font-bold text-gray-900 font-[family-name:var(--font-outfit)]">
+                            Welcome Back!
+                          </h2>
+                          <p className="text-gray-500 mt-2 text-sm">
+                            You already have{" "}
+                            {existingRoles.includes("student")
+                              ? "a Student"
+                              : "a Manager"}{" "}
+                            account. What would you like to do?
+                          </p>
+                        </div>
+
+                        <div className="space-y-3">
+                          <button
+                            onClick={() => setStep("register")}
+                            className="w-full flex items-center gap-4 p-5 rounded-2xl border-2 border-red-100 bg-red-50/50 hover:bg-red-50 hover:border-red-200 transition-all group"
+                          >
+                            <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center shrink-0 group-hover:bg-red-200 transition-colors">
+                              <GraduationCap className="w-6 h-6 text-red-600" />
+                            </div>
+                            <div className="text-left">
+                              <p className="font-bold text-gray-900">
+                                Apply as a Coach
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                Create a coach account and start teaching
+                              </p>
+                            </div>
+                          </button>
+
+                          <button
+                            onClick={handleGoToDashboard}
+                            className="w-full flex items-center gap-4 p-5 rounded-2xl border-2 border-gray-100 bg-gray-50/50 hover:bg-gray-50 hover:border-gray-200 transition-all group"
+                          >
+                            <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 group-hover:bg-gray-200 transition-colors">
+                              <ArrowRight className="w-6 h-6 text-gray-600" />
+                            </div>
+                            <div className="text-left">
+                              <p className="font-bold text-gray-900">
+                                Go to{" "}
+                                {existingRoles.includes("student")
+                                  ? "Student"
+                                  : "Manager"}{" "}
+                                Dashboard
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                Continue with your existing account
+                              </p>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
                     )}
                     {step === "register" && (
                       <CoachRegistrationForm

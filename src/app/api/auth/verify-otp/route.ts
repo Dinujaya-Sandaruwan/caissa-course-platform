@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
 
       const responsePayload: any = { isNewUser: true };
 
-      // If they have sibling accounts, return that data for autofill
+      // If they have sibling accounts, return that data for autofill + role info
       if (users.length > 0) {
         const sibling = users[0];
         responsePayload.existingProfile = {
@@ -107,6 +107,9 @@ export async function POST(request: NextRequest) {
           profilePhoto: sibling.profilePhoto,
           profilePhotoThumbnail: sibling.profilePhotoThumbnail,
         };
+        responsePayload.existingRoles = users
+          .filter((u) => u.status === "active")
+          .map((u) => u.role);
       }
 
       return NextResponse.json(responsePayload, { status: 200 });
