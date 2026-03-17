@@ -256,7 +256,7 @@ export async function PATCH(
         const basePath = cleanUploadDir.startsWith("public/")
           ? `/${cleanUploadDir.slice(7)}`
           : `/${cleanUploadDir}`;
-        const thumbnailOriginalUrl = `${basePath}/courses/${course._id.toString()}/${originalFileName}`;
+        const thumbnailOriginalUrl = `/api/files/courses/${course._id.toString()}/${originalFileName}`;
 
         const compressedFileName = `thumbnail-${crypto.randomBytes(4).toString("hex")}.webp`;
         const fullCompressedPath = path.join(courseDir, compressedFileName);
@@ -269,7 +269,7 @@ export async function PATCH(
           .webp({ quality: 80, effort: 6 })
           .toFile(fullCompressedPath);
 
-        const newThumbnailUrl = `${basePath}/courses/${course._id.toString()}/${compressedFileName}`;
+        const newThumbnailUrl = `/api/files/courses/${course._id.toString()}/${compressedFileName}`;
 
         course.thumbnailUrl = newThumbnailUrl;
         course.thumbnailOriginalUrl = thumbnailOriginalUrl;

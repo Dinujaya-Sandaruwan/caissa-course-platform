@@ -11,11 +11,6 @@ export async function GET(
   { params }: { params: Promise<{ path: string[] }> },
 ) {
   try {
-    const session = await getSessionUser();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { path: segments } = await params;
     const filePath = segments.join("/");
     const searchParams = request.nextUrl.searchParams;
@@ -42,32 +37,46 @@ export async function GET(
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
-    await connectDB();
-
-    // Permission checks based on file type / path
+    // Determine file type
     const isReceipt = filePath.startsWith("receipts/");
     const isCourseFile = filePath.startsWith("courses/");
     const isProfilePhoto =
       !isReceipt && !isCourseFile && !filePath.includes("/");
 
-    if (isReceipt) {
+    // Course thumbnails are public (shown on landing page, public course listing)
+    const fileName = segments[segments.length - 1] || "";
+    const isThumbnail = isCourseFile && fileName.startsWith("thumbnail-");
+
+    // Auth check: thumbnails are public, everything else requires login
+    const session = isThumbnail ? await getSessionUser().catch(() => null) : await getSessionUser();
+
+    if (!isThumbnail && !session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+
+    // Permission checks based on file type / path
+    if (isThumbnail) {
+      // Public access — no auth needed for course thumbnails
+    } else if (isReceipt) {
       // Receipts: only managers can view
-      if (session.role !== "manager") {
+      if (session!.role !== "manager") {
         return NextResponse.json({ error: "Access denied" }, { status: 403 });
       }
     } else if (isCourseFile) {
       // Course files (videos): only enrolled students, the coach, or a manager
       const courseId = segments[1]; // courses/{courseId}/...
-      if (session.role === "student") {
+      if (session!.role === "student") {
         const enrollment = await Enrollment.findOne({
-          studentId: session.userId,
+          studentId: session!.userId,
           courseId,
           paymentStatus: "approved",
         });
         if (!enrollment) {
           return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
-      } else if (session.role !== "coach" && session.role !== "manager") {
+      } else if (session!.role !== "coach" && session!.role !== "manager") {
         return NextResponse.json({ error: "Access denied" }, { status: 403 });
       }
     } else if (isProfilePhoto) {

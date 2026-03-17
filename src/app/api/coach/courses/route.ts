@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
     const basePath = cleanUploadDir.startsWith("public/")
       ? `/${cleanUploadDir.slice(7)}`
       : `/${cleanUploadDir}`;
-    const thumbnailOriginalUrl = `${basePath}/courses/${tempCourseId.toString()}/${originalFileName}`;
+    const thumbnailOriginalUrl = `/api/files/courses/${tempCourseId.toString()}/${originalFileName}`;
 
     // Compress using Sharp to WebP
     const compressedFileName = `thumbnail-${crypto.randomBytes(4).toString("hex")}.webp`;
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
       .webp({ quality: 80, effort: 6 }) // high quality, max effort compression
       .toFile(fullCompressedPath);
 
-    const thumbnailUrl = `${basePath}/courses/${tempCourseId.toString()}/${compressedFileName}`;
+    const thumbnailUrl = `/api/files/courses/${tempCourseId.toString()}/${compressedFileName}`;
 
     // Validate age fields (optional, but if one is given both must be)
     let validAgeMin: number | undefined;

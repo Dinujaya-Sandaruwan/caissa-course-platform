@@ -184,10 +184,7 @@ export default function CoachCoursesPage() {
               <div className="relative w-full aspect-[16/9] bg-gray-50 border-b border-gray-100 overflow-hidden shrink-0">
                 {course.thumbnailUrl ? (
                   <img
-                    src={course.thumbnailUrl.replace(
-                      /^\/?(\.\/)?public\//,
-                      "/",
-                    )}
+                    src={course.thumbnailUrl}
                     alt={course.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
