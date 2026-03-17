@@ -93,7 +93,10 @@ export async function deleteBunnyVideo(videoId: string) {
 
 /**
  * Fetches the current processing status of a video from Bunny Stream.
- * Returns the status code: 0 = Created, 1 = Uploaded, 2 = Processing, 3 = Finished, 4 = Error
+ * Returns the status code:
+ *   0 = Queued, 1 = Processing, 2 = Encoding,
+ *   3 = Finished, 4 = Resolution finished (playable),
+ *   5 = Failed
  */
 export async function getBunnyVideoStatus(videoId: string): Promise<number> {
   const res = await fetch(

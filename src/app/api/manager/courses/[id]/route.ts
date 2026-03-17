@@ -52,12 +52,12 @@ export async function GET(
       if (l.videoStatus === "processing" && l.bunnyVideoId) {
         try {
           const status = await getBunnyVideoStatus(l.bunnyVideoId);
-          if (status === 3) {
-            // Finished
+          if (status === 3 || status === 4) {
+            // 3 = Finished, 4 = Resolution finished (both mean video is playable)
             await Lesson.findByIdAndUpdate(l._id, { videoStatus: "ready" });
             l.videoStatus = "ready";
-          } else if (status === 4) {
-            // Error
+          } else if (status === 5) {
+            // 5 = Failed
             await Lesson.findByIdAndUpdate(l._id, {
               videoStatus: "pending",
               bunnyVideoId: null,
