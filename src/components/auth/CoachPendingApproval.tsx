@@ -12,7 +12,7 @@ export default function CoachPendingApproval() {
     setLoggingOut(true);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/");
+      window.location.href = "/";
     } catch {
       setLoggingOut(false);
     }
