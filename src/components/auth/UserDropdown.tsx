@@ -97,6 +97,12 @@ export default function UserDropdown({
     return name.substring(0, 2).toUpperCase();
   };
 
+  const truncateText = (text: string, maxLength: number) => {
+    if (!text) return "";
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength).trim() + "...";
+  };
+
   // Only show roles they actually have access to, and filter out current
   const availableSwitchOptions = ROLES.filter(
     (r) => user.availableRoles?.includes(r.role) && r.role !== user.role,
@@ -136,7 +142,7 @@ export default function UserDropdown({
         {variant === "sidebar" && (
           <div className="flex-1 min-w-0 pr-1">
             <p className="text-sm font-bold text-gray-900 truncate tracking-tight">
-              {user.name}
+              {truncateText(user.name, 22)}
             </p>
             <p className="text-[11px] font-medium text-gray-500 truncate capitalize">
               {user.role}
@@ -157,7 +163,7 @@ export default function UserDropdown({
         >
           <div className="p-3.5 border-b border-gray-100 bg-slate-50/50">
             <p className="text-sm font-bold text-gray-900 truncate tracking-tight">
-              {user.name}
+              {truncateText(user.name, 22)}
             </p>
             <p className="text-[11px] font-medium text-gray-400 capitalize mt-0.5">
               {user.role} Account
