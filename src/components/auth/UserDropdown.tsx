@@ -142,7 +142,7 @@ export default function UserDropdown({
         {variant === "sidebar" && (
           <div className="flex-1 min-w-0 pr-1">
             <p className="text-sm font-bold text-gray-900 truncate tracking-tight">
-              {truncateText(user.name, 22)}
+              {truncateText(user.name, 15)}
             </p>
             <p className="text-[11px] font-medium text-gray-500 truncate capitalize">
               {user.role}
@@ -163,7 +163,7 @@ export default function UserDropdown({
         >
           <div className="p-3.5 border-b border-gray-100 bg-slate-50/50">
             <p className="text-sm font-bold text-gray-900 truncate tracking-tight">
-              {truncateText(user.name, 22)}
+              {truncateText(user.name, 15)}
             </p>
             <p className="text-[11px] font-medium text-gray-400 capitalize mt-0.5">
               {user.role} Account
