@@ -46,7 +46,7 @@ export default async function CoachPendingPage() {
       </div>
 
       {/* Header */}
-      <header className="absolute top-0 w-full py-8 px-8 flex justify-between items-center z-10">
+      <header className="absolute top-0 w-full py-8 px-8 flex justify-between items-center z-50">
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="w-10 h-10 group-hover:scale-105 transition-transform">
             {/* eslint-disable-next-line @next/next/no-img-element */}
