@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
 
       const platformCut = amountPaid * (platformFeePercent / 100);
       const coachCut = amountPaid - platformCut;
-      const developerCut = platformCut * 0.05;
+      const developerCut = amountPaid * 0.05;
 
       // Group by month using enrolledAt or createdAt
       const date = new Date(

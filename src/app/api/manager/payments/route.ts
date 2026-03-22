@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
       totalPlatformRevenue += platformCut;
 
       if (enrollment.developerPayoutStatus === "pending") {
-        developerCut += platformCut * 0.05;
+        developerCut += amountPaid * 0.05;
       }
 
       const coach = course.coach;

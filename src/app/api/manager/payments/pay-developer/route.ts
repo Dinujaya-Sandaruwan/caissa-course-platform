@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       const platformFeePercent = course.platformFee || 0;
 
       const platformCut = amountPaid * (platformFeePercent / 100);
-      const developerCut = platformCut * 0.05;
+      const developerCut = amountPaid * 0.05;
 
       totalPayout += developerCut;
     }
