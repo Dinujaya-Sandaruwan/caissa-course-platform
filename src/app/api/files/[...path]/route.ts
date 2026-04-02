@@ -47,10 +47,11 @@ export async function GET(
     const fileName = segments[segments.length - 1] || "";
     const isThumbnail = isCourseFile && fileName.startsWith("thumbnail-");
 
-    // Auth check: thumbnails are public, everything else requires login
-    const session = isThumbnail ? await getSessionUser().catch(() => null) : await getSessionUser();
+    // Auth check: thumbnails and profile photos are public, everything else requires login
+    const isPublicFile = isThumbnail || isProfilePhoto;
+    const session = isPublicFile ? await getSessionUser().catch(() => null) : await getSessionUser();
 
-    if (!isThumbnail && !session) {
+    if (!isPublicFile && !session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
